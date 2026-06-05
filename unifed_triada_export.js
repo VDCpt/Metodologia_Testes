@@ -1369,7 +1369,7 @@ footer: function(currentPage, pageCount) {
             // Aviso (se aplicável)
             ...(hasPending ? [{ text: safeguardText, style: 'footerWarning', alignment: 'center', margin: [0, 6, 0, 0] }] : [])
         ],
-        margin: [40, 0, 40, 20]
+        margin: [40, 0, 40, 10]
     };
 }
 
