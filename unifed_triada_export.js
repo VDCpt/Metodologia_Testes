@@ -1675,71 +1675,73 @@
             },
             content: [
                 // ========== 1. TIMBRE E METADADOS DO PROCESSO ==========
-                // ── Box de dupla linha azul ──
+                // ── BOX PROFISSIONAL: dupla linha azul via canvas rect sobreposto ──
                 {
-                    table: {
-                        widths: ['*'],
-                        body: [[
-                            {
-                                stack: [
-                                    {
-                                        text: "UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL",
-                                        style: 'h2',
-                                        alignment: 'center',
-                                        margin: [0, 0, 0, 6]
-                                    },
-                                    {
-                                        text: "ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)",
-                                        style: 'h1',
-                                        alignment: 'center',
-                                        margin: [0, 0, 0, 0]
-                                    }
-                                ],
-                                margin: [18, 14, 18, 14]
-                            }
-                        ]]
-                    },
-                    layout: {
-                        hLineWidth: function(i, node) {
-                            // Linha exterior: 2.5pt; linha interior (offset 2pt): 0.8pt
-                            return (i === 0 || i === node.table.body.length) ? 2.5 : 0;
+                    stack: [
+                        // Rect exterior (2.5pt) + rect interior (0.9pt) com offset 4pt — dupla linha real
+                        {
+                            canvas: [
+                                // Rect exterior — borda principal
+                                {
+                                    type: 'rect',
+                                    x: 0, y: 0,
+                                    w: 515, h: 64,
+                                    lineWidth: 2.5,
+                                    lineColor: '#1e3a8a',
+                                    color: '#f0f4ff'
+                                },
+                                // Rect interior — segunda linha (offset 4pt)
+                                {
+                                    type: 'rect',
+                                    x: 4, y: 4,
+                                    w: 507, h: 56,
+                                    lineWidth: 0.8,
+                                    lineColor: '#1e3a8a'
+                                }
+                            ],
+                            // O canvas ocupa espaço; o texto vem sobreposto via absolutePosition
+                            margin: [0, 0, 0, -64]
                         },
-                        vLineWidth: function(i, node) {
-                            return (i === 0 || i === node.table.widths.length) ? 2.5 : 0;
-                        },
-                        hLineColor: function() { return '#1e3a8a'; },
-                        vLineColor: function() { return '#1e3a8a'; },
-                        paddingLeft:   function() { return 0; },
-                        paddingRight:  function() { return 0; },
-                        paddingTop:    function() { return 0; },
-                        paddingBottom: function() { return 0; }
-                    },
-                    margin: [0, 0, 0, 0]
-                },
-                // ── Segunda borda interna (linha dupla simulada via canvas) ──
-                {
-                    canvas: [
-                        // Topo interior
-                        { type: 'line', x1: 4,   y1: -3,  x2: 511, y2: -3,  lineWidth: 0.8, lineColor: '#1e3a8a' },
-                        // Fundo interior
-                        { type: 'line', x1: 4,   y1: 3,   x2: 511, y2: 3,   lineWidth: 0.8, lineColor: '#1e3a8a' }
+                        // Texto centrado sobre o canvas
+                        {
+                            stack: [
+                                {
+                                    text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL',
+                                    fontSize: 13,
+                                    bold: true,
+                                    color: '#1e3a8a',
+                                    alignment: 'center',
+                                    margin: [0, 0, 0, 5]
+                                },
+                                {
+                                    text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)',
+                                    fontSize: 9,
+                                    bold: false,
+                                    italics: true,
+                                    color: '#475569',
+                                    alignment: 'center',
+                                    margin: [0, 0, 0, 0]
+                                }
+                            ],
+                            margin: [24, 13, 24, 0]
+                        }
                     ],
-                    margin: [0, 0, 0, 0]
+                    margin: [0, 0, 0, 6]
                 },
-                // ── Legenda abaixo da box: esq | dir ──
+                // ── Legenda abaixo da box: Cadeia de Custódia (esq) | CONFIDENCIAL (dir) ──
                 {
                     table: {
                         widths: ['*', 'auto'],
                         body: [[
                             {
-                                text: 'Cadeia de Custódia Forense: Ativa',
+                                text: '🔒 Cadeia de Custódia Forense: Ativa',
                                 fontSize: 7.5,
                                 bold: true,
                                 color: '#1e3a8a',
                                 border: [false, false, false, false]
                             },
                             {
-                                text: 'CONFIDENCIAL',
+                                text: '⚠ CONFIDENCIAL',
                                 fontSize: 7.5,
                                 bold: true,
                                 color: '#b91c1c',
@@ -1749,7 +1751,7 @@
                         ]]
                     },
                     layout: 'noBorders',
-                    margin: [0, 5, 0, 14]
+                    margin: [0, 3, 0, 14]
                 },
                 {
                     columns: [
