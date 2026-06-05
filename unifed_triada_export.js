@@ -1337,7 +1337,7 @@
                     { text: '_____________________________________________', style: 'signatureLine', margin: [0, 20, 0, 4] },
                     { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
                 ],
-footer: function(currentPage, pageCount) {
+                footer: function(currentPage, pageCount) {
     const pendingIds = getPendingEvidenceIds();
     const hasPending = pendingIds.length > 0;
     const lang = window.currentLang || 'pt';
@@ -1375,8 +1375,7 @@ footer: function(currentPage, pageCount) {
         ],
         margin: [40, 0, 40, 10]
     };
-}
-
+},
                 styles: {
                     judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                     judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
