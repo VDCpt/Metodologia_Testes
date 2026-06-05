@@ -10,100 +10,110 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
     <!-- ============================================================================
-         ARTEFACTO: network_killswitch.js
-         FINALIDADE: Prevenção de fuga de dados e bloqueio de dependências CDN em ambiente Air-Gapped.
-         ESTRATÉGIA: Intercepção de chamadas globais de rede (Fetch, XHR, WebSocket, EventSource, sendBeacon).
-         INSERIDO NO TOPO PARA GARANTIR ISOLAMENTO ABSOLUTO ANTES DE QUALQUER CARGA EXTERNA.
+         BLOQUEIO SELETIVO DE REDE (SUBSTITUI O KILLSWITCH ORIGINAL)
+         Bloqueia apenas domínios externos não autorizados (ex: APIs externas, timestamps,
+         opentimestamps) mas permite CDNs locais ou offline-first.
          ============================================================================ -->
     <script>
         (function() {
             'use strict';
-            const LOG_PREFIX = "[PERÍCIA-BLOCKER]:";
+            const LOG_PREFIX = "[PERÍCIA-NET-BLOCKER]:";
+            // Padrões de URL que serão bloqueados (não devem ser acedidos em ambiente offline/controlado)
+            const BLOCKED_PATTERNS = [
+                'api.anthropic.com',
+                'freetsa.org',
+                'opentimestamps',
+                'blockchain.info',
+                'blockcypher.com'
+            ];
 
-            // Bloqueio de Fetch API
+            // Bloqueio de Fetch API apenas para padrões restritos
             if (window.fetch) {
                 const originalFetch = window.fetch;
                 window.fetch = function(...args) {
-                    console.warn(LOG_PREFIX + " Tentativa de Fetch bloqueada. URL:", args[0]);
-                    return Promise.reject(new Error("Network Isolation Active: Operation Forbidden (Fetch)"));
+                    const url = args[0];
+                    if (typeof url === 'string' && BLOCKED_PATTERNS.some(p => url.includes(p))) {
+                        console.warn(LOG_PREFIX + " Requisição bloqueada para domínio não autorizado:", url);
+                        return Promise.reject(new Error("Network policy: domínio bloqueado para esta operação"));
+                    }
+                    return originalFetch.apply(this, args);
                 };
             }
 
-            // Bloqueio de XMLHttpRequest
+            // XMLHttpRequest: bloqueio apenas se o URL corresponder aos padrões
             if (window.XMLHttpRequest) {
-                XMLHttpRequest.prototype.open = function() {
-                    console.warn(LOG_PREFIX + " Tentativa de XMLHttpRequest bloqueada.");
-                    throw new Error("Network Isolation Active: Operation Forbidden (XHR)");
-                };
-                XMLHttpRequest.prototype.send = function() {
-                    throw new Error("Network Isolation Active: XHR.send blocked");
+                const originalOpen = XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+                    this._unifedUrl = url;
+                    if (typeof url === 'string' && BLOCKED_PATTERNS.some(p => url.includes(p))) {
+                        console.warn(LOG_PREFIX + " XHR bloqueado para domínio não autorizado:", url);
+                        throw new Error("Network policy: XHR bloqueado para este destino");
+                    }
+                    return originalOpen.call(this, method, url, async !== false, user, password);
                 };
             }
 
-            // Bloqueio de WebSocket
+            // WebSocket: ignorado silenciosamente para padrões bloqueados
             if (window.WebSocket) {
+                const OriginalWebSocket = window.WebSocket;
                 window.WebSocket = function(...args) {
-                    console.error(LOG_PREFIX + " Tentativa de WebSocket bloqueada. URL:", args[0]);
-                    return {
-                        send: function() {},
-                        close: function() {},
-                        addEventListener: function() {}
-                    };
+                    const url = args[0];
+                    if (typeof url === 'string' && BLOCKED_PATTERNS.some(p => url.includes(p))) {
+                        console.warn(LOG_PREFIX + " WebSocket bloqueado:", url);
+                        // Retorna um objeto dummy para evitar erros na aplicação
+                        return {
+                            send: function() {},
+                            close: function() {},
+                            addEventListener: function() {}
+                        };
+                    }
+                    return new OriginalWebSocket(...args);
                 };
             }
 
-            // Bloqueio de EventSource (Server-Sent Events)
+            // EventSource (SSE)
             if (window.EventSource) {
-                window.EventSource = function() {
-                    console.warn(LOG_PREFIX + " Tentativa de EventSource bloqueada.");
-                    throw new Error("Network Isolation Active: EventSource blocked");
+                const OriginalEventSource = window.EventSource;
+                window.EventSource = function(url, ...rest) {
+                    if (typeof url === 'string' && BLOCKED_PATTERNS.some(p => url.includes(p))) {
+                        console.warn(LOG_PREFIX + " EventSource bloqueado:", url);
+                        throw new Error("Network policy: EventSource bloqueado");
+                    }
+                    return new OriginalEventSource(url, ...rest);
                 };
             }
 
-            // Bloqueio de navigator.sendBeacon
+            // sendBeacon
             if (navigator && navigator.sendBeacon) {
-                navigator.sendBeacon = function() {
-                    console.warn(LOG_PREFIX + " Tentativa de sendBeacon bloqueada.");
-                    return false;
+                const originalSendBeacon = navigator.sendBeacon;
+                navigator.sendBeacon = function(url, data) {
+                    if (typeof url === 'string' && BLOCKED_PATTERNS.some(p => url.includes(p))) {
+                        console.warn(LOG_PREFIX + " sendBeacon bloqueado:", url);
+                        return false;
+                    }
+                    return originalSendBeacon.call(this, url, data);
                 };
             }
 
-            // Bloqueio de criação de elementos de rede (link prefetch, etc.)
-            const originalCreateElement = document.createElement;
-            document.createElement = function(tagName) {
-                const element = originalCreateElement.call(document, tagName);
-                if (tagName.toLowerCase() === 'link') {
-                    const originalSetAttribute = element.setAttribute;
-                    element.setAttribute = function(name, value) {
-                        if (name === 'href' || name === 'as' || name === 'rel') {
-                            console.warn(LOG_PREFIX + " Tentativa de definir atributo de link bloqueada:", name, value);
-                            return;
-                        }
-                        return originalSetAttribute.call(this, name, value);
-                    };
-                }
-                return element;
-            };
-
-            console.info(LOG_PREFIX + " ✅ SISTEMA EM MODO AIR-GAPPED ACTIVO. Todas as requisições de rede estão inibidas. (killswitch v1.0)");
+            console.info(LOG_PREFIX + " ✅ Política de rede seletiva ativa (bloqueio apenas para domínios restritos).");
         })();
     </script>
 
     <!-- ────────────────────────────────────────────────────────────────────────────
          BIBLIOTECAS CRIPTOGRÁFICAS COM FALLBACK LOCAL (OFFLINE-FIRST)
          ──────────────────────────────────────────────────────────────────────────── -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="js/vendor/crypto-js.min.js"></script>
     <script>
         (function() {
             if (typeof CryptoJS === 'undefined') {
-                console.warn('[CRYPTO] CDN falhou. A carregar fallback local...');
+                console.warn('[CRYPTO] Falha no carregamento local. Tentando fallback...');
                 var script = document.createElement('script');
                 script.src = 'js/vendor/crypto-js.min.js';
                 script.onload = function() { console.info('[CRYPTO] Fallback local carregado.'); };
                 script.onerror = function() { console.error('[CRYPTO] Falha crítica: CryptoJS indisponível.'); };
                 document.head.appendChild(script);
             } else {
-                console.info('[CRYPTO] CryptoJS carregado da CDN.');
+                console.info('[CRYPTO] CryptoJS carregado (offline-first).');
             }
         })();
     </script>
@@ -137,46 +147,39 @@
         }
     </script>
 
-    <!-- FONTS E ICONES -->
+    <!-- FONTES E ICONES (recursos externos mantidos, não interferem na lógica forense) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- BIBLIOTECAS AUXILIARES -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"
-            onerror="this.onerror=null;this.src='https://unpkg.com/docx@7.8.2/build/index.js'"></script>
+    <!-- BIBLIOTECAS AUXILIARES (VERSÕES LOCAIS) -->
+    <script src="js/vendor/chart.min.js"></script>
+    <script src="js/vendor/papaparse.min.js"></script>
+    <script src="js/vendor/pdf.min.js"></script>
+    <script src="js/vendor/qrcode.min.js"></script>
+    <script src="js/vendor/jspdf.umd.min.js"></script>
+    <script src="js/vendor/pdfmake.min.js"></script>
+    <script src="js/vendor/vfs_fonts.js"></script>
+    <script src="js/vendor/jszip.min.js"></script>
+    <script src="js/vendor/sweetalert2.min.js"></script>
+    <script src="js/vendor/docx.js"></script>
     <script>
+        // Validação da biblioteca docx após carregamento local
         (function() {
-            var _check = function() {
-                if (typeof docx !== 'undefined') {
-                    console.info('[DOCX] ✅ docx.js v7.8.2 carregado com sucesso.');
-                } else {
-                    console.warn('[DOCX] ⚠️ docx.js não detectado. A Petição .docx não poderá ser gerada nesta sessão.');
-                }
-            };
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', _check);
+            if (typeof docx !== 'undefined') {
+                console.info('[DOCX] ✅ docx.js carregado com sucesso (local).');
             } else {
-                _check();
+                console.warn('[DOCX] ⚠️ docx.js não detectado. A Petição .docx não poderá ser gerada nesta sessão.');
             }
         })();
     </script>
 
-    <!-- FOLHAS DE ESTILO -->
+    <!-- FOLHAS DE ESTILO (locais) -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style_additions.css">
 
-    <!-- CSS CRÍTICO DE EMERGÊNCIA – MODAIS DESCONGELADOS -->
+    <!-- CSS CRÍTICO DE EMERGÊNCIA – MODAIS DESCONGELADOS (mantido inalterado) -->
     <style>
         /* Modal overlay base — oculto por omissão, flex quando activo */
         .modal-overlay {
@@ -448,6 +451,38 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                     }
                 };
             }
+        })();
+    </script>
+
+    <!-- ============================================================================
+         VERIFICAÇÃO DE DEPENDÊNCIAS (ANTES DO DOMContentLoaded)
+         Garante que todas as bibliotecas forenses essenciais foram carregadas localmente.
+         ============================================================================ -->
+    <script>
+        (function checkDependencies() {
+            const requiredLibs = [
+                { name: 'CryptoJS', global: 'CryptoJS' },
+                { name: 'pdfMake', global: 'pdfMake' },
+                { name: 'Chart', global: 'Chart' },
+                { name: 'QRCode', global: 'QRCode' },
+                { name: 'JSZip', global: 'JSZip' },
+                { name: 'jspdf', global: 'jspdf' }    // Alguns usam window.jspdf
+            ];
+            const missing = [];
+            for (const lib of requiredLibs) {
+                if (typeof window[lib.global] === 'undefined') {
+                    // Verifica também se existe como propriedade do window com nome alternativo
+                    if (lib.global === 'jspdf' && typeof window.jsPDF !== 'undefined') continue;
+                    missing.push(lib.name);
+                }
+            }
+            if (missing.length) {
+                console.error('[DEPENDENCIAS] ERRO CRÍTICO: Bibliotecas forenses não carregadas:', missing.join(', '));
+                alert('⚠️ ERRO CRÍTICO: O sistema não pode funcionar offline.\nFaltam: ' + missing.join(', ') + 
+                      '\n\nVerifique se os ficheiros foram copiados para a pasta "js/vendor/".');
+                throw new Error('Missing critical dependencies: ' + missing.join(', '));
+            }
+            console.log('[DEPENDENCIAS] ✅ Todas as bibliotecas forenses essenciais foram carregadas (offline-ready).');
         })();
     </script>
 </head>
@@ -1266,7 +1301,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
         window.pdfjsLib = window['pdfjs-dist/build/pdf'];
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                'js/vendor/pdf.worker.min.js';  // worker local
         }
 
         window._activatePurePanel = function() { };

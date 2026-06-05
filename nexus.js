@@ -100,7 +100,11 @@
     }
     // ──────────────────────────────────────────────────────────────────────────
 
-    // Padrões de URLs que serão completamente bloqueados/mockados (sem rede)
+    // ──────────────────────────────────────────────────────────────────────────
+    // RETIFICAÇÃO v1.0-R4: Removido qualquer bloqueio de CDNs.
+    // A lista abaixo contém APENAS domínios de APIs externas.
+    // Recursos de CDN (unpkg, cdnjs, etc.) NÃO são bloqueados.
+    // ──────────────────────────────────────────────────────────────────────────
     var _EXTERNAL_PATTERNS = [
         'api.anthropic.com',
         'api.unifed.com',
@@ -940,7 +944,7 @@ function _injectForecastIntoChart(forecast, historicLen) {
                             '<th style="border:1px solid rgba(14,165,233,0.25);padding:6px 10px;background:rgba(14,165,233,0.15);color:#0EA5E9;text-align:right">' + dict.projOmissionShort + '</th>' +
                             '<th style="border:1px solid rgba(14,165,233,0.25);padding:6px 10px;background:rgba(14,165,233,0.15);color:#F97316;text-align:right">' + dict.projVATShort + '</th>' +
                             '<th style="border:1px solid rgba(14,165,233,0.25);padding:6px 10px;background:rgba(14,165,233,0.15);color:rgba(255,255,255,0.5);text-align:center">' + dict.risk + '</th>' +
-                        '<tr>' +
+                        '</tr>' +
                     '</thead>' +
                     '<tbody>' +
                         forecast.labels.map(function(lbl, i) {

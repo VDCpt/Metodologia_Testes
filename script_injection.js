@@ -926,4 +926,58 @@ if (typeof window.UNIFED_NEXUS_INIT === 'function') {
     console.warn('⚠️ NEXUS_INIT não definido – a funcionalidade NEXUS pode não estar ativa.');
 }
 
-console.log('✅ [UNIFED-INJECTION-RETIFICADO-v1.0] Script de Injeção Forense com Purga Criptográfica Carregado (RET-06: congelamento absoluto + fallback OTS local)');
+// ============================================================================
+// RETIFICAÇÃO CIRÚRGICA: REMOÇÃO DE PLACEHOLDERS DE HASH (sanitizeHashForDemo pass-through)
+// ============================================================================
+/**
+ * sanitizeHashForDemo - Agora é pass-through, nunca modifica o hash real.
+ * @param {string} hashValue - O hash original
+ * @returns {string} - O mesmo hash, sem alterações
+ */
+window.sanitizeHashForDemo = function(hashValue) {
+    return hashValue; // nunca modificar o hash real
+};
+
+// ============================================================================
+// RETIFICAÇÃO CIRÚRGICA: _generateMockTSAResponse COM HASH REAL E SESSION ID
+// ============================================================================
+/**
+ * _generateMockTSAResponse - Gera resposta TSA mock usando o masterHash real e sessionId.
+ * @param {any} requestBody - Corpo da requisição (não utilizado, mantido para compatibilidade)
+ * @returns {Object} - Resposta TSA com messageImprint baseado no hash real
+ */
+window._generateMockTSAResponse = function(requestBody) {
+    var masterHash = (window.UNIFEDSystem && window.UNIFEDSystem.masterHash) || 'UNKNOWN_HASH';
+    var sessionId = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'UNIFED-AIRGAPPED';
+    var serialNumber = Date.now();
+    var genTime = new Date().toISOString();
+    
+    // Usar o masterHash real como messageImprint (primeiros 64 caracteres, se necessário)
+    var messageImprintHex = masterHash.substring(0, 64);
+    
+    return {
+        status: { status: 0, statusString: 'Operation Okay' },
+        timeStampToken: {
+            contentType: '1.2.840.113549.1.9.16.1.4',
+            tstInfo: {
+                version: 1,
+                policy: '1.3.6.1.4.1.47281.1',
+                messageImprint: {
+                    hashAlgorithm: 'SHA-256',
+                    hashedMessage: messageImprintHex
+                },
+                serialNumber: serialNumber,
+                genTime: genTime,
+                tsa: { directoryName: 'CN=UNIFED-AIRGAPPED-TSA,O=UNIFED-PROBATUM,C=PT' },
+                sessionRef: sessionId
+            }
+        },
+        _unifedMeta: {
+            source: 'LOCAL_MOCK_RFC3161',
+            airGapped: true,
+            warningProductionUse: 'RE-SEAL_WITH_ACCREDITED_TSA_FOR_JUDICIAL_SUBMISSION'
+        }
+    };
+};
+
+console.log('✅ [UNIFED-INJECTION-RETIFICADO-v1.0] Script de Injeção Forense com Purga Criptográfica Carregado (RET-06: congelamento absoluto + fallback OTS local + placeholders de hash removidos)');

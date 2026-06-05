@@ -12,6 +12,12 @@
  * - Evidências sem selagem RFC 3161 (demo_statements_4.pdf, demo_dac7_1.pdf) recebem padding de zeros
  * - Rodapé forense com cláusula de salvaguarda legal para artefactos não selados
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R15: PDF DO ANALISTA (layout, cabeçalho, rodapé)
+ * - Margens corrigidas (pageMargins: [40,85,40,65])
+ * - Cabeçalho condicional (oculto na primeira página)
+ * - Rodapé com master hash completo (64 chars) e número de página
+ * - Eliminado qualquer resíduo de doc.text (jsPDF) em construirConteudoDinamicoAnalista
+ * ============================================================================
  */
 
 (function () {
@@ -1373,19 +1379,37 @@
             gerarQRCodeDataURL(m.masterHash, m.session)
         ]);
 
+        // =====================================================================
+        // RETIFICAÇÃO CIRÚRGICA R15: DOCDEFINITION CORRIGIDO (layout, cabeçalho, rodapé)
+        // =====================================================================
         const docDefinition = {
-            pageSize: 'A4',
-            pageMargins: [40, 85, 40, 60],
+            pageOrientation: 'portrait',
+            pageMargins: [40, 85, 40, 65],  // topo aumentado para acomodar header
             header: function(currentPage, pageCount) {
-                var sid = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'DEMO';
+                if (currentPage === 1) {
+                    return null; // sem cabeçalho na primeira página (capa)
+                }
                 return {
-                    columns: [
-                        { text: 'SESSÃO: ' + sid + ' | PARECER TÉCNICO FORENSE', fontSize: 7, color: '#1e3a8a', alignment: 'left', margin: [40, 25, 0, 0] },
-                        { text: 'CONFIDENCIAL | Cadeia de Custódia Forense: Ativa', fontSize: 7, color: '#64748b', alignment: 'right', margin: [0, 25, 40, 0] }
-                    ]
+                    stack: [
+                        { 
+                            text: 'UNIFED-PROBATUM | PARECER TÉCNICO FORENSE', 
+                            style: 'headerTitle', 
+                            alignment: 'center',
+                            margin: [0, 0, 0, 5]
+                        },
+                        { 
+                            canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#00e5ff' }],
+                            margin: [0, 0, 0, 0]
+                        }
+                    ],
+                    margin: [40, 15, 40, 0]
                 };
             },
             footer: function(currentPage, pageCount) {
+                // Obter masterHash completo (sem truncamento)
+                const masterHashFull = (m.masterHash && m.masterHash.length === 64) 
+                    ? m.masterHash 
+                    : (window.UNIFEDSystem?.masterHash || 'INDISPONÍVEL');
                 const pendingIds = getPendingEvidenceIds();
                 const hasPending = pendingIds.length > 0;
                 const lang = window.currentLang || 'pt';
@@ -1397,22 +1421,44 @@
                     : '';
                 return {
                     stack: [
-                        { canvas: [{ type: 'line', x1: 40, y1: 5, x2: 555, y2: 5, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                        { text: 'Master Hash SHA-256: ' + (m.masterHash || 'INDISPONÍVEL') + ' | Página ' + currentPage + ' de ' + pageCount + safeguardText, alignment: 'center', fontSize: 7, margin: [0, 10, 0, 0], color: '#64748b' }
-                    ]
+                        { 
+                            canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }],
+                            margin: [0, 0, 0, 4]
+                        },
+                        { 
+                            text: `Master Hash SHA-256: ${masterHashFull}`, 
+                            style: 'footerText', 
+                            alignment: 'center',
+                            margin: [0, 4, 0, 2]
+                        },
+                        { 
+                            text: `Página ${currentPage} de ${pageCount}${safeguardText}`, 
+                            style: 'footerText', 
+                            alignment: 'center',
+                            margin: [0, 2, 0, 0]
+                        }
+                    ],
+                    margin: [40, 0, 40, 15]
                 };
+            },
+            watermark: { 
+                text: 'PROVA DIGITAL MATERIAL', 
+                color: '#0ea5e9', 
+                opacity: 0.04, 
+                angle: 45,
+                bold: false,
+                italics: true
             },
             content: construirConteudoDinamicoAnalista(m, sankeyImg, atfImg, qrCodeImg),
             defaultStyle: { fontSize: 10.5, color: '#334155' },
-            watermark: { text: 'PROVA DIGITAL MATERIAL', color: '#0ea5e9', opacity: 0.04, bold: false, italics: true, angle: 45, fontSize: 34 },
             styles: {
+                headerTitle: { fontSize: 11, bold: true, color: '#1e3a8a' },
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
                 h1: { fontSize: 11.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#1e3a8a' },
                 h2: { fontSize: 9.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#2c3e66' },
                 normal: { fontSize: 7.5, alignment: 'justify', lineHeight: 1.25, color: '#334155' },
                 code: { fontSize: 7, background: '#f1f5f9', padding: 4, margin: [0, 2, 0, 2] },
-                tableHeader: { fontSize: 8, bold: true, fillColor: '#e2e8f0', color: '#1e3a8a' },
-                footerLine1: { fontSize: 7.5, alignment: 'center', margin: [0, 0, 0, 10], color: '#64748b' },
-                footerLine2: { fontSize: 7.5, alignment: 'center', color: '#94a3b8' }
+                tableHeader: { fontSize: 8, bold: true, fillColor: '#e2e8f0', color: '#1e3a8a' }
             }
         };
 

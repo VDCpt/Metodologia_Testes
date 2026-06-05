@@ -1533,3 +1533,10 @@
 }
 #exportLawyerBtn  { border-color: #10B981 !important; }
 #exportAnalystBtn { border-color: #00E5FF !important; }
+
+/* ========================================================================
+   RETIFICAÇÃO CIRÚRGICA – TAMANHO DE FONTE PARA BOTÕES (ECRÃ)
+   ======================================================================== */
+.pure-btn-led {
+    font-size: 10px !important; /* para ecrã, sem afectar PDF */
+}

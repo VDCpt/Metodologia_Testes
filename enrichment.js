@@ -506,7 +506,7 @@ async function exportDOCX_RETIFICADO(packageType, lang) {
 }
 
 // ============================================================================
-// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA v1.3: HEADER CONDICIONAL)
+// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA v1.3: HEADER CONDICIONAL + MARGENS CORRECTAS)
 // ============================================================================
 
 window.exportPeticaoInicial = function(metricsOverride) {
@@ -597,7 +597,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
         };
         
         // =========================================================================
-        // RETIFICAÇÃO v1.3: docDefinition com HEADER CONDICIONAL
+        // RETIFICAÇÃO v1.3: docDefinition com HEADER CONDICIONAL e MARGENS CORRECTAS
         // =========================================================================
         const docDefinition = {
             info: {
@@ -609,9 +609,10 @@ window.exportPeticaoInicial = function(metricsOverride) {
             pageSize: 'A4',
             pageMargins: [72, 180, 72, 80],
             
+            // HEADER CONDICIONAL: NÃO aparece na primeira página (página 1)
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) {
-                    return null;
+                    return null;   // Sem header na primeira página
                 }
                 return {
                     stack: [
@@ -1015,5 +1016,5 @@ forensicLog('info', 'ENRICHMENT', '🔬 Funcionalidades activas:');
 forensicLog('info', 'ENRICHMENT', '   • formatForensicCurrency (global)        — centralizado');
 forensicLog('info', 'ENRICHMENT', '   • generateLegalNarrative(analysis, lang) — Função 1 (com fallback local)');
 forensicLog('info', 'ENRICHMENT', '   • exportDOCX(packageType, lang)          — Função 2');
-forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.3-PDF: HEADER CONDICIONAL)');
+forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.3-PDF: HEADER CONDICIONAL + MARGENS [72,180,72,80])');
 forensicLog('info', 'ENRICHMENT', '   • getEnrichedData() com deep freeze      — Imutabilidade total');

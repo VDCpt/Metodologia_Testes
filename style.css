@@ -3923,3 +3923,33 @@ body.dual-screen .stat-card p {
 }
 
 /* ══ FIM PATCHES FASE 6 ════════════════════════════════════════════════════ */
+
+/* ========================================================================
+   RETIFICAÇÃO CIRÚRGICA – AJUSTES PARA PDF (OVERFLOW E MARGENS)
+   ======================================================================== */
+@media print {
+    /* Garantir que o conteúdo do PDF não ultrapassa as margens da página */
+    body,
+    .main-container,
+    .analysis-area {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Forçar quebra de palavra nos hashes longos para evitar estouro */
+    .master-hash-value,
+    #masterHashValue,
+    .master-hash span,
+    .full-hash-pdf {
+        word-break: break-all !important;
+        font-size: 8pt !important;
+    }
+
+    /* Evitar quebras de página no interior dos cartões de estatística e KPI */
+    .pure-card,
+    .stat-card,
+    .kpi-card {
+        page-break-inside: avoid;
+    }
+}
