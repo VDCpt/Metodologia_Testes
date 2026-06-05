@@ -50,6 +50,10 @@
  *   cadeia de custódia detalhada, validação de selagem, questionário pericial,
  *   nota de reconciliação DAC7, questões para contraditório e declaração de compromisso.
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R23: CORRECÇÃO DO ESTILO footerText
+ * - Adicionado estilo footerText em _gerarBlobParecerTecnicoForense para evitar erro "Cannot read properties of undefined"
+ * - Substituída secção 33 (Declaração de Compromisso) por versão sanitizada sem texto solto
+ * ============================================================================
  */
 
 (function () {
@@ -142,7 +146,7 @@
             'msg_invalid_hash': '❌ Invalid Master Hash for PDF footer',
             'msg_pdf_footer_valid': '🔏 PDF footer validated with Master Hash',
             'msg_package_instruction': '📁 Delivery Instruction: The generated files must be placed in a local directory, compressed into a password-protected .zip file (e.g., "UNIFED-PROBATUM-{date}") and saved on the delivery Pen Drive, according to the counter-delivery protocol (Art. 125.º CPP / ISO/IEC 27037).',
-            'msg_unsigned_evidence_footer': '⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: {ids}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP and ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.',
+            'msg_unsigned_evidence_footer': '⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: {ids}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.',
         }
     };
 
@@ -1125,7 +1129,7 @@
             content.push({ 
                 text: isPT 
                     ? `A ausência de selagem temporal RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP e ISO/IEC 27037:2012, secção 6.3 (aquisição de prova digital). O selo temporal (timestamp) constitui evidência adicional de integridade, não substituta do hash criptográfico.`
-                    : `The absence of RFC 3161 timestamp for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP and ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.`,
+                    : `The absence of RFC 3161 timestamp for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.`,
                 style: 'normal',
                 margin: [0, 2, 0, 15],
                 color: '#78350f',
@@ -1849,15 +1853,15 @@ Q2 — INCLUSÃO DE FLUXOS NÃO SUJEITOS A COMISSÃO NO DAC7:
 
 Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admissibilidade de Prova) · Art. 103.º/104.º RGIT (Fraude Fiscal/Qualificada) · Art. 36.º, n.º 11 CIVA · Decreto-Lei n.º 28/2019 (SAF-T/DAC7) · Diretiva (UE) 2021/514 (DAC7) · Termos e Condições da Plataforma · ISO/IEC 27037:2012 (prova digital)`, style: 'normal', margin: [0, 0, 0, 15] },
 
-// ========== 33. DECLARAÇÃO DE COMPROMISSO E ASSINATURA ==========
-{ text: "DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
-{ text: "O presente relatório é composto por múltiplas páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:\n\n" + m.masterHash + "\n\nconstituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.", style: 'normal', margin: [0, 0, 0, 10] },
-{ text: "ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP", style: 'h2', margin: [0, 10, 0, 5] },
-{ text: "São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.", style: 'normal', margin: [0, 0, 0, 10] },
-{ text: "SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS", style: 'h2', margin: [0, 10, 0, 5] },
-{ text: "Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.", style: 'normal', margin: [0, 0, 0, 10] },
-{ text: "CONSULTOR TÉCNICO — COMPROMISSO DE HONRA E SALVAGUARDA (ART. 153.º E 155.º CPP)", style: 'h2', margin: [0, 10, 0, 5] },
-{ text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e perícia documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma perícia oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v13.12.2-i18n ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
+                // ========== 33. DECLARAÇÃO DE COMPROMISSO E ASSINATURA ==========
+                { text: "DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
+                { text: "O presente relatório é composto por múltiplas páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:\n\n" + m.masterHash + "\n\nconstituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.", style: 'normal', margin: [0, 0, 0, 10] },
+                { text: "ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP", style: 'h2', margin: [0, 10, 0, 5] },
+                { text: "São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.", style: 'normal', margin: [0, 0, 0, 10] },
+                { text: "SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS", style: 'h2', margin: [0, 10, 0, 5] },
+                { text: "Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.", style: 'normal', margin: [0, 0, 0, 10] },
+                { text: "CONSULTOR TÉCNICO — COMPROMISSO DE HONRA E SALVAGUARDA (ART. 153.º E 155.º CPP)", style: 'h2', margin: [0, 10, 0, 5] },
+                { text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e perícia documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma perícia oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v13.12.2-i18n ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // QR Code final (se disponível)
                 ...(qrCodeImg ? [
@@ -1867,9 +1871,10 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             styles: {
                 headerTitle: { fontSize: 10, bold: true, color: '#1e3a8a' },
                 footerLine: { fontSize: 6, color: '#334155', margin: [0, 0, 0, 2] },
-		footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
-		footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
-		footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' }
+                footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
+                footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
+                footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' },
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },   // <-- CORRECÇÃO R23: estilo adicionado
                 h1: { fontSize: 11, bold: true, alignment: 'center', margin: [0, 12, 0, 6], color: '#1e3a8a' },
                 h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 14, 0, 4], color: '#2c3e66' },
                 normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
@@ -2420,7 +2425,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R22 (PARECER ENRIQUECIDO + FLUXO ANALISTA MASTER + REMOÇÃO LIMITE)
+// Versão: v1.0-R23 (CORRECÇÃO footerText + SECÇÃO 33 SANITIZADA)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2694,5 +2699,5 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R22 instalado com sucesso (Parecer enriquecido + fluxo Analista integral + tabela completa). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R23 instalado com sucesso (Parecer enriquecido + fluxo Analista integral + tabela completa + footerText corrigido + secção 33 sanitizada). Consola 100% higienizada.');
 })();
