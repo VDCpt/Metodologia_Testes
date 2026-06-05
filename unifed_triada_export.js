@@ -1675,60 +1675,68 @@
             },
             content: [
                 // ========== 1. TIMBRE E METADADOS DO PROCESSO ==========
-                // ── BOX PROFISSIONAL: dupla linha azul via canvas rect sobreposto ──
+                // ── BOX PROFISSIONAL: tabela com fillColor + layout de dupla borda ──
                 {
-                    stack: [
-                        // Rect exterior (2.5pt) + rect interior (0.9pt) com offset 4pt — dupla linha real
-                        {
-                            canvas: [
-                                // Rect exterior — borda principal
-                                {
-                                    type: 'rect',
-                                    x: 0, y: 0,
-                                    w: 515, h: 64,
-                                    lineWidth: 2.5,
-                                    lineColor: '#1e3a8a',
-                                    color: '#f0f4ff'
+                    table: {
+                        widths: ['*'],
+                        body: [[
+                            {
+                                // Célula interior: segunda borda via padding + tabela aninhada
+                                table: {
+                                    widths: ['*'],
+                                    body: [[
+                                        {
+                                            stack: [
+                                                {
+                                                    text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL',
+                                                    fontSize: 13,
+                                                    bold: true,
+                                                    color: '#1e3a8a',
+                                                    alignment: 'center',
+                                                    margin: [0, 0, 0, 6]
+                                                },
+                                                {
+                                                    text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)',
+                                                    fontSize: 9,
+                                                    italics: true,
+                                                    color: '#334155',
+                                                    alignment: 'center',
+                                                    margin: [0, 0, 0, 0]
+                                                }
+                                            ],
+                                            fillColor: '#eef2ff',
+                                            border: [true, true, true, true]
+                                        }
+                                    ]]
                                 },
-                                // Rect interior — segunda linha (offset 4pt)
-                                {
-                                    type: 'rect',
-                                    x: 4, y: 4,
-                                    w: 507, h: 56,
-                                    lineWidth: 0.8,
-                                    lineColor: '#1e3a8a'
-                                }
-                            ],
-                            // O canvas ocupa espaço; o texto vem sobreposto via absolutePosition
-                            margin: [0, 0, 0, -64]
-                        },
-                        // Texto centrado sobre o canvas
-                        {
-                            stack: [
-                                {
-                                    text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL',
-                                    fontSize: 13,
-                                    bold: true,
-                                    color: '#1e3a8a',
-                                    alignment: 'center',
-                                    margin: [0, 0, 0, 5]
+                                layout: {
+                                    hLineWidth: function() { return 0.9; },
+                                    vLineWidth: function() { return 0.9; },
+                                    hLineColor: function() { return '#1e3a8a'; },
+                                    vLineColor: function() { return '#1e3a8a'; },
+                                    paddingLeft:   function() { return 12; },
+                                    paddingRight:  function() { return 12; },
+                                    paddingTop:    function() { return 10; },
+                                    paddingBottom: function() { return 10; }
                                 },
-                                {
-                                    text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)',
-                                    fontSize: 9,
-                                    bold: false,
-                                    italics: true,
-                                    color: '#475569',
-                                    alignment: 'center',
-                                    margin: [0, 0, 0, 0]
-                                }
-                            ],
-                            margin: [24, 13, 24, 0]
-                        }
-                    ],
-                    margin: [0, 0, 0, 6]
+                                fillColor: '#eef2ff',
+                                border: [true, true, true, true]
+                            }
+                        ]]
+                    },
+                    layout: {
+                        hLineWidth: function() { return 2.5; },
+                        vLineWidth: function() { return 2.5; },
+                        hLineColor: function() { return '#1e3a8a'; },
+                        vLineColor: function() { return '#1e3a8a'; },
+                        paddingLeft:   function() { return 4; },
+                        paddingRight:  function() { return 4; },
+                        paddingTop:    function() { return 4; },
+                        paddingBottom: function() { return 4; }
+                    },
+                    margin: [0, 0, 0, 5]
                 },
-                // ── Legenda abaixo da box: Cadeia de Custódia (esq) | CONFIDENCIAL (dir) ──
+                // ── Legendas: Cadeia de Custódia (esq) | CONFIDENCIAL (dir) ──
                 {
                     table: {
                         widths: ['*', 'auto'],
@@ -1741,7 +1749,7 @@
                                 border: [false, false, false, false]
                             },
                             {
-                                text: '⚠ CONFIDENCIAL',
+                                text: 'CONFIDENCIAL ⚠',
                                 fontSize: 7.5,
                                 bold: true,
                                 color: '#b91c1c',
