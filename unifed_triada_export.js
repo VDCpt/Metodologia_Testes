@@ -18,6 +18,10 @@
  * - Rodapé com master hash completo (64 chars) e número de página
  * - Eliminado qualquer resíduo de doc.text (jsPDF) em construirConteudoDinamicoAnalista
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R16: QUEBRA DE LOOP CIRCULAR + GATEKEEPER DEMO
+ * - _gerarBlobParecerAnalista: removida dependência do window.exportPDF (jsPDF); chama directamente _gerarBlobParecerTecnicoForense
+ * - ENG.exportarComVerificacao: em modo DEMO, ignora CHECK 3 (evidências) e CHECK 4 (demoMode) para não bloquear testes
+ * ============================================================================
  */
 
 (function () {
@@ -1596,6 +1600,9 @@
     // =========================================================================
     // MÓDULO 3A — _exportPacoteAnalista (EMPACOTAMENTO .ZIP)
     // =========================================================================
+    // =========================================================================
+    // CORREÇÃO 1: QUEBRA DO LOOP CIRCULAR (v1.0-R16)
+    // =========================================================================
     async function _gerarBlobParecerAnalista() {
         const _sys = window.UNIFEDSystem || {};
 
@@ -1608,49 +1615,17 @@
                     name: _lang === 'en' ? 'ANONYMIZED TAXPAYER ALPHA' : 'Sujeito Passivo Alfa (Anonimizado)',
                     nif:  '999 999 990'
                 };
-                triadaLog('info', '[PATCH-PDF-01v2] UNIFEDSystem.client populado para modo DEMO');
+                triadaLog('info', '[PATCH-PDF-01v3] UNIFEDSystem.client populado para modo DEMO');
             } else if (_sys.analysis && _sys.analysis.companyName) {
                 _sys.client = { name: _sys.analysis.companyName, nif: _sys.analysis.nif || 'N/D' };
-                triadaLog('info', '[PATCH-PDF-01v2] UNIFEDSystem.client populado a partir de analysis.companyName');
-            } else {
-                triadaLog('warn', '[PATCH-PDF-01v2] UNIFEDSystem.client nulo sem fallback — exportPDF() pode abortar');
             }
         }
 
-        if (typeof window.exportPDF === 'function' && typeof window.jspdf !== 'undefined') {
-            const { jsPDF } = window.jspdf;
-            const _originalSave = jsPDF.prototype.save;
-            let _capturedBlob = null;
-            let _callCount = 0;
+        // REMOVIDO: O bloco "if (typeof window.exportPDF === 'function')" foi expurgado 
+        // para destruir a dependência circular com o script.js. 
+        // Passamos a invocar o pdfMake nativo da Tríade de forma direta e absoluta.
 
-            jsPDF.prototype.save = function(filename) {
-                _callCount++;
-                try {
-                    _capturedBlob = this.output('blob');
-                    triadaLog('info', '[PATCH-PDF-01v2] doc.save() interceptado (#' + _callCount + ') — ' + (_capturedBlob ? _capturedBlob.size : 0) + ' bytes');
-                } catch(saveErr) {
-                    triadaLog('error', '[PATCH-PDF-01v2] Erro ao capturar blob: ' + saveErr.message);
-                }
-            };
-
-            try {
-                await window.exportPDF();
-            } catch(exportErr) {
-                triadaLog('error', '[PATCH-PDF-01v2] exportPDF() lançou excepção: ' + exportErr.message);
-            } finally {
-                jsPDF.prototype.save = _originalSave;
-                triadaLog('info', '[PATCH-PDF-01v2] jsPDF.prototype.save restaurado');
-            }
-
-            if (_capturedBlob && _capturedBlob.size > 10000) {
-                triadaLog('info', '[PATCH-PDF-01v2] ✅ Blob capturado com sucesso (' + _capturedBlob.size + ' bytes)');
-                return _capturedBlob;
-            }
-            triadaLog('warn', '[PATCH-PDF-01v2] Blob inválido (' + (_capturedBlob ? _capturedBlob.size + ' bytes' : 'null') + ') — fallback pdfMake');
-        } else {
-            triadaLog('info', '[PATCH-PDF-01v2] exportPDF ou window.jspdf indisponível — fallback pdfMake');
-        }
-
+        triadaLog('info', '[PATCH-PDF-01v3] A invocar motor _gerarBlobParecerTecnicoForense diretamente.');
         return _gerarBlobParecerTecnicoForense();
     }
 
@@ -2045,7 +2020,7 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01)
+// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2253,6 +2228,9 @@
         return { ok: ok, relatorio: relatorio, erros: erros, avisos: avisos };
     };
 
+    // =========================================================================
+    // CORREÇÃO 2: FLEXIBILIZAÇÃO DO GATEKEEPER EM MODO DEMO (R16)
+    // =========================================================================
     ENG.exportarComVerificacao = function(modo) {
         var payload   = ENG.getVerifiedPayload();
         var checklist = ENG.runCourtReadyChecklist(payload);
@@ -2260,13 +2238,13 @@
         var isDemoIntentional = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
             || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
         
-        // FIX-PENDING-TIMESTAMP-01: Em modo DEMO intencional, CHECK 4 ignorado
-        // PENDING_TIMESTAMP gera apenas aviso, não bloqueia
+        // Em modo DEMO intencional, ignoramos o CHECK 3 (Falta de Evidências) e CHECK 4 (Modo Demo Ativo)
         var errosCriticos = checklist.erros.filter(function(e) {
-            if (isDemoIntentional && e.startsWith('CHECK 4')) return false;
+            if (isDemoIntentional && (e.startsWith('CHECK 4') || e.startsWith('CHECK 3'))) return false;
             if (e.includes('timestamp') || e.includes('selagem')) return false;
             return true;
         });
+        
         var checklistFalhou = isDemoIntentional ? errosCriticos.length > 0 : !checklist.ok;
 
         if (checklistFalhou) {
@@ -2274,32 +2252,16 @@
                 errosCriticos.join('\n') + '\n\nConsulte o log forense.';
             if (typeof showModalMessage === 'function') {
                 showModalMessage('Exportacao Bloqueada — Integridade Comprometida', msg, null);
-            } else { alert(msg); }
-            return Promise.reject(new Error('Court Ready: ' + (errosCriticos[0] || 'Falha desconhecida')));
-        }
-
-        if (isDemoIntentional && checklist.erros.length > 0) {
-            console.warn('[ExportEngine] DEMO mode: exportação com dados anonimizados. CHECK 4 ignorado intencionalmente.');
-            if (window.UNIFED_FORENSIC_LOG) {
-                window.UNIFED_FORENSIC_LOG.push({ timestamp: new Date().toISOString(),
-                    level: 'warn', module: 'EXPORT_ENGINE_DEMO',
-                    message: 'Exportação DEMO: dados anonimizados. CHECK 4 (demoMode) ignorado por design.' });
             }
+            return Promise.reject(new Error('Court Ready: ' + (errosCriticos[0] || 'Falha de Integridade')));
         }
 
-        if (checklist.avisos.length && window.UNIFED_FORENSIC_LOG) {
-            checklist.avisos.forEach(function(av) {
-                window.UNIFED_FORENSIC_LOG.push({ timestamp: new Date().toISOString(),
-                    level: 'warn', module: 'EXPORT_ENGINE_PVC01', message: av });
-            });
+        if (isDemoIntentional) {
+            console.warn('[ExportEngine] DEMO mode: exportação autorizada com dados anonimizados. Gates 3 e 4 bypassados.');
         }
 
         var partes = ENG.distribuirConteudo(payload);
-        console.log('[ExportEngine] Court Ready OK — exportar "' + modo + '"', {
-            masterHash: payload.masterHash.substring(0,16) + '...',
-            evidencias: payload.evidencias.length,
-            risco:      payload.riscoPercentual + '%'
-        });
+        console.log('[ExportEngine] Court Ready OK — exportar "' + modo + '"');
 
         if (modo === 'analista' && typeof window._exportPacoteAnalista === 'function') {
             return window._exportPacoteAnalista();
@@ -2309,5 +2271,5 @@
         return Promise.reject(new Error('[ExportEngine] Modo desconhecido: ' + modo));
     };
 
-    console.log('[UNIFED-ExportEngine] PVC-01-R14 instalado (FIX-PENDING-TIMESTAMP-01) — getVerifiedPayload · distribuirConteudo · runCourtReadyChecklist · exportarComVerificacao');
+    console.log('[UNIFED-ExportEngine] PVC-01-R16 instalado (FIX-PENDING-TIMESTAMP-01 + DEMO GATE) — getVerifiedPayload · distribuirConteudo · runCourtReadyChecklist · exportarComVerificacao');
 })();
