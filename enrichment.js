@@ -1,8 +1,8 @@
 /**
  * ============================================================================
- * UNIFED - PROBATUM · enrichment.js · v1.1-PDF · RETIFICAÇÃO CIRÚRGICA (HEADER)
+ * UNIFED - PROBATUM · enrichment.js · v1.2-PDF · RETIFICAÇÃO CIRÚRGICA (HEADER FIXO)
  * ============================================================================
- * RETIFICAÇÕES APLICADAS (v1.1-PDF):
+ * RETIFICAÇÕES APLICADAS (v1.2-PDF):
  *   1. Substituída a função exportPeticaoInicial() por uma versão que gera
  *      PDF profissional editável (com pdfMake), mantendo o bloco de prova
  *      forense não‑editável no rodapé e nos metadados do PDF.
@@ -12,9 +12,10 @@
  *      no Word/PDF para adaptação pelo mandatário judicial.
  *   4. Mantidas todas as outras funcionalidades (generateLegalNarrative,
  *      exportDOCX, sistema de logs forenses, etc.).
- *   5. [RETIFICAÇÃO v1.1] Corrigida a sobreposição de cabeçalho vs conteúdo:
- *      - pageMargins aumentado para [72, 110, 72, 80]
- *      - Adicionado header funcional com título e número de página
+ *   5. [RETIFICAÇÃO v1.2] Corrigida a sobreposição de cabeçalho vs conteúdo:
+ *      - pageMargins aumentado para [72, 130, 72, 80]
+ *      - Adicionado header fixo com título e linha de separação
+ *      - Removido título duplicado do content
  *      - Ajustado footer para não colidir
  * ============================================================================
  */
@@ -505,11 +506,11 @@ async function exportDOCX_RETIFICADO(packageType, lang) {
 }
 
 // ============================================================================
-// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA v1.1: HEADER & MARGENS)
+// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA v1.2: HEADER FIXO CONFORME NORMA)
 // ============================================================================
 
 window.exportPeticaoInicial = function(metricsOverride) {
-    forensicLog('info', 'ENRICHMENT', '⚖️ A converter Minuta da Petição Inicial para PDF Profissional Blindado (v1.1-PDF)');
+    forensicLog('info', 'ENRICHMENT', '⚖️ A converter Minuta da Petição Inicial para PDF Profissional Blindado (v1.2-PDF)');
     
     if (metricsOverride && metricsOverride.platform) {
         metricsOverride.platform = 'Plataforma Digital Operacional (Anonimizado)';
@@ -540,7 +541,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
             }
         }
         
-        const lockForensicString = `🔒 PROVA FORENSE (NÃO EDITÁVEL) · UNIFED-PROBATUM v1.1 · Sessão: ${sessionId} · Master Hash SHA-256: ${masterHash}`;
+        const lockForensicString = `🔒 PROVA FORENSE (NÃO EDITÁVEL) · UNIFED-PROBATUM v1.2 · Sessão: ${sessionId} · Master Hash SHA-256: ${masterHash}`;
         
         const totals    = analysis.totals    || {};
         const crossings = analysis.crossings || {};
@@ -596,7 +597,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
         };
         
         // =========================================================================
-        // RETIFICAÇÃO v1.1: docDefinition com HEADER funcional e MARGENS corrigidas
+        // RETIFICAÇÃO v1.2: docDefinition com HEADER FIXO (NORMA ISO/IEC 27037)
         // =========================================================================
         const docDefinition = {
             info: {
@@ -607,33 +608,38 @@ window.exportPeticaoInicial = function(metricsOverride) {
             },
             pageSize: 'A4',
             // [esquerda, superior, direita, inferior]
-            // Margem superior aumentada para 110pt para evitar colisão com o cabeçalho
-            pageMargins: [72, 110, 72, 80],
+            // Margem superior aumentada para 130pt para acomodar o header fixo
+            pageMargins: [72, 130, 72, 80],
             
-            // HEADER FUNCIONAL com título e número de página
-            header: function(currentPage, pageCount, pageSize) {
+            // HEADER FIXO conforme norma ISO/IEC 27037
+            header: function(currentPage, pageCount) {
                 return {
-                    margin: [72, 20, 72, 0],
-                    columns: [
-                        { text: 'EXCELENTÍSSIMO SENHOR JUIZ DE DIREITO', style: 'headerTitle', alignment: 'left' },
-                        { text: 'Pág. ' + currentPage.toString() + ' de ' + pageCount, style: 'headerPage', alignment: 'right' }
+                    stack: [
+                        { 
+                            text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037) | CONFIDENCIAL * Cadeia de Custódia Forense: Ativa', 
+                            style: 'headerSmall', 
+                            alignment: 'center',
+                            margin: [0, 0, 0, 10] 
+                        },
+                        { canvas: [{ type: 'line', x1: 72, y1: 5, x2: 450, y2: 5, lineWidth: 0.5 }] }
                     ],
-                    columnGap: 10
+                    margin: [0, 20, 0, 0]
                 };
             },
             
             // FOOTER com a string forense achatada (não editável)
             footer: function(currentPage, pageCount) {
                 return {
-                    stack: [
-                        { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                        { text: lockForensicString, style: 'forensicSeal', margin: [0, 4, 0, 0] }
-                    ],
-                    margin: [40, 0, 40, 10]
+                    text: lockForensicString,
+                    style: 'footerSmall',
+                    alignment: 'center',
+                    margin: [0, 10, 0, 0]
                 };
             },
             
             content: [
+                // NOTA: O título "ESTRUTURA DE PARECER..." foi REMOVIDO daqui
+                // e movido para o header fixo. O corpo do parecer começa diretamente.
                 { text: 'MINUTA DE PETIÇÃO INICIAL\n(Modelo Profissional Editável em Gabinete)', style: 'titleHeader', margin: [0, 20, 0, 30] },
                 
                 { text: 'I. IDENTIFICAÇÃO DAS PARTES', style: 'sectionHeader', margin: [0, 16, 0, 8] },
@@ -660,16 +666,15 @@ window.exportPeticaoInicial = function(metricsOverride) {
             ],
             
             styles: {
-                headerTitle: { fontSize: 9, bold: true, alignment: 'left', color: '#1e3a8a' },
-                headerPage: { fontSize: 9, alignment: 'right', color: '#475569' },
+                headerSmall: { fontSize: 8, bold: true, alignment: 'center', color: '#1e3a8a' },
+                footerSmall: { fontSize: 7, bold: true, alignment: 'center', color: '#0f172a', background: '#f1f5f9' },
                 judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                 judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
                 titleHeader: { fontSize: 14, bold: true, alignment: 'center', color: '#0ea5e9', lineHeight: 1.5 },
                 sectionHeader: { fontSize: 12, bold: true, alignment: 'left', lineHeight: 1.5, color: '#1e3a8a' },
                 bodyText: { fontSize: 11, alignment: 'justify', lineHeight: 1.5, firstLineIndent: 40 },
                 signatureLine: { fontSize: 10, alignment: 'center', lineHeight: 1.5 },
-                signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true },
-                forensicSeal: { fontSize: 7, bold: true, alignment: 'center', color: '#0f172a', background: '#f1f5f9' }
+                signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true }
             },
             defaultStyle: {
                 font: 'Roboto'
@@ -695,13 +700,13 @@ window.exportPeticaoInicial = function(metricsOverride) {
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                         
-                        forensicLog('info', 'ENRICHMENT', '✅ PDF profissional blindado exportado com sucesso (v1.1)', { fileName: fileName, session: sessionId });
+                        forensicLog('info', 'ENRICHMENT', '✅ PDF profissional blindado exportado com sucesso (v1.2)', { fileName: fileName, session: sessionId });
                         
                         if (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody) {
                             window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.addEntry(
                                 'PETICAO_INICIAL_PDF_EXPORTED',
                                 { fileName: fileName, session: sessionId, masterHash: masterHash.substring(0, 16) },
-                                { format: 'application/pdf', version: 'v1.1-PDF-blindado' }
+                                { format: 'application/pdf', version: 'v1.2-PDF-blindado' }
                             ).catch(e => forensicLog('warn', 'ENRICHMENT', 'Erro ao adicionar entry na chainOfCustody', e));
                         }
                         
@@ -1003,10 +1008,10 @@ ABSOLUTE RULES:
     10. Conclua sempre com a declaração de independência nos termos da ISRS 4400 e Art. 153.º CPP.`;
 };
 
-forensicLog('info', 'ENRICHMENT', '✅ Módulo carregado com sucesso — v1.1-PDF (Petição Inicial em PDF blindado com HEADER corrigido)');
+forensicLog('info', 'ENRICHMENT', '✅ Módulo carregado com sucesso — v1.2-PDF (Petição Inicial em PDF blindado com HEADER FIXO)');
 forensicLog('info', 'ENRICHMENT', '🔬 Funcionalidades activas:');
 forensicLog('info', 'ENRICHMENT', '   • formatForensicCurrency (global)        — centralizado');
 forensicLog('info', 'ENRICHMENT', '   • generateLegalNarrative(analysis, lang) — Função 1 (com fallback local)');
 forensicLog('info', 'ENRICHMENT', '   • exportDOCX(packageType, lang)          — Função 2');
-forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.1-PDF: HEADER + MARGENS)');
+forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.2-PDF: HEADER FIXO)');
 forensicLog('info', 'ENRICHMENT', '   • getEnrichedData() com deep freeze      — Imutabilidade total');
