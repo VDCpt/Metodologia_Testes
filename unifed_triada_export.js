@@ -1589,7 +1589,7 @@
         // docDefinition completo com todas as secções do segundo ficheiro
         // =========================================================================
         const docDefinition = {
-            pageMargins: [40, 85, 40, 65],
+            pageMargins: [40, 85, 40, 80],
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) return null;
                 return {
@@ -1603,17 +1603,74 @@
                 const hasPending = pendingIds.length > 0;
                 const lang = window.currentLang || 'pt';
                 const isPT = lang === 'pt';
-                const safeguardText = hasPending 
-                    ? (isPT 
-                        ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
-                        : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+                const safeguardText = hasPending
+                    ? (isPT
+                        ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+                        : `⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
                     : '';
                 return {
-                    columns: [
-                        { text: `Master Hash SHA-256: ${m.masterHash || 'INDISPONÍVEL'}`, style: 'footerText', width: 'auto' },
-                        { text: `Página ${currentPage} de ${pageCount}${safeguardText}`, style: 'footerText', alignment: 'right' }
+                    stack: [
+                        // ── Linha separadora ──
+                        {
+                            canvas: [{
+                                type: 'line',
+                                x1: 0, y1: 0, x2: 515, y2: 0,
+                                lineWidth: 0.5,
+                                lineColor: '#1e3a8a'
+                            }],
+                            margin: [0, 0, 0, 3]
+                        },
+                        // ── Linha 1: título (esq) | processo (dir) ──
+                        {
+                            table: {
+                                widths: ['*', 'auto'],
+                                body: [[
+                                    {
+                                        text: 'UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)',
+                                        style: 'footerLeft',
+                                        border: [false, false, false, false]
+                                    },
+                                    {
+                                        text: `PROCESSO N.: ${m.session || 'UNIFED-SESSAO'}`,
+                                        style: 'footerRight',
+                                        alignment: 'right',
+                                        border: [false, false, false, false]
+                                    }
+                                ]]
+                            },
+                            layout: 'noBorders',
+                            margin: [0, 0, 0, 1]
+                        },
+                        // ── Linha 2: master hash (esq) | página (dir) ──
+                        {
+                            table: {
+                                widths: ['*', 'auto'],
+                                body: [[
+                                    {
+                                        text: `Master Hash SHA-256: ${(m.masterHash || 'INDISPONÍVEL').toUpperCase()}`,
+                                        style: 'footerLeft',
+                                        border: [false, false, false, false]
+                                    },
+                                    {
+                                        text: `Página ${currentPage} de ${pageCount}`,
+                                        style: 'footerRight',
+                                        alignment: 'right',
+                                        border: [false, false, false, false]
+                                    }
+                                ]]
+                            },
+                            layout: 'noBorders',
+                            margin: [0, 0, 0, 0]
+                        },
+                        // ── Aviso RFC 3161 (condicional) ──
+                        ...(hasPending ? [{
+                            text: safeguardText,
+                            style: 'footerWarning',
+                            alignment: 'center',
+                            margin: [0, 4, 0, 0]
+                        }] : [])
                     ],
-                    margin: [40, 0, 40, 20]
+                    margin: [40, 0, 40, 8]
                 };
             },
             content: [
