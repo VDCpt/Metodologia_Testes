@@ -24,20 +24,21 @@
  * ============================================================================
  * RETIFICAÇÃO CIRÚRGICA v1.0-R17: SANITIZAÇÃO DE LOGS INTERNOS EM MODO DEMO
  * - Monkey patch em ENG.runCourtReadyChecklist para suprimir console.error falsos quando modo DEMO ativo
- * - A consola forense permanece 100% higienizada sem alarmes enganosos durante testes
  * ============================================================================
  * RETIFICAÇÃO CIRÚRGICA v1.0-R18: SUBSTITUIÇÃO DO BLOCO DO PDF DO ANALISTA (MOD. 03-B)
  * - construirConteudoDinamicoAnalista: versão enriquecida com nota metodológica, grelhas, veredito reforçado
- * - Estilos actualizados em _gerarBlobParecerTecnicoForense (tableHeader, tableMain, tableMeta, code, etc.)
  * ============================================================================
  * RETIFICAÇÃO CIRÚRGICA v1.0-R19: REMOÇÃO DE 'font: Courier' DO ESTILO code
- * - Corrigido objeto styles em _gerarBlobParecerTecnicoForense para evitar quebra no mapeamento de fontes do pdfMake
+ * - Corrigido objeto styles em _gerarBlobParecerTecnicoForense
  * ============================================================================
  * RETIFICAÇÃO CIRÚRGICA v1.0-R20: RESTAURAÇÃO DAS DIVISÕES ESTRUTURAIS MOD. 03-B
  * - Substituído docDefinition em _gerarBlobParecerTecnicoForense pelo modelo canónico completo
- * - Inclui Nota Metodológica Fleet Extract, Métricas de Materialidade, Enquadramento RGIT, Declaração Art. 153.º CPP
  * - Dados dinâmicos (m) e imagens (Sankey, ATF, QR) preservados
- * - Rodapé com salvaguarda para evidências sem timestamp
+ * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R21: CORRECÇÃO DO FLUXO DE EXPORTAÇÃO (MASTER INTEGRAL)
+ * - Isolada fragmentação de dados (distribuirConteudo) apenas para o fluxo do Advogado
+ * - Removido limite de registos na tabela do Analista (agora lista TODAS as transacções)
+ * - Adicionado dontBreakRows: true na tabela para quebra de página automática
  * ============================================================================
  */
 
@@ -745,7 +746,6 @@
                       tipo === 'parecer' ? (isPT ? 'Parecer Técnico Forense' : 'Forensic Technical Opinion') :
                       (isPT ? 'Anexo de Custódia' : 'Custody Annex');
         
-        // Cláusula de salvaguarda legal para evidências sem selagem temporal
         const safeguardNote = (pendingEvidenceIds && pendingEvidenceIds.length > 0) 
             ? `<div style="margin-top: 30px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; font-size: 10px;">
                    <strong>⚠️ NOTA DE SALVAGUARDA FORENSE:</strong><br>
@@ -840,18 +840,16 @@
 
     // =========================================================================
     // CONSTRUÇÃO RESTRUTURADA DO CONTEÚDO DO PDF DO ANALISTA (MOD. 03-B COMPLETO)
+    // Nota: esta função já não é utilizada pelo novo docDefinition de R20, mas mantida por compatibilidade
     // =========================================================================
-    // Esta função já não é utilizada pelo novo docDefinition, mas mantida para compatibilidade
     function construirConteudoDinamicoAnalista(m, sankeyImage, atfImage, qrCodeDataUrl) {
         const lang = window.currentLang || 'pt';
         const isPT = lang === 'pt';
         const content = [];
         
-        // ── Bloco 1: Cabeçalho Corporativo de Alta Fidelidade (Capa Mod. 03-B)
         content.push({ text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL', style: 'headerTitle', alignment: 'center', margin: [0, 0, 0, 4] });
         content.push({ text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)', style: 'normal', alignment: 'center', bold: true, color: '#64748b', margin: [0, 0, 0, 15] });
         
-        // Grelha de Identificação Processual
         content.push({
             style: 'tableMeta',
             table: {
@@ -865,7 +863,6 @@
             margin: [0, 0, 0, 15]
         });
 
-        // Alerta de Status Forense
         content.push({
             canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 22, r: 4, color: '#f8fafc', strokeColor: '#ef4444', lineWidth: 1 }],
             margin: [0, 0, 0, -22]
@@ -877,7 +874,6 @@
             margin: [0, 6, 0, 15]
         });
 
-        // ── Bloco 2: Nota Metodológica Forense Obrigatória (Data Proxy)
         content.push({ text: isPT ? '1. NOTA METODOLÓGICA FORENSE - MÉTODO DATA PROXY: FLEET EXTRACT' : '1. FORENSIC METHODOLOGY NOTE - DATA PROXY: FLEET EXTRACT', style: 'h1', margin: [0, 10, 0, 5] });
         content.push({ 
             text: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro \'Ganhos da Empresa\' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).', 
@@ -885,7 +881,6 @@
             margin: [0, 2, 0, 12] 
         });
 
-        // ── Bloco 3: Metadados da Análise
         content.push({ text: isPT ? '2. METADADOS E ALVO DA PERÍCIA' : '2. METADATA AND PERITIA TARGET', style: 'h1', margin: [0, 8, 0, 5] });
         
         const metaGrid = {
@@ -901,7 +896,6 @@
         content.push(metaGrid);
         content.push({ text: '', margin: [0, 10] });
 
-        // ── Bloco 4: Visualizações e Gráficos de Prova
         if (sankeyImage) {
             content.push({ text: isPT ? '3. ANÁLISE TRIDIMENSIONAL DE FLUXO FINANCEIRO (SANKEY)' : '3. THREE-DIMENSIONAL FINANCIAL FLOW ANALYSIS (SANKEY)', style: 'h1', margin: [0, 10, 0, 5] });
             content.push({ image: sankeyImage, width: 460, alignment: 'center', margin: [0, 5, 0, 12] });
@@ -912,7 +906,6 @@
             content.push({ image: atfImage, width: 460, alignment: 'center', margin: [0, 5, 0, 12] });
         }
         
-        // ── Bloco 5: Grelha de Métricas Principais de Desvio Criptográfico
         content.push({ text: isPT ? '5. DETERMINAÇÃO DA MATERIALIDADE E MÉTRICAS ACUMULADAS' : '5. DETERMINATION OF MATERIALITY AND ACCUMULATED METRICS', style: 'h1', margin: [0, 10, 0, 5] });
         
         const metricsTable = {
@@ -938,7 +931,6 @@
         };
         content.push(metricsTable);
         
-        // ── Bloco 6: Veredito Forense e Questões Adversariais
         content.push({ text: isPT ? '6. VEREDITO PERICIAL' : '6. FORENSIC VERDICT', style: 'h1', margin: [0, 10, 0, 5] });
         content.push({ text: m.verdict, style: 'normal', margin: [0, 2, 0, 12], bold: true, color: '#1e3a8a' });
         
@@ -949,7 +941,6 @@
             });
         }
         
-        // ── Bloco 7: Cadeia de Custódia Forense e Árvore de Merkle
         content.push({ text: isPT ? '8. INTEGRIDADE CRIPTOGRÁFICA DA PROVA (ISO 27037 / eIDAS 2.0)' : '8. EVIDENCE CRYPTOGRAPHIC INTEGRITY', style: 'h1', margin: [0, 12, 0, 5] });
         content.push({ text: `MASTER BATCH HASH (SHA-256): ${m.masterHash}`, style: 'code', margin: [0, 2, 0, 2] });
         content.push({ text: `RAIZ DA ÁRVORE DE MERKLE (EVIDÊNCIAS): ${m.merkleRoot}`, style: 'code', margin: [0, 2, 0, 8] });
@@ -959,7 +950,6 @@
             content.push({ text: isPT ? 'Assinatura Digital QR - Verificação de Integridade Local Coincidente' : 'QR Digital Signature - Coincident Local Integrity Verification', style: 'normal', alignment: 'center', fontSize: 7, color: '#64748b', margin: [0, 0, 0, 15] });
         }
 
-        // Tabela de Transações Estruturadas
         if (m.transactionRows && m.transactionRows.length > 0) {
             content.push({ text: isPT ? '9. EXTRATO DE REGISTOS PROCESSADOS (AMOSTRA DE SUPORTE)' : '9. SAMPLE OF PROCESSED RECORDS', style: 'h1', margin: [0, 10, 0, 5] });
             const transTable = {
@@ -971,6 +961,7 @@
                     ]
                 }
             };
+            // Nota: aqui ainda há slice(0,8) – mas esta função já não é chamada no novo docDefinition
             m.transactionRows.slice(0, 8).forEach(row => {
                 transTable.table.body.push([
                     row.id || 'N/A',
@@ -986,7 +977,6 @@
             }
         }
         
-        // ── Bloco 8: Declaração de Compromisso Profissional (Fim do Mod. 03-B)
         content.push({ text: isPT ? '10. DECLARAÇÃO DE COMPROMISSO DO CONSULTOR TÉCNICO INDEPENDENTE' : '10. EXPERT OPINION STATEMENT', style: 'h1', margin: [0, 12, 0, 5] });
         content.push({ 
             text: 'Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.', 
@@ -1404,7 +1394,7 @@
     // =========================================================================
     // FUNÇÕES AUXILIARES DE GERAÇÃO DE BLOBS PARA PDF (com gates integrados)
     // =========================================================================
-    async function _gerarBlobParecerTecnicoForense() {
+    async function _gerarBlobParecerTecnicoForense(fullPayload) {
         triadaLog('info', '📄 Gerando blob do Parecer Técnico Forense (Analista) com gates');
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
@@ -1442,8 +1432,16 @@
         ]);
 
         // =========================================================================
-        // RETIFICAÇÃO CIRÚRGICA v1.0-R20: RESTAURAÇÃO DAS DIVISÕES ESTRUTURAIS MOD. 03-B
-        // Novo docDefinition completo, com secções canónicas e dados dinâmicos
+        // RETIFICAÇÃO R21: USAR fullPayload (se fornecido) para obter transacções completas
+        // =========================================================================
+        let transactionRowsToUse = m.transactionRows;
+        if (fullPayload && fullPayload.transactionRows && Array.isArray(fullPayload.transactionRows)) {
+            transactionRowsToUse = fullPayload.transactionRows;
+            triadaLog('info', '[R21] Utilizando transactionRows do payload integral (' + transactionRowsToUse.length + ' registos)');
+        }
+
+        // =========================================================================
+        // docDefinition completo com a tabela de registos sem limite e com dontBreakRows
         // =========================================================================
         const docDefinition = {
             pageMargins: [40, 85, 40, 65],
@@ -1574,11 +1572,34 @@
                     { text: "Assinatura Digital QR - Verificação de Integridade Local Coincidente", style: 'normal', alignment: 'center', fontSize: 7, color: '#64748b', margin: [0, 0, 0, 15] }
                 ] : []),
 
-                // ── SECÇÃO 9: DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP) ──
-                { text: "9. DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
+                // ── SECÇÃO 9: EXTRATO DE REGISTOS PROCESSADOS (COMPLETO, SEM LIMITE) ──
+                { text: "9. EXTRATO DE REGISTOS PROCESSADOS (LISTAGEM INTEGRAL)", style: 'h2' },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['15%', '20%', '35%', '15%', '15%'],
+                        // CORRECÇÃO R21: dontBreakRows para evitar cortes entre páginas
+                        dontBreakRows: true,
+                        body: [
+                            [{ text: "ID", style: 'tableHeader' }, { text: "Período", style: 'tableHeader' }, { text: "Natureza do Artefacto", style: 'tableHeader' }, { text: "BTOR (€)", style: 'tableHeader' }, { text: "BTF (€)", style: 'tableHeader' }],
+                            // Usar TODOS os registos sem nenhum slice
+                            ...(transactionRowsToUse.map(row => [
+                                row.id || 'N/A',
+                                row.date || 'N/A',
+                                (row.type || row.operator || 'N/A').substring(0, 30),
+                                formatForensicCurrency(row.btor || 0),
+                                formatForensicCurrency(row.btf || 0)
+                            ]))
+                        ]
+                    },
+                    margin: [0, 0, 0, 15]
+                },
+
+                // ── SECÇÃO 10: DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP) ──
+                { text: "10. DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
                 { text: "Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (baseada na norma internacional ISRS 4400 e nas boas práticas de Digital Forensics) é totalmente reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados estruturados fornecido.", style: 'normal', italics: true, margin: [0, 0, 0, 25] },
 
-                // ── SECÇÃO 10: VALIDAÇÃO E ASSINATURA ──────────────────────────────
+                // ── SECÇÃO 11: VALIDAÇÃO E ASSINATURA ──────────────────────────────
                 {
                     columns: [
                         { text: "", width: '*' },
@@ -1747,7 +1768,7 @@
     // =========================================================================
     // MÓDULO 3A — _exportPacoteAnalista (EMPACOTAMENTO .ZIP)
     // =========================================================================
-    async function _gerarBlobParecerAnalista() {
+    async function _gerarBlobParecerAnalista(fullPayload) {
         const _sys = window.UNIFEDSystem || {};
 
         if (!_sys.client) {
@@ -1766,14 +1787,15 @@
         }
 
         triadaLog('info', '[PATCH-PDF-01v3] A invocar motor _gerarBlobParecerTecnicoForense diretamente.');
-        return _gerarBlobParecerTecnicoForense();
+        return _gerarBlobParecerTecnicoForense(fullPayload);
     }
 
-    window._exportPacoteAnalista = async function () {
+    window._exportPacoteAnalista = async function (fullPayload) {
         triadaLog('info', '🚀 _exportPacoteAnalista — iniciando compilação do arquivo .ZIP para o Analista');
         try {
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || "DEMO";
-            const parecerBlob = await _gerarBlobParecerAnalista();
+            // Passa o payload integral (se fornecido) para o gerador do PDF
+            const parecerBlob = await _gerarBlobParecerAnalista(fullPayload);
             const jsonBlob = new Blob([JSON.stringify(buildMaximalJsonPayload(), null, 2)], { type: 'application/json' });
             if (typeof JSZip !== 'undefined') {
                 const zip = new JSZip();
@@ -1844,7 +1866,7 @@
 
             triadaLog('info', '[FIX-TRIADA-01] A gerar 3 documentos em paralelo...');
             const [parecerBlob, custodiaBlob, peticaoBlob] = await Promise.all([
-                _gerarBlobParecerAnalista(),
+                _gerarBlobParecerAnalista(_unifiedPayload),  // passa o payload integral
                 _gerarBlobAnexoCustodia(),
                 _gerarPeticaoBlob()
             ]);
@@ -2146,7 +2168,7 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B) + R19 (CODE FONT FIX) + R20 (ESTRUTURA MOD.03-B)
+// Versão: v1.0-R21 (CORRECÇÃO FLUXO ANALISTA MASTER + REMOÇÃO LIMITE + dontBreakRows)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2222,7 +2244,9 @@
             evidencias:         rawEvids,
             conclusaoJuridica:  conclusaoJuridica,
             isVerified:         true,
-            geradoEm:           new Date().toISOString()
+            geradoEm:           new Date().toISOString(),
+            // Adicionar transacções completas para uso no fluxo do Analista
+            transactionRows:    (window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.transactionRows) || []
         });
     };
 
@@ -2348,6 +2372,9 @@
         return { ok: ok, relatorio: relatorio, erros: erros, avisos: avisos };
     };
 
+    // =========================================================================
+    // CORRECÇÃO R21: Isolar fragmentação de dados apenas no fluxo do Advogado
+    // =========================================================================
     ENG.exportarComVerificacao = function(modo) {
         var payload   = ENG.getVerifiedPayload();
         var checklist = ENG.runCourtReadyChecklist(payload);
@@ -2376,12 +2403,14 @@
             console.warn('[ExportEngine] DEMO mode: exportação autorizada com dados anonimizados. Gates 3 e 4 bypassados.');
         }
 
-        var partes = ENG.distribuirConteudo(payload);
-        console.log('[ExportEngine] Court Ready OK — exportar "' + modo + '"');
-
+        // CORRECÇÃO R21: fluxo do analista recebe payload integral; advogado recebe fragmentado
         if (modo === 'analista' && typeof window._exportPacoteAnalista === 'function') {
-            return window._exportPacoteAnalista();
+            // Passa o payload integral (que inclui todas as transacções)
+            return window._exportPacoteAnalista(payload);
         } else if (modo === 'advogado' && typeof window._exportPacoteAdvogado === 'function') {
+            var partesAdvogado = ENG.distribuirConteudo(payload);
+            // O advogado recebe os fragmentos (parecer, anexo, peticao) mas ainda precisa do payload original para algumas partes
+            // A função _exportPacoteAdvogado usará o window.UNIFED_ACTIVE_EXPORT_PAYLOAD definido dentro dela
             return window._exportPacoteAdvogado();
         }
         return Promise.reject(new Error('[ExportEngine] Modo desconhecido: ' + modo));
@@ -2414,5 +2443,5 @@
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R20 instalado com sucesso (estrutura Mod. 03-B restaurada + dados dinâmicos + imagens). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R21 instalado com sucesso (fluxo Analista integral + tabela completa + dontBreakRows). Consola 100% higienizada.');
 })();
