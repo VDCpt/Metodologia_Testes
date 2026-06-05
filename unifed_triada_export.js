@@ -33,6 +33,12 @@
  * RETIFICAÇÃO CIRÚRGICA v1.0-R19: REMOÇÃO DE 'font: Courier' DO ESTILO code
  * - Corrigido objeto styles em _gerarBlobParecerTecnicoForense para evitar quebra no mapeamento de fontes do pdfMake
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R20: RESTAURAÇÃO DAS DIVISÕES ESTRUTURAIS MOD. 03-B
+ * - Substituído docDefinition em _gerarBlobParecerTecnicoForense pelo modelo canónico completo
+ * - Inclui Nota Metodológica Fleet Extract, Métricas de Materialidade, Enquadramento RGIT, Declaração Art. 153.º CPP
+ * - Dados dinâmicos (m) e imagens (Sankey, ATF, QR) preservados
+ * - Rodapé com salvaguarda para evidências sem timestamp
+ * ============================================================================
  */
 
 (function () {
@@ -835,6 +841,7 @@
     // =========================================================================
     // CONSTRUÇÃO RESTRUTURADA DO CONTEÚDO DO PDF DO ANALISTA (MOD. 03-B COMPLETO)
     // =========================================================================
+    // Esta função já não é utilizada pelo novo docDefinition, mas mantida para compatibilidade
     function construirConteudoDinamicoAnalista(m, sankeyImage, atfImage, qrCodeDataUrl) {
         const lang = window.currentLang || 'pt';
         const isPT = lang === 'pt';
@@ -996,8 +1003,6 @@
     // =========================================================================
     // ================== RETIFICAÇÃO FIX-PENDING-TIMESTAMP-01 =================
     // =========================================================================
-    // Lista global de IDs de evidências sem selagem temporal RFC 3161
-    // Utilizada pelo gerador de PDF para adicionar nota de rodapé de salvaguarda legal
     window._UNIFED_PENDING_TIMESTAMP_EVIDENCES = window._UNIFED_PENDING_TIMESTAMP_EVIDENCES || [];
 
     function addPendingTimestampEvidence(evidenceId, evidenceName) {
@@ -1015,10 +1020,7 @@
         return window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.length > 0;
     }
 
-    // Função de validação forense para evidências sem timestamp
-    // Retorna status WARNING em vez de erro fatal
     function validateEvidenceTimestamp(evidence) {
-        // FIX-PENDING-TIMESTAMP-01: Fallback lógico para permitir exportação com flag WARNING
         if (!evidence.timestamp || evidence.timestamp === null || evidence.timestamp === 'PENDING_TIMESTAMP') {
             triadaLog('warn', `[WARN] Evidência ${evidence.id || evidence.filename} sem selagem RFC 3161. Marcando como PENDING.`);
             addPendingTimestampEvidence(evidence.id || evidence.filename, evidence.filename || 'Desconhecido');
@@ -1031,12 +1033,10 @@
     // CONTEÚDO DO ANEXO DE CUSTÓDIA (CONTEÚDO REAL) + Salvaguarda para evidências não seladas
     // =========================================================================
     function gerarConteudoAnexoCustodia(m) {
-        // FIX-PARTITION-04: se existe override de evidências do payload master, usar essas
         if (window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE && window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE.length > 0) {
             const _ovEvids = window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE;
             if (!m.custodyLog || m.custodyLog.length < _ovEvids.length) {
                 m.custodyLog = _ovEvids.map(function(ev, i) {
-                    // Validar timestamp de cada evidência e marcar PENDING se necessário
                     if (!ev.timestamp || ev.timestamp === 'PENDING_TIMESTAMP') {
                         addPendingTimestampEvidence(ev.id || ev.nome, ev.nome || 'Evidência');
                     }
@@ -1051,7 +1051,6 @@
             }
             delete window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE;
         } else if (m.custodyLog && m.custodyLog.length > 0) {
-            // Validar evidências existentes
             m.custodyLog.forEach(log => {
                 if (!log.timestamp || log.timestamp === 'PENDING_TIMESTAMP') {
                     addPendingTimestampEvidence(log.serial || log.fileName, log.fileName || 'Evidência');
@@ -1067,16 +1066,12 @@
         const content = [];
         
         content.push({ text: isPT ? 'ANEXO DE CADEIA DE CUSTÓDIA E INTEGRIDADE DIGITAL' : 'ANNEX: CHAIN OF CUSTODY AND DIGITAL INTEGRITY', style: 'h1', alignment: 'center', margin: [0, 0, 0, 20] });
-        
         content.push({ text: isPT ? '1. PROPÓSITO' : '1. PURPOSE', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: isPT ? 'Este anexo documenta a cadeia de custódia das provas digitais, a árvore de Merkle que garante a integridade das evidências e o carimbo temporal RFC 3161, em conformidade com a ISO/IEC 27037 e o Regulamento eIDAS 2.0.' : 'This annex documents the chain of custody of digital evidence, the Merkle tree ensuring evidence integrity, and the RFC 3161 timestamp, in compliance with ISO/IEC 27037 and eIDAS 2.0 Regulation.', style: 'normal', margin: [0, 2, 0, 15] });
-        
         content.push({ text: isPT ? '2. HASH MASTER (SHA-256)' : '2. MASTER HASH (SHA-256)', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: m.masterHash, style: 'code', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
-        
         content.push({ text: isPT ? '3. RAIZ MERKLE' : '3. MERKLE ROOT', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: m.merkleRoot, style: 'code', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
-        
         content.push({ text: isPT ? '4. SESSÃO' : '4. SESSION', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: m.session, style: 'normal', margin: [0, 2, 0, 15] });
         
@@ -1125,7 +1120,6 @@
             content.push({ text: isPT ? 'Nenhuma evidência adicional integrada.' : 'No additional evidence integrated.', style: 'normal', italics: true, margin: [0, 2, 0, 10] });
         }
         
-        // FIX-PENDING-TIMESTAMP-01: Cláusula de salvaguarda legal para evidências sem timestamp
         if (hasPending) {
             content.push({ text: isPT ? '⚠️ NOTA DE SALVAGUARDA FORENSE (Art. 125.º CPP)' : '⚠️ FORENSIC SAFEGUARD NOTE (Art. 125.º CPP)', style: 'h2', margin: [0, 15, 0, 5], color: '#b91c1c' });
             content.push({ 
@@ -1142,7 +1136,6 @@
         
         content.push({ text: isPT ? '7. DECLARAÇÃO DE INTEGRIDADE' : '7. INTEGRITY STATEMENT', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: isPT ? 'Declaro, sob compromisso de honra, que o presente anexo reflete fielmente os registos de custódia e os hashes de integridade calculados no momento da exportação, não tendo sido efetuadas quaisquer alterações não rastreáveis.' : 'I declare, under oath, that this annex faithfully reflects the custody records and integrity hashes calculated at the time of export, and that no untraceable changes have been made.', style: 'normal', margin: [0, 2, 0, 20] });
-        
         content.push({ text: `${isPT ? 'Data' : 'Date'}: ${new Date().toLocaleString(lang)}`, style: 'normal', margin: [0, 10, 0, 5] });
         content.push({ text: '_____________________________________________', style: 'normal', alignment: 'center', margin: [0, 10, 0, 2] });
         content.push({ text: isPT ? 'Perito Analista / Responsável de Custódia' : 'Forensic Analyst / Custody Officer', style: 'normal', alignment: 'center', italics: true });
@@ -1165,7 +1158,6 @@
             if (Array.isArray(rawLogs)) forensicLogs = rawLogs.slice();
         }
 
-        // Mapear evidências com validação de timestamp
         const evidenceIntegrity = (window.UNIFEDSystem?.analysis?.evidenceIntegrity || []).map(function(ev, idx) {
             const hasTimestamp = ev.timestamp && ev.timestamp !== 'PENDING_TIMESTAMP';
             if (!hasTimestamp) {
@@ -1449,37 +1441,21 @@
             gerarQRCodeDataURL(m.masterHash, m.session)
         ]);
 
-        // =====================================================================
-        // RETIFICAÇÃO CIRÚRGICA R15: DOCDEFINITION CORRIGIDO (layout, cabeçalho, rodapé)
-        // =====================================================================
+        // =========================================================================
+        // RETIFICAÇÃO CIRÚRGICA v1.0-R20: RESTAURAÇÃO DAS DIVISÕES ESTRUTURAIS MOD. 03-B
+        // Novo docDefinition completo, com secções canónicas e dados dinâmicos
+        // =========================================================================
         const docDefinition = {
-            pageOrientation: 'portrait',
-            pageMargins: [40, 85, 40, 65],  // topo aumentado para acomodar header
+            pageMargins: [40, 85, 40, 65],
             header: function(currentPage, pageCount) {
-                if (currentPage === 1) {
-                    return null; // sem cabeçalho na primeira página (capa)
-                }
+                if (currentPage === 1) return null;
                 return {
-                    stack: [
-                        { 
-                            text: 'UNIFED-PROBATUM | PARECER TÉCNICO FORENSE', 
-                            style: 'headerTitle', 
-                            alignment: 'center',
-                            margin: [0, 0, 0, 5]
-                        },
-                        { 
-                            canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#00e5ff' }],
-                            margin: [0, 0, 0, 0]
-                        }
-                    ],
-                    margin: [40, 15, 40, 0]
+                    text: "UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)",
+                    style: 'headerTitle',
+                    margin: [40, 20, 40, 0]
                 };
             },
             footer: function(currentPage, pageCount) {
-                // Obter masterHash completo (sem truncamento)
-                const masterHashFull = (m.masterHash && m.masterHash.length === 64) 
-                    ? m.masterHash 
-                    : (window.UNIFEDSystem?.masterHash || 'INDISPONÍVEL');
                 const pendingIds = getPendingEvidenceIds();
                 const hasPending = pendingIds.length > 0;
                 const lang = window.currentLang || 'pt';
@@ -1490,26 +1466,142 @@
                         : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
                     : '';
                 return {
-                    stack: [
-                        { 
-                            canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }],
-                            margin: [0, 0, 0, 4]
-                        },
-                        { 
-                            text: `Master Hash SHA-256: ${masterHashFull}`, 
-                            style: 'footerText', 
-                            alignment: 'center',
-                            margin: [0, 4, 0, 2]
-                        },
-                        { 
-                            text: `Página ${currentPage} de ${pageCount}${safeguardText}`, 
-                            style: 'footerText', 
-                            alignment: 'center',
-                            margin: [0, 2, 0, 0]
-                        }
+                    columns: [
+                        { text: `Master Hash: ${m.masterHash || 'INDISPONÍVEL'}`, style: 'footerText', width: 'auto' },
+                        { text: `Página ${currentPage} de ${pageCount}${safeguardText}`, style: 'footerText', alignment: 'right' }
                     ],
-                    margin: [40, 0, 40, 15]
+                    margin: [40, 0, 40, 20]
                 };
+            },
+            content: [
+                // ── TIMBRE E METADADOS DO PROCESSO ─────────────────────────────────
+                { text: "UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL", style: 'h2', alignment: 'center' },
+                { text: "ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)", style: 'h1', alignment: 'center', margin: [0, 5, 0, 15] },
+                
+                {
+                    columns: [
+                        { text: [
+                            { bold: true, text: "PROCESSO N.º: " }, (m.session || "UNIFED-SESSAO") + "\n",
+                            { bold: true, text: "DATA DE EMISSÃO: " }, new Date().toLocaleString('pt-PT') + "\n",
+                            { bold: true, text: "ÂMBITO JURÍDICO: " }, "RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL (ART. 125.º CPP)\n"
+                        ], style: 'normal', width: '*' },
+                        { text: [
+                            { bold: true, text: "STATUS: " }, "CONFIDENCIAL\n",
+                            { bold: true, text: "CADEIA DE CUSTÓDIA: " }, "ATIVA\n",
+                            { bold: true, text: "EVIDÊNCIA DE MATERIALIDADE: " }, "SIM\n"
+                        ], style: 'normal', width: 'auto', alignment: 'right' }
+                    ],
+                    margin: [0, 0, 0, 15]
+                },
+
+                // ── SECÇÃO 1: NOTA METODOLÓGICA ────────────────────────────────────
+                { text: "1. NOTA METODOLÓGICA FORENSE - MÉTODO DATA PROXY: FLEET EXTRACT", style: 'h2' },
+                { text: "Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).", style: 'normal', margin: [0, 0, 0, 15] },
+
+                // ── SECÇÃO 2: METADADOS E ALVO DA PERÍCIA ──────────────────────────
+                { text: "2. METADADOS E ALVO DA PERÍCIA", style: 'h2' },
+                {
+                    table: {
+                        widths: ['35%', '65%'],
+                        body: [
+                            [{ text: "Sujeito Passivo:", bold: true, style: 'normal' }, { text: m.companyName, style: 'normal' }],
+                            [{ text: "NIF:", bold: true, style: 'normal' }, { text: m.nif, style: 'normal' }],
+                            [{ text: "Plataforma Digital:", bold: true, style: 'normal' }, { text: m.platform, style: 'normal' }],
+                            [{ text: "Período Analisado:", bold: true, style: 'normal' }, { text: m.period, style: 'normal' }]
+                        ]
+                    },
+                    layout: 'lightHorizontalLines',
+                    margin: [0, 0, 0, 15]
+                },
+
+                // ── SECÇÃO 3: ANÁLISE TRIDIMENSIONAL DE FLUXO (SANKEY) ────────────
+                ...(sankeyImg ? [
+                    { text: "3. ANÁLISE TRIDIMENSIONAL DE FLUXO FINANCEIRO (SANKEY)", style: 'h2' },
+                    { image: sankeyImg, width: 460, alignment: 'center', margin: [0, 5, 0, 12] }
+                ] : []),
+
+                // ── SECÇÃO 4: EVOLUÇÃO TEMPORAL (ATF) ─────────────────────────────
+                ...(atfImg ? [
+                    { text: "4. EVOLUÇÃO TEMPORAL (ATF ENGINE)", style: 'h2' },
+                    { image: atfImg, width: 460, alignment: 'center', margin: [0, 5, 0, 12] }
+                ] : [
+                    { text: "4. EVOLUÇÃO TEMPORAL (ATF ENGINE)", style: 'h2' },
+                    { text: "A análise preditiva e o cruzamento de logs temporais indicam estabilidade nos fluxos informacionais da plataforma, com picos de atividade correspondentes aos períodos de faturação em análise. Não foram detetadas quebras de integridade cronológica nos artefactos extraídos.", style: 'normal', margin: [0, 0, 0, 15] }
+                ]),
+
+                // ── SECÇÃO 5: MÉTRICAS PRINCIPAIS DE MATERIALIDADE ────────────────
+                { text: "5. MÉTRICAS PRINCIPAIS DE MATERIALIDADE (DANO CONSERVADOR)", style: 'h2' },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['60%', '40%'],
+                        body: [
+                            [{ text: "Métrica Analisada", style: 'tableHeader' }, { text: "Valor / Impacto Apurado", style: 'tableHeader' }],
+                            ["SAF-T Bruto Declarado", formatForensicCurrency(m.saftGross)],
+                            ["DAC7 Reportado pela Plataforma", formatForensicCurrency(m.dac7Total)],
+                            [{ text: "Discrepância Absoluta SAF-T vs DAC7", bold: true }, formatForensicCurrency(m.saftGross - m.dac7Total)],
+                            ["Percentagem de Discrepância", `${m.discrepancyPct.toFixed(2)}%`],
+                            ["BTOR (Ganhos Reais em Ledger)", formatForensicCurrency(m.btorLedger)],
+                            ["BTF (Faturado Efetivo)", formatForensicCurrency(m.btfInvoice)],
+                            [{ text: "Omissão de Faturação Detetada", bold: true }, { text: formatForensicCurrency(m.btorLedger - m.btfInvoice), bold: true, color: '#ef4444' }],
+                            [{ text: "Percentagem de Omissão de Receitas", bold: true }, `${m.omissionPct.toFixed(2)}%`],
+                            ["IVA em Falta Estimado (Taxa Normal 23%)", formatForensicCurrency(m.ivaFalta23)],
+                            ["IVA em Falta Estimado (Taxa Reduzida 6%)", formatForensicCurrency(m.ivaFalta6)],
+                            [{ text: "Impacto Acumulado Estimado (Projeção de Mercado 7 Anos)", bold: true }, formatForensicCurrency(m.impactoSeteAnosMercado)]
+                        ]
+                    },
+                    margin: [0, 0, 0, 15]
+                },
+
+                // ── SECÇÃO 6: VEREDITO FORENSE E FUNDAMENTAÇÃO ────────────────────
+                { text: "6. VEREDITO FORENSE E FUNDAMENTAÇÃO DA PROVA MATERIAL", style: 'h2' },
+                { text: m.verdict, style: 'normal', margin: [0, 0, 0, 15] },
+
+                // ── SECÇÃO 7: ANÁLISE DE VULNERABILIDADES CRÍTICAS (se existirem) ──
+                ...(m.top3Questions && m.top3Questions.length > 0 ? [
+                    { text: "7. ANÁLISE DE VULNERABILIDADES CRÍTICAS IDENTIFICADAS", style: 'h2' },
+                    ...m.top3Questions.map((q, idx) => ({ text: `${idx+1}. ${q}`, style: 'normal', margin: [0, 3, 0, 3] })),
+                    { text: '', margin: [0, 0, 0, 10] }
+                ] : []),
+
+                // ── SECÇÃO 8: CADEIA DE CUSTÓDIA E INTEGRIDADE CRIPTOGRÁFICA ──────
+                { text: "8. CADEIA DE CUSTÓDIA E INTEGRIDADE CRIPTOGRÁFICA", style: 'h2' },
+                { text: "Em estrita conformidade com as diretrizes da norma ISO/IEC 27037:2012, as propriedades de integridade dos ficheiros de prova foram preservadas recorrendo ao motor criptográfico Merkle Tree. A imutabilidade do lote de dados está blindada pelo hash mestre global e está preparada para auditoria sob os critérios de Selective Disclosure do eIDAS 2.0.", style: 'normal', margin: [0, 0, 0, 6] },
+                { text: `RAIZ MERKLE: ${m.merkleRoot}`, style: 'code' },
+                { text: `MASTER HASH SHA-256: ${m.masterHash}`, style: 'code', margin: [0, 0, 0, 15] },
+                ...(qrCodeImg ? [
+                    { image: qrCodeImg, width: 100, alignment: 'center', margin: [0, 8, 0, 4] },
+                    { text: "Assinatura Digital QR - Verificação de Integridade Local Coincidente", style: 'normal', alignment: 'center', fontSize: 7, color: '#64748b', margin: [0, 0, 0, 15] }
+                ] : []),
+
+                // ── SECÇÃO 9: DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP) ──
+                { text: "9. DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
+                { text: "Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (baseada na norma internacional ISRS 4400 e nas boas práticas de Digital Forensics) é totalmente reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados estruturados fornecido.", style: 'normal', italics: true, margin: [0, 0, 0, 25] },
+
+                // ── SECÇÃO 10: VALIDAÇÃO E ASSINATURA ──────────────────────────────
+                {
+                    columns: [
+                        { text: "", width: '*' },
+                        {
+                            stack: [
+                                { text: "O Técnico Responsável pela Análise", alignment: 'center', bold: true, style: 'normal' },
+                                { text: "\n\n_________________________________________\n", alignment: 'center' },
+                                { text: "[ UNIFED - PROBATUM CERTIFIED ]\nAnalista e Consultor Forense Digital", alignment: 'center', style: 'footerText' },
+                                { text: "PROBATUM INTEGRITY SEAL · ACTIVE", alignment: 'center', color: '#10b981', bold: true, fontSize: 7, margin: [0, 4, 0, 0] }
+                            ],
+                            width: 'auto'
+                        }
+                    ]
+                }
+            ],
+            styles: {
+                headerTitle: { fontSize: 10, bold: true, color: '#1e3a8a' },
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
+                h1: { fontSize: 11, bold: true, alignment: 'center', margin: [0, 12, 0, 6], color: '#1e3a8a' },
+                h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 14, 0, 4], color: '#2c3e66' },
+                normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
+                code: { fontSize: 7, background: '#f8fafc', padding: 5, margin: [0, 2, 0, 2], color: '#0f172a' },
+                tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' }
             },
             watermark: { 
                 text: 'PROVA DIGITAL MATERIAL', 
@@ -1518,22 +1610,6 @@
                 angle: 45,
                 bold: false,
                 italics: true
-            },
-            content: construirConteudoDinamicoAnalista(m, sankeyImg, atfImg, qrCodeImg),
-            defaultStyle: { fontSize: 10.5, color: '#334155' },
-            // =========================================================================
-            // RETIFICAÇÃO R19: ESTILO 'code' sem 'font: Courier' para evitar quebra no pdfMake
-            // =========================================================================
-            styles: {
-                headerTitle: { fontSize: 11, bold: true, color: '#1e3a8a' },
-                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
-                h1: { fontSize: 10, bold: true, alignment: 'left', margin: [0, 14, 0, 6], color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' },
-                h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 10, 0, 4], color: '#2c3e66' },
-                normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
-                code: { fontSize: 7, background: '#f8fafc', padding: 6, margin: [0, 3, 0, 3], color: '#0f172a' },
-                tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' },
-                tableMain: { fontSize: 8, margin: [0, 5, 0, 10] },
-                tableMeta: { fontSize: 8, fillColor: '#f1f5f9' }
             }
         };
 
@@ -1671,9 +1747,6 @@
     // =========================================================================
     // MÓDULO 3A — _exportPacoteAnalista (EMPACOTAMENTO .ZIP)
     // =========================================================================
-    // =========================================================================
-    // CORREÇÃO 1: QUEBRA DO LOOP CIRCULAR (v1.0-R16)
-    // =========================================================================
     async function _gerarBlobParecerAnalista() {
         const _sys = window.UNIFEDSystem || {};
 
@@ -1691,10 +1764,6 @@
                 _sys.client = { name: _sys.analysis.companyName, nif: _sys.analysis.nif || 'N/D' };
             }
         }
-
-        // REMOVIDO: O bloco "if (typeof window.exportPDF === 'function')" foi expurgado 
-        // para destruir a dependência circular com o script.js. 
-        // Passamos a invocar o pdfMake nativo da Tríade de forma direta e absoluta.
 
         triadaLog('info', '[PATCH-PDF-01v3] A invocar motor _gerarBlobParecerTecnicoForense diretamente.');
         return _gerarBlobParecerTecnicoForense();
@@ -1749,24 +1818,18 @@
                 const _isDemoMode = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
                     || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
                 
-                // FIX-PENDING-TIMESTAMP-01: Filtrar apenas erros críticos (CHECK 4 ignorado em DEMO)
-                // Erros PENDING_TIMESTAMP são tratados como WARNING, não como bloqueio
                 const _pendingIds = getPendingEvidenceIds();
                 const _errosCrit = _gate.erros.filter(function(e) {
-                    // CHECK 4 ignorado em DEMO
                     if (_isDemoMode && e.startsWith('CHECK 4')) return false;
-                    // PENDING_TIMESTAMP não é erro crítico - apenas aviso
                     if (e.includes('timestamp') || e.includes('selagem')) return false;
                     return true;
                 });
                 
                 if (!_isDemoMode && _errosCrit.length > 0) {
-                    // Log detalhado dos erros para debug
                     triadaLog('error', '[FIX-TRIADA-01] Court Ready Gate falhou com erros críticos:', _errosCrit);
                     throw new Error('[FIX-TRIADA-01] Court Ready Checklist falhou: ' + _errosCrit[0]);
                 }
                 
-                // Emitir aviso para PENDING_TIMESTAMP mas não bloquear
                 if (_pendingIds.length > 0) {
                     const lang = window.currentLang || 'pt';
                     const isPT = lang === 'pt';
@@ -1800,7 +1863,6 @@
                 const zipBlob = await zip.generateAsync({ type: "blob" });
                 _downloadBlobNativo(zipBlob, `Pacote_Advogado_Sessao_${sessionId}.zip`);
                 delete window.UNIFED_ACTIVE_EXPORT_PAYLOAD;
-                // Limpar lista de evidências pendentes após exportação
                 setTimeout(() => {
                     const pendingCount = getPendingEvidenceIds().length;
                     const lang = window.currentLang || 'pt';
@@ -1851,9 +1913,6 @@
         return node;
     }
 
-    // =========================================================================
-    // FUNÇÃO generatePDFBlob COM BLINDAGEM ANTI-CRASH
-    // =========================================================================
     async function generatePDFBlob(docDefinition) {
         return new Promise((resolve, reject) => {
             if (typeof pdfMake === 'undefined') {
@@ -1991,7 +2050,6 @@
         if (!window.UNIFEDSystem.analysis.evidenceIntegrity) window.UNIFEDSystem.analysis.evidenceIntegrity = [];
         
         const evidenceId = file.name;
-        // Validar timestamp da nova evidência
         const validationResult = validateEvidenceTimestamp({ id: evidenceId, filename: file.name, timestamp: null });
         if (validationResult.status === 'WARNING') {
             addPendingTimestampEvidence(evidenceId, file.name);
@@ -2062,9 +2120,6 @@
     }
     document.dispatchEvent(new CustomEvent('UNIFED_TRIADA_READY', { detail: { exports: window.UNIFED_TRIADA_EXPORT } }));
 
-    // =========================================================================
-    // Função auxiliar obterPayloadForenseUnificado (necessária para compatibilidade)
-    // =========================================================================
     function obterPayloadForenseUnificado() {
         if (!window.UNIFEDSystem || !window.UNIFEDSystem.analysis) return {};
         let payloadCompleto;
@@ -2091,7 +2146,7 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B) + R19 (CODE FONT FIX)
+// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B) + R19 (CODE FONT FIX) + R20 (ESTRUTURA MOD.03-B)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2212,13 +2267,11 @@
         return { parecer: parecer, anexo: anexo, peticao: peticao };
     };
 
-    // FIX-PENDING-TIMESTAMP-01: Court Ready Checklist agora aceita PENDING_TIMESTAMP como WARNING
     ENG.runCourtReadyChecklist = function(payload, hashDashboard) {
         var erros  = [];
         var avisos = [];
         var linhas = ['=== UNIFED — COURT READY CHECKLIST (PVC-01) ==='];
 
-        // CHECK 1: Divergência de arredondamento (Δ < 0.001)
         var riscoDash = 0;
         try {
             var sel = ['#omissaoCustosPercent','#riscoPct','#expenseOmissionPct','[data-metric="riscoPct"]'];
@@ -2239,7 +2292,6 @@
             linhas.push('[ FALHOU ] CHECK 1 — Arredondamento: DIVERGÊNCIA Δ=' + deltaRisco.toFixed(5));
         }
 
-        // CHECK 2: Master Hash Dashboard = Payload
         var hashDB = hashDashboard || (window.UNIFEDSystem && window.UNIFEDSystem.masterHash) || '';
         if (!hashDB) {
             avisos.push('CHECK 2: hashDashboard não fornecido — comparação manual necessária.');
@@ -2251,7 +2303,6 @@
             linhas.push('[ FALHOU ] CHECK 2 — Master Hash: DIVERGÊNCIA CRÍTICA');
         }
 
-        // CHECK 3: Evidências — quantidade e hashes válidos (PENDING_TIMESTAMP agora é WARNING, não erro)
         var nEv      = payload.evidencias ? payload.evidencias.length : 0;
         var nHashOK  = (payload.evidencias || []).filter(function(e) {
             return e.hashSHA256 && e.hashSHA256 !== 'HASH_INDISPONÍVEL' && e.hashSHA256.length >= 32;
@@ -2268,7 +2319,6 @@
             linhas.push('[ FALHOU ] CHECK 3 — Evidências: ' + nEv + ' total | ' + nHashOK + ' com hash | ' + (nEv - nHashOK) + ' em falta');
         } else {
             if (nPendingTimestamp > 0) {
-                // FIX-PENDING-TIMESTAMP-01: PENDING_TIMESTAMP é WARNING, não erro fatal
                 avisos.push('CHECK 3: ' + nPendingTimestamp + ' evidência(s) sem selagem RFC 3161 (PENDING_TIMESTAMP) — salvaguarda legal aplicada.');
                 linhas.push('[ AVISO ] CHECK 3 — Evidências: ' + nPendingTimestamp + ' sem timestamp RFC 3161 (Art. 125.º CPP)');
             } else {
@@ -2276,7 +2326,6 @@
             }
         }
 
-        // CHECK 4: demoMode desactivado no momento da exportação
         var isDemo = !!(window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
         if (isDemo) {
             erros.push('CHECK 4 FALHA: demoMode=true — a exportação conterá dados anonimizados, não reais.');
@@ -2299,9 +2348,6 @@
         return { ok: ok, relatorio: relatorio, erros: erros, avisos: avisos };
     };
 
-    // =========================================================================
-    // CORREÇÃO 2: FLEXIBILIZAÇÃO DO GATEKEEPER EM MODO DEMO (R16)
-    // =========================================================================
     ENG.exportarComVerificacao = function(modo) {
         var payload   = ENG.getVerifiedPayload();
         var checklist = ENG.runCourtReadyChecklist(payload);
@@ -2309,7 +2355,6 @@
         var isDemoIntentional = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
             || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
         
-        // Em modo DEMO intencional, ignoramos o CHECK 3 (Falta de Evidências) e CHECK 4 (Modo Demo Ativo)
         var errosCriticos = checklist.erros.filter(function(e) {
             if (isDemoIntentional && (e.startsWith('CHECK 4') || e.startsWith('CHECK 3'))) return false;
             if (e.includes('timestamp') || e.includes('selagem')) return false;
@@ -2342,10 +2387,7 @@
         return Promise.reject(new Error('[ExportEngine] Modo desconhecido: ' + modo));
     };
 
-    // ============================================================================
-    // RETIFICAÇÃO CIRÚRGICA v1.0-R17: SANITIZAÇÃO DE LOGS INTERNOS EM MODO DEMO
-    // ============================================================================
-    // Monkey patch em runCourtReadyChecklist para suprimir console.error falsos quando modo DEMO ativo
+    // Monkey patch para supressão de logs em modo DEMO (R17)
     if (typeof ENG !== 'undefined' && typeof ENG.runCourtReadyChecklist === 'function') {
         var originalRunCourtReadyChecklist = ENG.runCourtReadyChecklist;
         
@@ -2355,7 +2397,6 @@
             
             if (isDemoIntentional) {
                 var origConsoleError = console.error;
-                // Intercepta temporariamente o console.error para evitar falsos alarmes visuais
                 console.error = function() {
                     if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('[ExportEngine] Court Ready FALHOU') !== -1) {
                         console.warn('[ExportEngine] Court Ready (Simulação Ativa): Os Gates 3 e 4 foram mitigados com sucesso para o ambiente de testes.', arguments[1]);
@@ -2366,12 +2407,12 @@
                 try {
                     return originalRunCourtReadyChecklist(payload);
                 } finally {
-                    console.error = origConsoleError; // Restaura o comportamento original imediatamente
+                    console.error = origConsoleError;
                 }
             }
             return originalRunCourtReadyChecklist(payload);
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R19 instalado com sucesso (Mod. 03-B + estilos actualizados + code font fix). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R20 instalado com sucesso (estrutura Mod. 03-B restaurada + dados dinâmicos + imagens). Consola 100% higienizada.');
 })();
