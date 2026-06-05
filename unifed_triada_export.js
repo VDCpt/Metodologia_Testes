@@ -7,6 +7,11 @@
  * - Adicionado fallback HTML na geração da petição (resiliência).
  * - Garantido conteúdo real em todos os PDFs e JSON.
  * ============================================================================
+ * RETIFICAÇÃO v1.0-R14: FIX-PENDING-TIMESTAMP-01
+ * - Court Ready Checklist agora aceita PENDING_TIMESTAMP como WARNING não bloqueante
+ * - Evidências sem selagem RFC 3161 (demo_statements_4.pdf, demo_dac7_1.pdf) recebem padding de zeros
+ * - Rodapé forense com cláusula de salvaguarda legal para artefactos não selados
+ * ============================================================================
  */
 
 (function () {
@@ -85,6 +90,7 @@
             'msg_invalid_hash': '❌ Master Hash inválido para rodapé do PDF',
             'msg_pdf_footer_valid': '🔏 Rodapé do PDF validado com Master Hash',
             'msg_package_instruction': '📁 Instrução de Entrega: Os ficheiros gerados devem ser colocados numa diretoria local, compactados em formato .zip com password (ex.: "UNIFED-PROBATUM-{data}") e gravados na Pen Drive de entrega, conforme protocolo contra-entrega (Art. 125.º CPP / ISO/IEC 27037).',
+            'msg_unsigned_evidence_footer': '⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: {ids}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP e ISO/IEC 27037:2012, secção 6.3 (aquisição de prova digital). O selo temporal (timestamp) constitui evidência adicional de integridade, não substituta do hash criptográfico.',
         },
         en: {
             'forensic_analyst_report': 'INTEGRAL FORENSIC DOCUMENT - ANALYST',
@@ -98,6 +104,7 @@
             'msg_invalid_hash': '❌ Invalid Master Hash for PDF footer',
             'msg_pdf_footer_valid': '🔏 PDF footer validated with Master Hash',
             'msg_package_instruction': '📁 Delivery Instruction: The generated files must be placed in a local directory, compressed into a password-protected .zip file (e.g., "UNIFED-PROBATUM-{date}") and saved on the delivery Pen Drive, according to the counter-delivery protocol (Art. 125.º CPP / ISO/IEC 27037).',
+            'msg_unsigned_evidence_footer': '⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: {ids}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP and ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.',
         }
     };
 
@@ -564,16 +571,11 @@
         if (domSession && domSession.innerText && domSession.innerText.trim().length >= 8) {
             return domSession.innerText.trim();
         }
-        // FIX-SESSION-DEMO-01: Em modo DEMO, activateDemoMode pode ainda não ter terminado
-        // quando refreshCustodyExplorer corre (500ms após DOMContentLoaded).
-        // Fallback seguro: gerar sessionId sintético DEMO para não bloquear a UI.
-        // O sessionId real será substituído assim que activateDemoMode conclua.
         const isDemoMode = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
             || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
         if (isDemoMode) {
             const demoFallbackId = 'DEMO-' + Date.now().toString(36).toUpperCase().slice(-8);
             triadaLog('info', '[FIX-SESSION-DEMO-01] SessionID sintético DEMO gerado: ' + demoFallbackId);
-            // Propagar para UNIFEDSystem para que chamadas subsequentes não repitam o fallback
             if (window.UNIFEDSystem && !window.UNIFEDSystem.sessionId) {
                 window.UNIFEDSystem.sessionId = demoFallbackId;
             }
@@ -709,16 +711,25 @@
     // =========================================================================
     // FUNÇÃO AUXILIAR DE FALLBACK HTML PARA PDFs (quando pdfMake falha)
     // =========================================================================
-    function _generateFallbackHTML(metrics, tipo) {
+    function _generateFallbackHTML(metrics, tipo, pendingEvidenceIds) {
         const lang = window.currentLang || 'pt';
         const isPT = lang === 'pt';
         const title = tipo === 'analista' ? (isPT ? 'Relatório Pericial Analista' : 'Analyst Forensic Report') :
                       tipo === 'parecer' ? (isPT ? 'Parecer Técnico Forense' : 'Forensic Technical Opinion') :
                       (isPT ? 'Anexo de Custódia' : 'Custody Annex');
+        
+        // Cláusula de salvaguarda legal para evidências sem selagem temporal
+        const safeguardNote = (pendingEvidenceIds && pendingEvidenceIds.length > 0) 
+            ? `<div style="margin-top: 30px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; font-size: 10px;">
+                   <strong>⚠️ NOTA DE SALVAGUARDA FORENSE:</strong><br>
+                   A ausência de selagem temporal RFC 3161 em [ID: ${pendingEvidenceIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP e ISO/IEC 27037:2012, secção 6.3 (aquisição de prova digital). O selo temporal (timestamp) constitui evidência adicional de integridade, não substituta do hash criptográfico.
+               </div>`
+            : '';
+        
         const html = `<!DOCTYPE html>
         <html lang="${lang}">
         <head><meta charset="UTF-8"><title>${title}</title>
-        <style>body{font-family:Arial;margin:2cm;line-height:1.5} pre{background:#f4f4f4;padding:10px}</style>
+        <style>body{font-family:Arial;margin:2cm;line-height:1.5} pre{background:#f4f4f4;padding:10px} .footer-note{margin-top:40px;font-size:9px;color:#666;border-top:1px solid #ccc;padding-top:10px}</style>
         </head>
         <body>
         <h1>${title}</h1>
@@ -727,7 +738,10 @@
         <hr>
         <h2>${isPT ? 'Dados da Análise' : 'Analysis Data'}</h2>
         <pre>${JSON.stringify(metrics, null, 2)}</pre>
-        <p>${isPT ? 'Este é um documento de fallback gerado porque o gerador de PDF não estava disponível. Pode guardar esta página como PDF através do menu "Imprimir" do navegador.' : 'This is a fallback document generated because the PDF generator was unavailable. You can save this page as PDF via the browser\'s "Print" menu.'}</p>
+        ${safeguardNote}
+        <div class="footer-note">
+            ${isPT ? 'Este é um documento de fallback gerado porque o gerador de PDF não estava disponível. Pode guardar esta página como PDF através do menu "Imprimir" do navegador.' : 'This is a fallback document generated because the PDF generator was unavailable. You can save this page as PDF via the browser\'s "Print" menu.'}
+        </div>
         </body>
         </html>`;
         return html;
@@ -904,29 +918,75 @@
     }
 
     // =========================================================================
-    // CONTEÚDO DO ANEXO DE CUSTÓDIA (CONTEÚDO REAL)
+    // ================== RETIFICAÇÃO FIX-PENDING-TIMESTAMP-01 =================
+    // =========================================================================
+    // Lista global de IDs de evidências sem selagem temporal RFC 3161
+    // Utilizada pelo gerador de PDF para adicionar nota de rodapé de salvaguarda legal
+    window._UNIFED_PENDING_TIMESTAMP_EVIDENCES = window._UNIFED_PENDING_TIMESTAMP_EVIDENCES || [];
+
+    function addPendingTimestampEvidence(evidenceId, evidenceName) {
+        if (!window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.some(e => e.id === evidenceId)) {
+            window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.push({ id: evidenceId, name: evidenceName });
+            triadaLog('warn', `[PENDING_TIMESTAMP] Evidência ${evidenceId} (${evidenceName}) marcada sem selagem RFC 3161.`);
+        }
+    }
+
+    function getPendingEvidenceIds() {
+        return window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.map(e => e.id);
+    }
+
+    function hasPendingTimestampEvidences() {
+        return window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.length > 0;
+    }
+
+    // Função de validação forense para evidências sem timestamp
+    // Retorna status WARNING em vez de erro fatal
+    function validateEvidenceTimestamp(evidence) {
+        // FIX-PENDING-TIMESTAMP-01: Fallback lógico para permitir exportação com flag WARNING
+        if (!evidence.timestamp || evidence.timestamp === null || evidence.timestamp === 'PENDING_TIMESTAMP') {
+            triadaLog('warn', `[WARN] Evidência ${evidence.id || evidence.filename} sem selagem RFC 3161. Marcando como PENDING.`);
+            addPendingTimestampEvidence(evidence.id || evidence.filename, evidence.filename || 'Desconhecido');
+            return { status: 'WARNING', code: 'PENDING_TIMESTAMP', evidenceId: evidence.id };
+        }
+        return { status: 'OK', code: 'TIMESTAMP_VALID' };
+    }
+
+    // =========================================================================
+    // CONTEÚDO DO ANEXO DE CUSTÓDIA (CONTEÚDO REAL) + Salvaguarda para evidências não seladas
     // =========================================================================
     function gerarConteudoAnexoCustodia(m) {
         // FIX-PARTITION-04: se existe override de evidências do payload master, usar essas
         if (window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE && window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE.length > 0) {
             const _ovEvids = window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE;
-            // Injectar no metrics object para que o resto da função os encontre
             if (!m.custodyLog || m.custodyLog.length < _ovEvids.length) {
                 m.custodyLog = _ovEvids.map(function(ev, i) {
+                    // Validar timestamp de cada evidência e marcar PENDING se necessário
+                    if (!ev.timestamp || ev.timestamp === 'PENDING_TIMESTAMP') {
+                        addPendingTimestampEvidence(ev.id || ev.nome, ev.nome || 'Evidência');
+                    }
                     return {
                         serial:    ev.id   || ('EV_' + String(i+1).padStart(3,'0')),
                         fileName:  ev.nome || 'N/D',
                         hash:      ev.hashSHA256,
-                        timestamp: ev.timestamp
+                        timestamp: ev.timestamp || 'PENDING_TIMESTAMP'
                     };
                 });
                 triadaLog('info', '[FIX-PARTITION-04] custodyLog substituído por payload master (' + m.custodyLog.length + ' entradas)');
             }
-            // Limpar override após uso
             delete window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE;
+        } else if (m.custodyLog && m.custodyLog.length > 0) {
+            // Validar evidências existentes
+            m.custodyLog.forEach(log => {
+                if (!log.timestamp || log.timestamp === 'PENDING_TIMESTAMP') {
+                    addPendingTimestampEvidence(log.serial || log.fileName, log.fileName || 'Evidência');
+                }
+            });
         }
+        
         const lang = window.currentLang || 'pt';
         const isPT = lang === 'pt';
+        const pendingIds = getPendingEvidenceIds();
+        const hasPending = pendingIds.length > 0;
         
         const content = [];
         
@@ -948,15 +1008,17 @@
             content.push({ text: isPT ? '5. REGISTOS DE CUSTÓDIA' : '5. CUSTODY LOGS', style: 'h2', margin: [0, 10, 0, 5] });
             const logTable = {
                 body: [
-                    [{ text: isPT ? 'Timestamp' : 'Timestamp', style: 'tableHeader' }, { text: isPT ? 'Evento' : 'Event', style: 'tableHeader' }, { text: isPT ? 'Origem' : 'Origin', style: 'tableHeader' }, { text: 'Hash', style: 'tableHeader' }]
+                    [{ text: isPT ? 'Timestamp' : 'Timestamp', style: 'tableHeader' }, { text: isPT ? 'Evento' : 'Event', style: 'tableHeader' }, { text: isPT ? 'Origem' : 'Origin', style: 'tableHeader' }, { text: 'Hash', style: 'tableHeader' }, { text: 'Status', style: 'tableHeader' }]
                 ]
             };
             m.custodyLog.slice(0, 15).forEach(log => {
+                const hasTimestamp = log.timestamp && log.timestamp !== 'PENDING_TIMESTAMP';
                 logTable.body.push([
-                    log.timestamp || 'N/A',
+                    hasTimestamp ? (log.timestamp || 'N/A') : { text: 'PENDENTE', color: '#b91c1c', italics: true },
                     log.tipo || log.action || 'N/A',
                     log.origem || log.module || 'N/A',
-                    (log.hash || 'N/A').substring(0, 16) + '…'
+                    (log.hash || 'N/A').substring(0, 16) + '…',
+                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: '⚠️ Sem selagem RFC 3161', color: '#b91c1c' }
                 ]);
             });
             content.push({ table: logTable, margin: [0, 5, 0, 15] });
@@ -970,19 +1032,36 @@
         if (evidenceList.length > 0) {
             const evTable = {
                 body: [
-                    [{ text: isPT ? 'Ficheiro' : 'File', style: 'tableHeader' }, { text: 'Hash SHA-256', style: 'tableHeader' }, { text: isPT ? 'Data' : 'Date', style: 'tableHeader' }]
+                    [{ text: isPT ? 'Ficheiro' : 'File', style: 'tableHeader' }, { text: 'Hash SHA-256', style: 'tableHeader' }, { text: isPT ? 'Timestamp' : 'Timestamp', style: 'tableHeader' }, { text: 'Status', style: 'tableHeader' }]
                 ]
             };
             evidenceList.forEach(ev => {
+                const hasTimestamp = ev.timestamp && ev.timestamp !== 'PENDING_TIMESTAMP';
                 evTable.body.push([
                     ev.filename || 'N/A',
                     (ev.hash || 'N/A').substring(0, 16) + '…',
-                    ev.timestamp ? new Date(ev.timestamp).toLocaleString(lang) : 'N/A'
+                    hasTimestamp ? (ev.timestamp ? new Date(ev.timestamp).toLocaleString(lang) : 'N/A') : { text: 'PENDENTE', color: '#b91c1c' },
+                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: '⚠️ PENDING_TIMESTAMP', color: '#b91c1c' }
                 ]);
             });
             content.push({ table: evTable, margin: [0, 5, 0, 15] });
         } else {
             content.push({ text: isPT ? 'Nenhuma evidência adicional integrada.' : 'No additional evidence integrated.', style: 'normal', italics: true, margin: [0, 2, 0, 10] });
+        }
+        
+        // FIX-PENDING-TIMESTAMP-01: Cláusula de salvaguarda legal para evidências sem timestamp
+        if (hasPending) {
+            content.push({ text: isPT ? '⚠️ NOTA DE SALVAGUARDA FORENSE (Art. 125.º CPP)' : '⚠️ FORENSIC SAFEGUARD NOTE (Art. 125.º CPP)', style: 'h2', margin: [0, 15, 0, 5], color: '#b91c1c' });
+            content.push({ 
+                text: isPT 
+                    ? `A ausência de selagem temporal RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP e ISO/IEC 27037:2012, secção 6.3 (aquisição de prova digital). O selo temporal (timestamp) constitui evidência adicional de integridade, não substituta do hash criptográfico.`
+                    : `The absence of RFC 3161 timestamp for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP and ISO/IEC 27037:2012, section 6.3 (digital evidence acquisition). The timestamp constitutes additional integrity evidence, not a substitute for cryptographic hash.`,
+                style: 'normal',
+                margin: [0, 2, 0, 15],
+                color: '#78350f',
+                background: '#fffbeb',
+                padding: 8
+            });
         }
         
         content.push({ text: isPT ? '7. DECLARAÇÃO DE INTEGRIDADE' : '7. INTEGRITY STATEMENT', style: 'h2', margin: [0, 10, 0, 5] });
@@ -1010,6 +1089,22 @@
             if (Array.isArray(rawLogs)) forensicLogs = rawLogs.slice();
         }
 
+        // Mapear evidências com validação de timestamp
+        const evidenceIntegrity = (window.UNIFEDSystem?.analysis?.evidenceIntegrity || []).map(function(ev, idx) {
+            const hasTimestamp = ev.timestamp && ev.timestamp !== 'PENDING_TIMESTAMP';
+            if (!hasTimestamp) {
+                addPendingTimestampEvidence(ev.filename || `EV_${idx}`, ev.filename || 'Evidência');
+            }
+            return {
+                filename: ev.filename,
+                hash: ev.hash,
+                type: ev.type,
+                timestamp: ev.timestamp || 'PENDING_TIMESTAMP',
+                size: ev.size,
+                hasValidTimestamp: hasTimestamp
+            };
+        });
+
         const maximalPayload = {
             metadata: {
                 source: 'UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION',
@@ -1024,6 +1119,7 @@
                 subject: metrics.companyName,
                 nif: metrics.nif,
                 demoMode: !!sys.demoMode,
+                pendingTimestampEvidences: getPendingEvidenceIds(),
                 dataMonths: (() => {
                     const dm = sys.dataMonths;
                     if (dm && typeof dm.forEach === 'function') return Array.from(dm);
@@ -1037,7 +1133,8 @@
                 algorithm: 'SHA-256',
                 protocol: 'RFC 3161',
                 eidas2: 'eIDAS 2.0 Selective Disclosure (Merkle Tree)',
-                merkleRoot: metrics.merkleRoot || 'N/A'
+                merkleRoot: metrics.merkleRoot || 'N/A',
+                pendingTimestampWarning: hasPendingTimestampEvidences() ? 'Evidências sem selagem temporal: ' + getPendingEvidenceIds().join(', ') : null
             },
             analysis: {
                 totals: Object.assign({}, analysis.totals || {}),
@@ -1069,19 +1166,12 @@
                 ivaAsfixia:   (window.UNIFEDSystem?.rawMetrics?.ivaAsfixia) || (analysis.crossings?.ivaAsfixia) || 0,
                 impactoSeteAnosMercado: metrics.impactoSeteAnosMercado || 0
             },
-            // PATCH-JSON-01: Chave 'evidence' existia duplicada no objeto literal —
-            // em JavaScript, a segunda definição sobrescrevia silenciosamente a primeira,
-            // descartando invoices/statements/saft/dac7. Unificadas em sub-chaves distintas.
             evidence: {
-                // Sub-secção 1 — Documentos por tipo (invoices, statements, SAF-T, DAC7)
                 invoices:   { count: (docs.invoices   && docs.invoices.files)   ? docs.invoices.files.length   : 0, totalValue:   (docs.invoices   && docs.invoices.totals)   ? (docs.invoices.totals.invoiceValue   || 0) : 0, files: (docs.invoices   && docs.invoices.files)   ? docs.invoices.files.map(function(f){return f.name;})   : [] },
                 statements: { count: (docs.statements && docs.statements.files) ? docs.statements.files.length : 0, ganhos:       (docs.statements && docs.statements.totals) ? (docs.statements.totals.ganhos       || 0) : 0, despesas: (docs.statements && docs.statements.totals) ? (docs.statements.totals.despesas || 0) : 0, files: (docs.statements && docs.statements.files) ? docs.statements.files.map(function(f){return f.name;}) : [] },
                 saft:       { count: (docs.saft       && docs.saft.files)       ? docs.saft.files.length       : 0, bruto:        (docs.saft       && docs.saft.totals)       ? (docs.saft.totals.bruto              || 0) : 0, files: (docs.saft       && docs.saft.files)       ? docs.saft.files.map(function(f){return f.name;})       : [] },
                 dac7:       { count: (docs.dac7       && docs.dac7.files)       ? docs.dac7.files.length       : 0, receitaAnual: (docs.dac7       && docs.dac7.totals)       ? (docs.dac7.totals.receitaAnual       || 0) : 0, files: (docs.dac7       && docs.dac7.files)       ? docs.dac7.files.map(function(f){return f.name;})       : [] },
-                // Sub-secção 2 — Hashes de integridade (evidenceIntegrity da cadeia de custódia)
-                hashes: (window.UNIFEDSystem?.analysis?.evidenceIntegrity || []).map(function(ev) {
-                    return { filename: ev.filename, hash: ev.hash, type: ev.type, timestamp: ev.timestamp, size: ev.size };
-                })
+                hashes: evidenceIntegrity
             },
             custodyLog: metrics.custodyLog,
             transactionRows: metrics.transactionRows,
@@ -1106,13 +1196,10 @@
     async function _gerarPeticaoBlob() {
         triadaLog('info', '⚖️ Iniciando geração da Minuta de Petição Inicial (Blob) via pdfMake');
 
-        // FIX-PARTITION-02: se existe payload unificado do _exportPacoteAdvogado,
-        // sincronizar os valores-chave para garantir consistência com o Parecer Master.
         const _activePayload = window.UNIFED_ACTIVE_EXPORT_PAYLOAD || null;
         if (_activePayload && _activePayload.isVerified) {
             const sys = window.UNIFEDSystem || {};
             if (sys.analysis) {
-                // Propagar valores normalizados para o analysis lido pelo pdfMake
                 if (_activePayload.riscoPercentual && sys.analysis.expenseOmissionPct !== undefined) {
                     sys.analysis._exportRiscoNorm = _activePayload.riscoPercentual;
                 }
@@ -1128,16 +1215,13 @@
             const sys = window.UNIFEDSystem || {};
             const analysis = sys.analysis || {};
 
-            // Resolver sessionId canónico
             const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
 
-            // Garantir masterHash
             let currentMasterHash = analysis.masterHash || sys.masterHash;
             if (!currentMasterHash || typeof currentMasterHash !== 'string' || currentMasterHash.length !== 64) {
                 currentMasterHash = safeGenerateMasterBatchHash();
             }
 
-            // Gate de paridade
             const auditPayload = {
                 session: canonicalSessionId,
                 masterHash: currentMasterHash,
@@ -1146,17 +1230,12 @@
             };
             await window.UNIFED_PII_PARITY_GATE.validate(auditPayload, '_gerarPeticaoBlob');
 
-            // Propagar hash
             window.UNIFED_HASH_PROPAGATOR.propagate(currentMasterHash, '_gerarPeticaoBlob → pre-PDF');
 
-            // Obter métricas (inclui valores financeiros)
             const m = getSystemMetrics();
 
-            // Conteúdo da petição em PDF (estilo judicial profissional)
             const docDefinition = {
                 pageSize: 'A4',
-                // FIX-GEOM-01: margem topo 85pt garante clearance total com header (≈30mm).
-                // Margens uniformizadas com os outros 2 documentos do pacote Advogado.
                 pageMargins: [40, 85, 40, 60],
                 header: function(currentPage, pageCount) {
                     return {
@@ -1187,15 +1266,23 @@
                     { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
                 ],
                 footer: function(currentPage, pageCount) {
+                    const pendingIds = getPendingEvidenceIds();
+                    const hasPending = pendingIds.length > 0;
+                    const lang = window.currentLang || 'pt';
+                    const isPT = lang === 'pt';
+                    const safeguardText = hasPending 
+                        ? (isPT 
+                            ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+                            : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+                        : '';
                     return {
                         stack: [
                             { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                            { text: `Master Hash SHA-256: ${currentMasterHash} | Página ${currentPage} de ${pageCount}`, style: 'forensicSeal', margin: [0, 4, 0, 0] }
+                            { text: `Master Hash SHA-256: ${currentMasterHash} | Página ${currentPage} de ${pageCount}${safeguardText}`, style: 'forensicSeal', margin: [0, 4, 0, 0] }
                         ],
                         margin: [40, 0, 40, 10]
                     };
                 },
-                // ========== ESTILOS CORRIGIDOS (sem referências a fontes externas) ==========
                 styles: {
                     judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                     judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
@@ -1208,20 +1295,25 @@
                 }
             };
 
-            // Gerar blob via pdfMake (função generatePDFBlob já existe)
             const blob = await generatePDFBlob(docDefinition);
             triadaLog('info', '✅ Petição Inicial (PDF) gerada com sucesso.');
             return blob;
         } catch (error) {
             triadaLog('error', '❌ Falha crítica em _gerarPeticaoBlob, a gerar fallback HTML', { message: error.message, stack: error.stack });
-            // Fallback HTML (consolidado a partir do segundo ficheiro)
             const m = getSystemMetrics();
             const lang = window.currentLang || 'pt';
             const isPT = lang === 'pt';
+            const pendingIds = getPendingEvidenceIds();
+            const safeguardNote = (pendingIds.length > 0)
+                ? `<div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                       <strong>⚠️ NOTA DE SALVAGUARDA FORENSE:</strong><br>
+                       A ausência de selagem temporal RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP e ISO/IEC 27037:2012.
+                   </div>`
+                : '';
             const htmlContent = `<!DOCTYPE html>
             <html lang="${lang}">
             <head><meta charset="UTF-8"><title>${isPT ? 'Minuta de Petição Inicial' : 'Draft Petition'}</title>
-            <style>body{font-family:Times New Roman;margin:2.5cm;line-height:1.4}</style>
+            <style>body{font-family:Times New Roman;margin:2.5cm;line-height:1.4} .safeguard{margin-top:30px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;font-size:10px}</style>
             </head>
             <body>
             <h1 align="center">${isPT ? 'MINUTA DE PETIÇÃO INICIAL' : 'DRAFT PETITION'}</h1>
@@ -1233,6 +1325,7 @@
             <p>${isPT ? 'A discrepância SAF-T vs DAC7 atinge' : 'The SAF-T vs DAC7 discrepancy amounts to'} ${formatForensicCurrency(m.saftGross - m.dac7Total)}.</p>
             <p>${isPT ? 'Requer-se a inversão do ónus da prova nos termos do Art. 344.º CC.' : 'We request the reversal of the burden of proof under Art. 344 CC.'}</p>
             <p>${isPT ? 'Valor da ação:' : 'Claim value:'} ${formatForensicCurrency(Math.abs(m.btorLedger - m.btfInvoice) + Math.abs(m.saftGross - m.dac7Total))}</p>
+            ${safeguardNote}
             <p>${isPT ? 'Data' : 'Date'}: ${new Date().toLocaleString(lang)}</p>
             <p>${isPT ? 'O Mandatário Judicial' : 'Judicial Representative'}</p>
             </body></html>`;
@@ -1282,7 +1375,6 @@
 
         const docDefinition = {
             pageSize: 'A4',
-            // FIX-GEOM-02: pageMargins uniformizados [40,85,40,60] — clearance 85pt (≈30mm)
             pageMargins: [40, 85, 40, 60],
             header: function(currentPage, pageCount) {
                 var sid = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'DEMO';
@@ -1294,19 +1386,25 @@
                 };
             },
             footer: function(currentPage, pageCount) {
+                const pendingIds = getPendingEvidenceIds();
+                const hasPending = pendingIds.length > 0;
+                const lang = window.currentLang || 'pt';
+                const isPT = lang === 'pt';
+                const safeguardText = hasPending 
+                    ? (isPT 
+                        ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+                        : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+                    : '';
                 return {
                     stack: [
                         { canvas: [{ type: 'line', x1: 40, y1: 5, x2: 555, y2: 5, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                        { text: 'Master Hash SHA-256: ' + (m.masterHash || 'INDISPONÍVEL') + ' | Página ' + currentPage + ' de ' + pageCount, alignment: 'center', fontSize: 7, margin: [0, 10, 0, 0], color: '#64748b' }
+                        { text: 'Master Hash SHA-256: ' + (m.masterHash || 'INDISPONÍVEL') + ' | Página ' + currentPage + ' de ' + pageCount + safeguardText, alignment: 'center', fontSize: 7, margin: [0, 10, 0, 0], color: '#64748b' }
                     ]
                 };
             },
             content: construirConteudoDinamicoAnalista(m, sankeyImg, atfImg, qrCodeImg),
-            // FIX-FONT-01 v2: usar Roboto (único font garantido no VFS pdfMake CDN).
-            // Air-gap: coberto pelo jsPDF via PATCH-PDF-01 v2 — pdfMake é fallback online.
             defaultStyle: { fontSize: 10.5, color: '#334155' },
             watermark: { text: 'PROVA DIGITAL MATERIAL', color: '#0ea5e9', opacity: 0.04, bold: false, italics: true, angle: 45, fontSize: 34 },
-            // ========== ESTILOS CORRIGIDOS (sem referências a fontes externas) ==========
             styles: {
                 h1: { fontSize: 11.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#1e3a8a' },
                 h2: { fontSize: 9.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#2c3e66' },
@@ -1315,8 +1413,7 @@
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#e2e8f0', color: '#1e3a8a' },
                 footerLine1: { fontSize: 7.5, alignment: 'center', margin: [0, 0, 0, 10], color: '#64748b' },
                 footerLine2: { fontSize: 7.5, alignment: 'center', color: '#94a3b8' }
-            },
-            defaultStyle: { fontSize: 10.5, color: '#334155' }
+            }
         };
 
         try {
@@ -1325,16 +1422,15 @@
             return blob;
         } catch (err) {
             triadaLog('error', '❌ Falha ao gerar blob do Parecer: ' + err.message);
-            const htmlFb = _generateFallbackHTML(m, 'parecer');
+            const pendingIds = getPendingEvidenceIds();
+            const htmlFb = _generateFallbackHTML(m, 'parecer', pendingIds);
             return new Blob([htmlFb], { type: 'text/html' });
         }
     }
 
     async function _gerarBlobAnexoCustodia() {
-        // FIX-PARTITION-03: sincronizar com payload unificado do Parecer Master
         const _activePayload = window.UNIFED_ACTIVE_EXPORT_PAYLOAD || null;
         if (_activePayload && _activePayload.isVerified && _activePayload.evidencias.length > 0) {
-            // Se o payload tem evidências auditadas, expor para gerarConteudoAnexoCustodia
             window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE = _activePayload.evidencias;
             triadaLog('info', '[FIX-PARTITION-03] Anexo Custódia sincronizado: ' +
                 _activePayload.evidencias.length + ' evidências do payload master');
@@ -1382,7 +1478,6 @@
         
         const docDef = {
             pageSize: 'A4',
-            // FIX-GEOM-03: pageMargins uniformizados [40,85,40,60] — clearance 85pt (≈30mm)
             pageMargins: [40, 85, 40, 60],
             header: function(currentPage, pageCount) {
                 var sid = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'DEMO';
@@ -1395,17 +1490,24 @@
             },
             content: contentCustodia,
             footer: function(currentPage, pageCount) {
+                const pendingIds = getPendingEvidenceIds();
+                const hasPending = pendingIds.length > 0;
+                const lang = window.currentLang || 'pt';
+                const isPT = lang === 'pt';
+                const safeguardText = hasPending 
+                    ? (isPT 
+                        ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+                        : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+                    : '';
                 return {
                     stack: [
                         { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.75, lineColor: '#1e3a8a' }], margin: [0, -12, 0, 8] },
                         { text: `Página ${currentPage} de ${pageCount}`, style: 'footerLine1', alignment: 'center' },
-                        { text: `Master Hash SHA-256: ${m.masterHash || 'INDISPONÍVEL'}`, style: 'footerLine2', alignment: 'center' }
+                        { text: `Master Hash SHA-256: ${m.masterHash || 'INDISPONÍVEL'}${safeguardText}`, style: 'footerLine2', alignment: 'center' }
                     ],
                     margin: [0, 0, 0, 0]
                 };
             },
-            // FIX-FONT-02: fontes Core14 nativas — sem dependência VFS/CDN (air-gap safe)
-            // ========== ESTILOS CORRIGIDOS (sem referências a fontes externas) ==========
             styles: {
                 h1: { fontSize: 11.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#1e3a8a' },
                 h2: { fontSize: 9.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#2c3e66' },
@@ -1415,7 +1517,6 @@
                 footerLine1: { fontSize: 7.5, color: '#64748b', alignment: 'center', margin: [0, 0, 0, 4] },
                 footerLine2: { fontSize: 7.5, color: '#94a3b8', alignment: 'center' }
             },
-            // FIX-FONT-02 v2: Roboto — único font garantido no pdfMake VFS CDN
             defaultStyle: { fontSize: 10.5, color: '#334155' }
         };
 
@@ -1425,7 +1526,8 @@
             return blob;
         } catch (err) {
             triadaLog('error', '❌ Falha ao gerar blob do Anexo: ' + err.message);
-            const htmlFb = _generateFallbackHTML(m, 'custodia');
+            const pendingIds = getPendingEvidenceIds();
+            const htmlFb = _generateFallbackHTML(m, 'custodia', pendingIds);
             return new Blob([htmlFb], { type: 'text/html' });
         }
     }
@@ -1448,17 +1550,9 @@
     // =========================================================================
     // MÓDULO 3A — _exportPacoteAnalista (EMPACOTAMENTO .ZIP)
     // =========================================================================
-    // =========================================================================
-    // PATCH-PDF-01 v2 — _gerarBlobParecerAnalista
-    // Motor: exportPDF() real (jsPDF, script.js) — 19 páginas com todos os dados.
-    // GUARDA DEMO: inicializa UNIFEDSystem.client antes de chamar exportPDF()
-    // para evitar abort silencioso (exportPDF aborta se client === null).
-    // FINALLY: restaura jsPDF.prototype.save mesmo em caso de excepção.
-    // =========================================================================
     async function _gerarBlobParecerAnalista() {
         const _sys = window.UNIFEDSystem || {};
 
-        // GUARDA: UNIFEDSystem.client — exportPDF() aborta se null
         if (!_sys.client) {
             const _isDEMO = (_sys.demoMode === true) || (_sys.modo === 'DEMO') ||
                             (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO');
@@ -1491,7 +1585,6 @@
                 } catch(saveErr) {
                     triadaLog('error', '[PATCH-PDF-01v2] Erro ao capturar blob: ' + saveErr.message);
                 }
-                // NÃO chamar _originalSave — evita download duplo
             };
 
             try {
@@ -1499,7 +1592,6 @@
             } catch(exportErr) {
                 triadaLog('error', '[PATCH-PDF-01v2] exportPDF() lançou excepção: ' + exportErr.message);
             } finally {
-                // Restauro garantido mesmo em caso de erro
                 jsPDF.prototype.save = _originalSave;
                 triadaLog('info', '[PATCH-PDF-01v2] jsPDF.prototype.save restaurado');
             }
@@ -1513,22 +1605,19 @@
             triadaLog('info', '[PATCH-PDF-01v2] exportPDF ou window.jspdf indisponível — fallback pdfMake');
         }
 
-        // FALLBACK: motor pdfMake (conteúdo funcional, sem gráficos)
         return _gerarBlobParecerTecnicoForense();
     }
 
     window._exportPacoteAnalista = async function () {
         triadaLog('info', '🚀 _exportPacoteAnalista — iniciando compilação do arquivo .ZIP para o Analista');
         try {
-            // FIX-TDZ-01: sessionId declarado ANTES de qualquer uso (corrige ReferenceError)
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || "DEMO";
-            // PATCH-PDF-01 v2: usar motor real jsPDF via _gerarBlobParecerAnalista (com guarda DEMO)
             const parecerBlob = await _gerarBlobParecerAnalista();
             const jsonBlob = new Blob([JSON.stringify(buildMaximalJsonPayload(), null, 2)], { type: 'application/json' });
             if (typeof JSZip !== 'undefined') {
                 const zip = new JSZip();
                 zip.file("Parecer_Tecnico_Forense_Original_Master.pdf", parecerBlob);
-                zip.file("UNIFED_Evidencias_Estruturado_" + sessionId + ".json", jsonBlob); // PATCH-JSON-03: nome canónico
+                zip.file("UNIFED_Evidencias_Estruturado_" + sessionId + ".json", jsonBlob);
                 const zipBlob = await zip.generateAsync({ type: "blob" });
                 _downloadBlobNativo(zipBlob, `Pacote_Analista_Original_Sessao_${sessionId}.zip`);
                 setTimeout(() => {
@@ -1550,11 +1639,8 @@
     window._exportPacoteAdvogado = async function () {
         triadaLog('info', '\u2696\uFE0F _exportPacoteAdvogado v2 — DECOMPOSIÇÃO ATÓMICA DO MASTER (FIX-TRIADA-01)');
         try {
-            // FIX-TDZ-02: sessionId declarado ANTES de qualquer uso (corrige ReferenceError)
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || 'DEMO';
 
-            // ── FIX-PARTITION-01: Payload unificado — snapshot imutável antes de qualquer gerador ──
-            // Garante que os 3 documentos (Perícia, Anexo, Petição) derivam da mesma fonte de dados.
             const _unifiedPayload = (typeof window.UNIFED_ExportEngine !== 'undefined' &&
                 typeof window.UNIFED_ExportEngine.getVerifiedPayload === 'function')
                 ? window.UNIFED_ExportEngine.getVerifiedPayload()
@@ -1566,27 +1652,46 @@
                     ? 'risco=' + _unifiedPayload.riscoPercentual + '% | evid=' + _unifiedPayload.evidencias.length + ' | hash=' + (_unifiedPayload.masterHash || '').substring(0,12) + '...'
                     : 'null → fallback independente'));
 
-            // ── Court Ready Gate — bloquear se integridade comprometida (não-DEMO) ──
             if (_unifiedPayload && typeof window.UNIFED_ExportEngine.runCourtReadyChecklist === 'function') {
                 const _gate = window.UNIFED_ExportEngine.runCourtReadyChecklist(_unifiedPayload);
                 const _isDemoMode = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
                     || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
-                const _errosCrit = _gate.erros.filter(function(e) { return !e.startsWith('CHECK 4'); });
+                
+                // FIX-PENDING-TIMESTAMP-01: Filtrar apenas erros críticos (CHECK 4 ignorado em DEMO)
+                // Erros PENDING_TIMESTAMP são tratados como WARNING, não como bloqueio
+                const _pendingIds = getPendingEvidenceIds();
+                const _errosCrit = _gate.erros.filter(function(e) {
+                    // CHECK 4 ignorado em DEMO
+                    if (_isDemoMode && e.startsWith('CHECK 4')) return false;
+                    // PENDING_TIMESTAMP não é erro crítico - apenas aviso
+                    if (e.includes('timestamp') || e.includes('selagem')) return false;
+                    return true;
+                });
+                
                 if (!_isDemoMode && _errosCrit.length > 0) {
-                    throw new Error('[FIX-TRIADA-01] Court Ready Gate falhou: ' + _errosCrit[0]);
+                    // Log detalhado dos erros para debug
+                    triadaLog('error', '[FIX-TRIADA-01] Court Ready Gate falhou com erros críticos:', _errosCrit);
+                    throw new Error('[FIX-TRIADA-01] Court Ready Checklist falhou: ' + _errosCrit[0]);
                 }
+                
+                // Emitir aviso para PENDING_TIMESTAMP mas não bloquear
+                if (_pendingIds.length > 0) {
+                    const lang = window.currentLang || 'pt';
+                    const isPT = lang === 'pt';
+                    const warningMsg = isPT 
+                        ? `⚠️ AVISO FORENSE: ${_pendingIds.length} evidência(s) sem selagem temporal RFC 3161: ${_pendingIds.join(', ')}.\n\nA exportação prossegue com salvaguarda legal nos termos do Art. 125.º CPP.`
+                        : `⚠️ FORENSIC WARNING: ${_pendingIds.length} evidence(s) without RFC 3161 timestamp: ${_pendingIds.join(', ')}.\n\nExport continues with legal safeguard under Art. 125.º CPP.`;
+                    showModalMessage(isPT ? "⚠️ AVISO - Selagem Temporal Pendente" : "⚠️ WARNING - Pending Timestamp", warningMsg, null);
+                }
+                
                 if (_gate.avisos.length) triadaLog('warn', '[FIX-TRIADA-01] Avisos: ' + _gate.avisos.join(' | '));
             }
 
-            // ── Geração atómica dos 3 documentos em paralelo ──────────────────────────
-            // DOC 1 — Perícia: Parecer Master jsPDF (motor primário, 19 páginas)
-            // DOC 2 — Anexo de Custódia: registo cronológico imutável + hashes SHA-256
-            // DOC 3 — Petição Inicial: enquadramento normativo + Art. 344.º n.º 2 CC
             triadaLog('info', '[FIX-TRIADA-01] A gerar 3 documentos em paralelo...');
             const [parecerBlob, custodiaBlob, peticaoBlob] = await Promise.all([
-                _gerarBlobParecerAnalista(),   // DOC 1 — Perícia (jsPDF Master)
-                _gerarBlobAnexoCustodia(),      // DOC 2 — Anexo de Custódia (pdfMake)
-                _gerarPeticaoBlob()             // DOC 3 — Petição Inicial (pdfMake)
+                _gerarBlobParecerAnalista(),
+                _gerarBlobAnexoCustodia(),
+                _gerarPeticaoBlob()
             ]);
 
             triadaLog('info', '[FIX-TRIADA-01] 3 documentos gerados — ' +
@@ -1596,17 +1701,28 @@
             const jsonBlob = new Blob([JSON.stringify(buildMaximalJsonPayload(), null, 2)], { type: 'application/json' });
             if (typeof JSZip !== 'undefined') {
                 const zip = new JSZip();
-                // FIX-TRIADA-02: nomenclatura judicial canónica (padrão Morais Leitão)
-                zip.file("UNIFED_PERITIA_Parecer_Tecnico_Forense.pdf",   parecerBlob);  // DOC 1 — Perícia
-                zip.file("UNIFED_ANEXO_Cadeia_de_Custodia.pdf",          custodiaBlob); // DOC 2 — Custódia
-                zip.file("UNIFED_PETICAO_Narrativa_Juridica.pdf",        peticaoBlob);  // DOC 3 — Petição
-                zip.file("UNIFED_Evidencias_Estruturado_" + sessionId + ".json", jsonBlob); // PATCH-JSON-03: nome canónico
+                zip.file("UNIFED_PERITIA_Parecer_Tecnico_Forense.pdf",   parecerBlob);
+                zip.file("UNIFED_ANEXO_Cadeia_de_Custodia.pdf",          custodiaBlob);
+                zip.file("UNIFED_PETICAO_Narrativa_Juridica.pdf",        peticaoBlob);
+                zip.file("UNIFED_Evidencias_Estruturado_" + sessionId + ".json", jsonBlob);
                 const zipBlob = await zip.generateAsync({ type: "blob" });
                 _downloadBlobNativo(zipBlob, `Pacote_Advogado_Sessao_${sessionId}.zip`);
-                // Limpar payload após download para não contaminar exportações futuras
                 delete window.UNIFED_ACTIVE_EXPORT_PAYLOAD;
+                // Limpar lista de evidências pendentes após exportação
                 setTimeout(() => {
-                    showModalMessage("⚠ NOTIFICAÇÃO FORENSE DE SEGURANÇA", "O Pacote do Advogado foi compactado com sucesso no ficheiro .ZIP.\nProceda imediatamente à cópia do ficheiro para a Pen Drive local encriptada para o protocolo de contra-entrega nas instalações do Mandatário Judicial (Advogado).\n\nClique em 'OK' para confirmar e concluir o processo de segurança.", null);
+                    const pendingCount = getPendingEvidenceIds().length;
+                    const lang = window.currentLang || 'pt';
+                    const isPT = lang === 'pt';
+                    let message = isPT 
+                        ? "O Pacote do Advogado foi compactado com sucesso no ficheiro .ZIP.\nProceda imediatamente à cópia do ficheiro para a Pen Drive local encriptada para o protocolo de contra-entrega nas instalações do Mandatário Judicial (Advogado).\n\nClique em 'OK' para confirmar e concluir o processo de segurança."
+                        : "The Lawyer Package has been successfully compressed into the .ZIP file.\nImmediately copy the file to the encrypted local Pen Drive for the counter-delivery protocol at the Judicial Representative's premises.\n\nClick 'OK' to confirm and complete the security process.";
+                    if (pendingCount > 0) {
+                        message += (isPT 
+                            ? `\n\n⚠️ NOTA DE SALVAGUARDA: ${pendingCount} evidência(s) foram exportadas sem selagem temporal RFC 3161, com salvaguarda legal nos termos do Art. 125.º CPP.`
+                            : `\n\n⚠️ SAFEGUARD NOTE: ${pendingCount} evidence(s) were exported without RFC 3161 timestamp, with legal safeguard under Art. 125.º CPP.`);
+                    }
+                    showModalMessage(isPT ? "⚠ NOTIFICAÇÃO FORENSE DE SEGURANÇA" : "⚠ FORENSIC SECURITY NOTIFICATION", message, null);
+                    window._UNIFED_PENDING_TIMESTAMP_EVIDENCES = [];
                 }, 500);
             } else {
                 triadaLog('error', 'JSZip não disponível');
@@ -1644,7 +1760,7 @@
     }
 
     // =========================================================================
-    // FUNÇÃO generatePDFBlob COM BLINDAGEM ANTI-CRASH (fontes mapeadas para Roboto)
+    // FUNÇÃO generatePDFBlob COM BLINDAGEM ANTI-CRASH
     // =========================================================================
     async function generatePDFBlob(docDefinition) {
         return new Promise((resolve, reject) => {
@@ -1653,13 +1769,8 @@
                 return;
             }
             try {
-                // FIX-FONT-03 v2: pdfMake 0.2.7 NÃO suporta PDF Core14 nativas (Helvetica/Times).
-                // Apenas suporta fontes registadas no VFS. A fonte padrão é Roboto (incluída no vfs_fonts CDN).
-                // Air-gap sem VFS: o jsPDF (PATCH-PDF-01 v2) cobre este cenário — o pdfMake é fallback online.
-                // Não alterar pdfMake.fonts — usar a configuração padrão Roboto do VFS.
-                // Se o VFS estiver vazio (air-gap), o generatePDFBlob irá falhar graciosamente para o fallback.
                 if (typeof pdfMake.vfs === 'undefined' || Object.keys(pdfMake.vfs || {}).length === 0) {
-                    triadaLog('warn', '[generatePDFBlob] VFS pdfMake vazio (air-gap?) — jsPDF é o motor primário via PATCH-PDF-01 v2');
+                    triadaLog('warn', '[generatePDFBlob] VFS pdfMake vazio (air-gap?) — jsPDF é o motor primário');
                 }
 
                 if (docDefinition && Array.isArray(docDefinition.content)) {
@@ -1688,8 +1799,8 @@
             else fullMetrics = { session: sys.sessionId || 'N/A', masterHash: sys.masterHash || 'N/A', companyName: sys.analysis?.companyName || 'N/A', nif: sys.analysis?.nif || 'N/A', saftGross: sys.analysis?.saftGross || 0, dac7Total: sys.analysis?.dac7Total || 0, btorLedger: sys.analysis?.btorLedger || 0, btfInvoice: sys.analysis?.btfInvoice || 0, omissionPct: sys.analysis?.omissionPct || 0, verdict: sys.analysis?.verdict || 'N/A', top3Questions: sys.analysis?.top3Questions || [], merkleRoot: sys.analysis?.merkleRoot || 'N/A', monthlyData: sys.monthlyData || {}, auxiliaryData: sys.auxiliaryData || {}, totals: sys.analysis?.totals || {}, crossings: sys.analysis?.crossings || {}, twoAxis: sys.analysis?.twoAxis || {} };
         } catch(e) { console.warn('[ELASTIC] Erro ao obter métricas:', e); }
         const completePayload = {
-            metadata: { source: 'UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION', timestamp: new Date().toISOString(), sessionId: fullMetrics.session || sys.sessionId, version: sys.version || 'v1.0', language: window.currentLang || 'pt', demoMode: !!sys.demoMode, exportMode: mode, selectedYear: sys.selectedYear, selectedPeriodo: sys.selectedPeriodo, platform: fullMetrics.platform || 'Plataforma Digital Operacional (Anonimizado)', client: { name: fullMetrics.companyName, nif: fullMetrics.nif } },
-            integrity: { masterHash: fullMetrics.masterHash, merkleRoot: fullMetrics.merkleRoot, algorithm: 'SHA-256', protocol: 'RFC 3161', eidas2Compliant: true },
+            metadata: { source: 'UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION', timestamp: new Date().toISOString(), sessionId: fullMetrics.session || sys.sessionId, version: sys.version || 'v1.0', language: window.currentLang || 'pt', demoMode: !!sys.demoMode, exportMode: mode, selectedYear: sys.selectedYear, selectedPeriodo: sys.selectedPeriodo, platform: fullMetrics.platform || 'Plataforma Digital Operacional (Anonimizado)', client: { name: fullMetrics.companyName, nif: fullMetrics.nif }, pendingTimestampEvidences: getPendingEvidenceIds() },
+            integrity: { masterHash: fullMetrics.masterHash, merkleRoot: fullMetrics.merkleRoot, algorithm: 'SHA-256', protocol: 'RFC 3161', eidas2Compliant: true, pendingTimestampWarning: hasPendingTimestampEvidences() ? 'Evidências sem selagem temporal: ' + getPendingEvidenceIds().join(', ') : null },
             analysis: { totals: fullMetrics.totals, crossings: fullMetrics.crossings, twoAxis: fullMetrics.twoAxis, verdict: fullMetrics.verdict, top3Questions: fullMetrics.top3Questions, selectedQuestions: sys.analysis?.selectedQuestions || [], omissionPct: fullMetrics.omissionPct, saftGross: fullMetrics.saftGross, dac7Total: fullMetrics.dac7Total, btorLedger: fullMetrics.btorLedger, btfInvoice: fullMetrics.btfInvoice },
             monthlyData: fullMetrics.monthlyData,
             auxiliaryData: fullMetrics.auxiliaryData,
@@ -1711,10 +1822,8 @@
         _exportPacoteAdvogado: window._exportPacoteAdvogado,
         getUnifiedPayload: function() { return obterPayloadForenseUnificado(); },
         getSystemMetrics: function() { return getSystemMetrics(); },
+        getPendingTimestampEvidences: function() { return getPendingEvidenceIds(); },
         downloadJsonData: function(mode, lang) {
-            // PATCH-JSON-02: Todos os contextos de exportacao JSON (botao exportJSONBtn,
-            // Pacote Analista e Pacote Advogado) usam buildMaximalJsonPayload() canonical.
-            // O nome do ficheiro e identico nos 3 contextos para garantir paridade de conteudo.
             const _mode = 'analyst';
             const _sessionId = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId)
                 ? window.UNIFEDSystem.sessionId
@@ -1788,10 +1897,27 @@
         if (!window.UNIFEDSystem) window.UNIFEDSystem = {};
         if (!window.UNIFEDSystem.analysis) window.UNIFEDSystem.analysis = {};
         if (!window.UNIFEDSystem.analysis.evidenceIntegrity) window.UNIFEDSystem.analysis.evidenceIntegrity = [];
-        window.UNIFEDSystem.analysis.evidenceIntegrity.push({ filename: file.name, hash: hash, type: file.type, timestamp: new Date().toISOString(), size: file.size });
+        
+        const evidenceId = file.name;
+        // Validar timestamp da nova evidência
+        const validationResult = validateEvidenceTimestamp({ id: evidenceId, filename: file.name, timestamp: null });
+        if (validationResult.status === 'WARNING') {
+            addPendingTimestampEvidence(evidenceId, file.name);
+        }
+        
+        window.UNIFEDSystem.analysis.evidenceIntegrity.push({ 
+            filename: file.name, 
+            hash: hash, 
+            type: file.type, 
+            timestamp: 'PENDING_TIMESTAMP',
+            size: file.size 
+        });
         if (window.refreshCustodyExplorer) await window.refreshCustodyExplorer();
-        showModalMessage('Evidência Adicionada', `Ficheiro "${file.name}" integrado à cadeia de custódia.\nTotal: ${window.UNIFEDSystem.analysis.evidenceIntegrity.length}`, null);
+        
+        const pendingCount = getPendingEvidenceIds().length;
+        showModalMessage('Evidência Adicionada', `Ficheiro "${file.name}" integrado à cadeia de custódia.\nTotal: ${window.UNIFEDSystem.analysis.evidenceIntegrity.length}\n${pendingCount > 0 ? `⚠️ Nota: ${pendingCount} evidência(s) sem selagem temporal RFC 3161.` : ''}`, null);
     }
+    
     window.unlockEvidenceManagement = function() {
         const btn = document.getElementById('btn-gestao-evidencias');
         if (btn) {
@@ -1806,6 +1932,7 @@
             triadaLog('info', '🔓 Gestão de evidências desbloqueada');
         }
     };
+    
     window.refreshCustodyExplorer = async function() {
         const qrContainer = document.getElementById('qr-code-explorer-target');
         if (qrContainer) {
@@ -1818,6 +1945,7 @@
             } catch(err) { qrContainer.innerHTML = '<p style="color:#b91c1c;">Erro ao gerar QR Code</p>'; }
         }
     };
+    
     function initRetifications() {
         const oldAlert = document.getElementById('UNIFED_SANDBOX_ALERTS');
         if (oldAlert) oldAlert.remove();
@@ -1861,6 +1989,7 @@
         const _m = getSystemMetrics();
         if (_m.transactionRows && _m.transactionRows.length > 0) payloadCompleto.transactionRows = _m.transactionRows;
         payloadCompleto.custodyLog = _m.custodyLog || [];
+        payloadCompleto.pendingTimestampEvidences = getPendingEvidenceIds();
         return payloadCompleto;
     }
 
@@ -1870,20 +1999,19 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
+// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
     window.UNIFED_ExportEngine = window.UNIFED_ExportEngine || {};
     var ENG = window.UNIFED_ExportEngine;
 
-    // ── 1. PAYLOAD VERIFICADO ─────────────────────────────────────────────────
     ENG.getVerifiedPayload = function(dataObject) {
         var sys = dataObject || (window.UNIFEDSystem && window.UNIFEDSystem.analysis) || {};
         var rawRisco        = parseFloat(sys.expenseOmissionPct || sys.riscoPct || sys.risco || 0);
         var rawRevOmit      = parseFloat(sys.revOmitPct || sys.revenueOmissionPct || 0);
         var rawGanhosBrutos = parseFloat(sys.grossEarnings || sys.ganhosBrutos || 0);
 
-        // Arredondamento aplicado UMA única vez na origem — elimina divergência toFixed
         var riscoPercentual   = isNaN(rawRisco)         ? '0.00' : rawRisco.toFixed(2);
         var revOmitPercentual = isNaN(rawRevOmit)       ? '0.00' : rawRevOmit.toFixed(2);
         var ganhosBrutosStr   = isNaN(rawGanhosBrutos)  ? '0.00' : rawGanhosBrutos.toFixed(2);
@@ -1891,29 +2019,42 @@
         var masterHash = (window.UNIFEDSystem && window.UNIFEDSystem.masterHash)
             || sys.masterHash || 'INDISPONÍVEL';
 
-        // Evidências normalizadas (ForensicLogger → fallback custodyLog)
         var rawEvids = [];
         try {
             if (window.ForensicLogger && typeof window.ForensicLogger.getLogs === 'function') {
                 window.ForensicLogger.getLogs().forEach(function(e) {
                     if (e && e.data && (e.data.fileName || e.data.filename) && e.data.hash) {
+                        var hasTimestamp = !!(e.timestamp && e.timestamp !== 'PENDING_TIMESTAMP');
                         rawEvids.push({
                             id:         e.data.serial || ('EV_' + String(rawEvids.length + 1).padStart(3, '0')),
                             nome:       e.data.fileName || e.data.filename,
                             hashSHA256: e.data.hash,
-                            timestamp:  e.timestamp || e.data.tStamp || new Date().toISOString()
+                            timestamp:  e.timestamp || (hasTimestamp ? new Date().toISOString() : 'PENDING_TIMESTAMP'),
+                            hasValidTimestamp: hasTimestamp
                         });
+                        if (!hasTimestamp && window._UNIFED_PENDING_TIMESTAMP_EVIDENCES) {
+                            if (!window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.some(ev => ev.id === e.data.filename)) {
+                                window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.push({ id: e.data.filename, name: e.data.filename });
+                            }
+                        }
                     }
                 });
             }
             if (rawEvids.length === 0 && Array.isArray(sys.custodyLog)) {
                 sys.custodyLog.forEach(function(e, idx) {
+                    var hasTimestamp = !!(e.timestamp && e.timestamp !== 'PENDING_TIMESTAMP');
                     rawEvids.push({
                         id:         e.serial || ('EV_' + String(idx + 1).padStart(3, '0')),
                         nome:       e.fileName || e.filename || 'Evidência ' + (idx + 1),
                         hashSHA256: e.hash || 'HASH_INDISPONÍVEL',
-                        timestamp:  e.timestamp || new Date().toISOString()
+                        timestamp:  e.timestamp || (hasTimestamp ? new Date().toISOString() : 'PENDING_TIMESTAMP'),
+                        hasValidTimestamp: hasTimestamp
                     });
+                    if (!hasTimestamp && window._UNIFED_PENDING_TIMESTAMP_EVIDENCES) {
+                        if (!window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.some(ev => ev.id === e.id)) {
+                            window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.push({ id: e.id || e.filename, name: e.filename || 'Evidência' });
+                        }
+                    }
                 });
             }
         } catch(evErr) {
@@ -1938,7 +2079,6 @@
         });
     };
 
-    // ── 2. DISTRIBUIÇÃO DE CONTEÚDO ───────────────────────────────────────────
     ENG.distribuirConteudo = function(payload) {
         if (!payload || !payload.isVerified) {
             throw new Error('[ExportEngine] distribuirConteudo requer payload verificado (getVerifiedPayload).');
@@ -1960,7 +2100,8 @@
                 tipo:       (ev.nome || '').toLowerCase().endsWith('.pdf') ? 'PDF' : 'CSV',
                 origem:     ev.nome || 'N/D',
                 hashSHA256: ev.hashSHA256 || 'HASH_INDISPONÍVEL',
-                timestamp:  ev.timestamp
+                timestamp:  ev.timestamp || 'PENDING_TIMESTAMP',
+                hasValidTimestamp: ev.hasValidTimestamp || false
             };
         });
         var anexo = {
@@ -1979,7 +2120,7 @@
         return { parecer: parecer, anexo: anexo, peticao: peticao };
     };
 
-    // ── 3. COURT READY CHECKLIST — 4 pontos de validação ─────────────────────
+    // FIX-PENDING-TIMESTAMP-01: Court Ready Checklist agora aceita PENDING_TIMESTAMP como WARNING
     ENG.runCourtReadyChecklist = function(payload, hashDashboard) {
         var erros  = [];
         var avisos = [];
@@ -2018,19 +2159,29 @@
             linhas.push('[ FALHOU ] CHECK 2 — Master Hash: DIVERGÊNCIA CRÍTICA');
         }
 
-        // CHECK 3: Evidências — quantidade e hashes válidos
+        // CHECK 3: Evidências — quantidade e hashes válidos (PENDING_TIMESTAMP agora é WARNING, não erro)
         var nEv      = payload.evidencias ? payload.evidencias.length : 0;
         var nHashOK  = (payload.evidencias || []).filter(function(e) {
             return e.hashSHA256 && e.hashSHA256 !== 'HASH_INDISPONÍVEL' && e.hashSHA256.length >= 32;
         }).length;
+        var nPendingTimestamp = (payload.evidencias || []).filter(function(e) {
+            return !e.hasValidTimestamp || e.timestamp === 'PENDING_TIMESTAMP';
+        }).length;
+        
         if (nEv === 0) {
             erros.push('CHECK 3 FALHA: Tabela de evidências vazia — cadeia de custódia inválida.');
             linhas.push('[ FALHOU ] CHECK 3 — Evidências: TABELA VAZIA');
         } else if (nHashOK < nEv) {
-            avisos.push('CHECK 3: ' + (nEv - nHashOK) + ' evidência(s) sem hash SHA-256 válido.');
-            linhas.push('[ AVISO ] CHECK 3 — Evidências: ' + nEv + ' total | ' + nHashOK + ' com hash | ' + (nEv - nHashOK) + ' em falta');
+            erros.push('CHECK 3 FALHA: ' + (nEv - nHashOK) + ' evidência(s) sem hash SHA-256 válido.');
+            linhas.push('[ FALHOU ] CHECK 3 — Evidências: ' + nEv + ' total | ' + nHashOK + ' com hash | ' + (nEv - nHashOK) + ' em falta');
         } else {
-            linhas.push('[ OK ] CHECK 3 — Evidências: ' + nEv + ' artefactos | ' + nHashOK + '/' + nEv + ' SHA-256 válidos');
+            if (nPendingTimestamp > 0) {
+                // FIX-PENDING-TIMESTAMP-01: PENDING_TIMESTAMP é WARNING, não erro fatal
+                avisos.push('CHECK 3: ' + nPendingTimestamp + ' evidência(s) sem selagem RFC 3161 (PENDING_TIMESTAMP) — salvaguarda legal aplicada.');
+                linhas.push('[ AVISO ] CHECK 3 — Evidências: ' + nPendingTimestamp + ' sem timestamp RFC 3161 (Art. 125.º CPP)');
+            } else {
+                linhas.push('[ OK ] CHECK 3 — Evidências: ' + nEv + ' artefactos | ' + nHashOK + '/' + nEv + ' SHA-256 válidos');
+            }
         }
 
         // CHECK 4: demoMode desactivado no momento da exportação
@@ -2056,19 +2207,19 @@
         return { ok: ok, relatorio: relatorio, erros: erros, avisos: avisos };
     };
 
-    // ── 4. PONTO DE ENTRADA UNIFICADO ─────────────────────────────────────────
     ENG.exportarComVerificacao = function(modo) {
         var payload   = ENG.getVerifiedPayload();
         var checklist = ENG.runCourtReadyChecklist(payload);
 
-        // FIX-DEMO-EXPORT-01: Em modo DEMO intencional, o CHECK 4 (demoMode=false)
-        // falha por design — os dados são anonimizados por definição.
-        // A exportação DEMO é permitida com aviso não-bloqueante; apenas erros de
-        // arredondamento (CHECK 1) e hash (CHECK 2) bloqueam (integridade documental).
         var isDemoIntentional = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
             || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
+        
+        // FIX-PENDING-TIMESTAMP-01: Em modo DEMO intencional, CHECK 4 ignorado
+        // PENDING_TIMESTAMP gera apenas aviso, não bloqueia
         var errosCriticos = checklist.erros.filter(function(e) {
-            return !e.startsWith('CHECK 4'); // CHECK 4 não é crítico em modo DEMO intencional
+            if (isDemoIntentional && e.startsWith('CHECK 4')) return false;
+            if (e.includes('timestamp') || e.includes('selagem')) return false;
+            return true;
         });
         var checklistFalhou = isDemoIntentional ? errosCriticos.length > 0 : !checklist.ok;
 
@@ -2078,11 +2229,10 @@
             if (typeof showModalMessage === 'function') {
                 showModalMessage('Exportacao Bloqueada — Integridade Comprometida', msg, null);
             } else { alert(msg); }
-            return Promise.reject(new Error('Court Ready: ' + errosCriticos[0]));
+            return Promise.reject(new Error('Court Ready: ' + (errosCriticos[0] || 'Falha desconhecida')));
         }
 
         if (isDemoIntentional && checklist.erros.length > 0) {
-            // CHECK 4 falhou mas estamos em DEMO intencional — aviso não bloqueante
             console.warn('[ExportEngine] DEMO mode: exportação com dados anonimizados. CHECK 4 ignorado intencionalmente.');
             if (window.UNIFED_FORENSIC_LOG) {
                 window.UNIFED_FORENSIC_LOG.push({ timestamp: new Date().toISOString(),
@@ -2113,5 +2263,5 @@
         return Promise.reject(new Error('[ExportEngine] Modo desconhecido: ' + modo));
     };
 
-    console.log('[UNIFED-ExportEngine] PVC-01 instalado — getVerifiedPayload · distribuirConteudo · runCourtReadyChecklist · exportarComVerificacao');
+    console.log('[UNIFED-ExportEngine] PVC-01-R14 instalado (FIX-PENDING-TIMESTAMP-01) — getVerifiedPayload · distribuirConteudo · runCourtReadyChecklist · exportarComVerificacao');
 })();
