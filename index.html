@@ -9,6 +9,86 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
+    <!-- ============================================================================
+         ARTEFACTO: network_killswitch.js
+         FINALIDADE: Prevenção de fuga de dados e bloqueio de dependências CDN em ambiente Air-Gapped.
+         ESTRATÉGIA: Intercepção de chamadas globais de rede (Fetch, XHR, WebSocket, EventSource, sendBeacon).
+         INSERIDO NO TOPO PARA GARANTIR ISOLAMENTO ABSOLUTO ANTES DE QUALQUER CARGA EXTERNA.
+         ============================================================================ -->
+    <script>
+        (function() {
+            'use strict';
+            const LOG_PREFIX = "[PERÍCIA-BLOCKER]:";
+
+            // Bloqueio de Fetch API
+            if (window.fetch) {
+                const originalFetch = window.fetch;
+                window.fetch = function(...args) {
+                    console.warn(LOG_PREFIX + " Tentativa de Fetch bloqueada. URL:", args[0]);
+                    return Promise.reject(new Error("Network Isolation Active: Operation Forbidden (Fetch)"));
+                };
+            }
+
+            // Bloqueio de XMLHttpRequest
+            if (window.XMLHttpRequest) {
+                XMLHttpRequest.prototype.open = function() {
+                    console.warn(LOG_PREFIX + " Tentativa de XMLHttpRequest bloqueada.");
+                    throw new Error("Network Isolation Active: Operation Forbidden (XHR)");
+                };
+                XMLHttpRequest.prototype.send = function() {
+                    throw new Error("Network Isolation Active: XHR.send blocked");
+                };
+            }
+
+            // Bloqueio de WebSocket
+            if (window.WebSocket) {
+                window.WebSocket = function(...args) {
+                    console.error(LOG_PREFIX + " Tentativa de WebSocket bloqueada. URL:", args[0]);
+                    return {
+                        send: function() {},
+                        close: function() {},
+                        addEventListener: function() {}
+                    };
+                };
+            }
+
+            // Bloqueio de EventSource (Server-Sent Events)
+            if (window.EventSource) {
+                window.EventSource = function() {
+                    console.warn(LOG_PREFIX + " Tentativa de EventSource bloqueada.");
+                    throw new Error("Network Isolation Active: EventSource blocked");
+                };
+            }
+
+            // Bloqueio de navigator.sendBeacon
+            if (navigator && navigator.sendBeacon) {
+                navigator.sendBeacon = function() {
+                    console.warn(LOG_PREFIX + " Tentativa de sendBeacon bloqueada.");
+                    return false;
+                };
+            }
+
+            // Bloqueio de criação de elementos de rede (link prefetch, etc.)
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName) {
+                const element = originalCreateElement.call(document, tagName);
+                if (tagName.toLowerCase() === 'link') {
+                    const originalSetAttribute = element.setAttribute;
+                    element.setAttribute = function(name, value) {
+                        if (name === 'href' || name === 'as' || name === 'rel') {
+                            console.warn(LOG_PREFIX + " Tentativa de definir atributo de link bloqueada:", name, value);
+                            return;
+                        }
+                        return originalSetAttribute.call(this, name, value);
+                    };
+                }
+                return element;
+            };
+
+            console.info(LOG_PREFIX + " ✅ SISTEMA EM MODO AIR-GAPPED ACTIVO. Todas as requisições de rede estão inibidas. (killswitch v1.0)");
+        })();
+    </script>
+
     <!-- ────────────────────────────────────────────────────────────────────────────
          BIBLIOTECAS CRIPTOGRÁFICAS COM FALLBACK LOCAL (OFFLINE-FIRST)
          ──────────────────────────────────────────────────────────────────────────── -->
