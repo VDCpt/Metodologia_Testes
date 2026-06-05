@@ -1352,28 +1352,67 @@
     
     return {
         stack: [
-            // Linha de underscores (ocupando toda a largura)
-            { text: '______________________________________________________________________________________________________________', style: 'footerLine', alignment: 'center' },
-            // Primeira linha: título à esquerda, processo à direita
+            // ── Linha separadora flush com as margens do corpo ──
             {
-                columns: [
-                    { text: "RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP", style: 'footerLeft', alignment: 'left' },
-                    { text: `PROCESSO N.: ${processoNum}`, style: 'footerRight', alignment: 'right' }
-                ],
-                margin: [0, 4, 0, 2]
+                canvas: [{
+                    type: 'line',
+                    x1: 0, y1: 0, x2: 515, y2: 0,
+                    lineWidth: 0.5,
+                    lineColor: '#1e3a8a'
+                }],
+                margin: [0, 0, 0, 3]
             },
-            // Segunda linha: Master Hash à esquerda, página à direita
+            // ── Linha 1: título (esq) | processo (dir) ──
             {
-                columns: [
-                    { text: `Master Hash SHA-256: ${m.masterHash || 'INDISPONÍVEL'}`, style: 'footerLeft', alignment: 'left' },
-                    { text: `Página ${currentPage} de ${pageCount}`, style: 'footerRight', alignment: 'right' }
-                ],
+                table: {
+                    widths: ['*', 'auto'],
+                    body: [[
+                        {
+                            text: 'RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP',
+                            style: 'footerLeft',
+                            border: [false, false, false, false]
+                        },
+                        {
+                            text: `PROCESSO N.: ${processoNum}`,
+                            style: 'footerRight',
+                            alignment: 'right',
+                            border: [false, false, false, false]
+                        }
+                    ]]
+                },
+                layout: 'noBorders',
+                margin: [0, 0, 0, 1]
+            },
+            // ── Linha 2: master hash (esq) | página (dir) ──
+            {
+                table: {
+                    widths: ['*', 'auto'],
+                    body: [[
+                        {
+                            text: `Master Hash SHA-256: ${(m.masterHash || 'INDISPONÍVEL').toUpperCase()}`,
+                            style: 'footerLeft',
+                            border: [false, false, false, false]
+                        },
+                        {
+                            text: `Página ${currentPage} de ${pageCount}`,
+                            style: 'footerRight',
+                            alignment: 'right',
+                            border: [false, false, false, false]
+                        }
+                    ]]
+                },
+                layout: 'noBorders',
                 margin: [0, 0, 0, 0]
             },
-            // Aviso (se aplicável)
-            ...(hasPending ? [{ text: safeguardText, style: 'footerWarning', alignment: 'center', margin: [0, 6, 0, 0] }] : [])
+            // ── Aviso RFC 3161 (condicional) ──
+            ...(hasPending ? [{
+                text: safeguardText,
+                style: 'footerWarning',
+                alignment: 'center',
+                margin: [0, 4, 0, 0]
+            }] : [])
         ],
-        margin: [40, 0, 40, 10]
+        margin: [40, 0, 40, 8]
     };
 },
                 styles: {
