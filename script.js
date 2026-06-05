@@ -6937,27 +6937,14 @@ window.exportDataJSON = function() { window.exportForensicPayload('analyst'); };
 // EXPORTAÇÃO PDF – Delegada ao motor pdfMake (unifed_triada_export.js)
 // ============================================================================
 async function exportPDF() {
-    console.warn('[DEPRECATED] exportPDF() está obsoleta. A usar motor pdfMake.');
-    if (!window.UNIFEDSystem?.client) {
-        showToast('Sem sujeito passivo para gerar parecer.', 'error');
-        return;
+    console.warn('[DEPRECATED] exportPDF() está obsoleta. O motor de exportação foi delegado inteiramente à Tríade (unifed_triada_export.js).');
+    
+    if (typeof showToast === 'function') {
+        showToast('Utilize os botões da "Tríade Pericial" para gerar os pacotes documentais.', 'info');
     }
-    try {
-        if (typeof window._gerarBlobParecerAnalista === 'function') {
-            const blob = await window._gerarBlobParecerAnalista();
-            if (blob) {
-                const sessionId = window.UNIFEDSystem.sessionId || Date.now();
-                downloadBlob(blob, `UNIFED_PERITIA_${sessionId}.pdf`, 'application/pdf');
-                logAudit('✅ PDF gerado via pdfMake (layout corrigido).', 'success');
-                ForensicLogger.addEntry('PDF_EXPORT_VIA_PDFMAKE', { sessionId });
-                return;
-            }
-        }
-        throw new Error('Motor pdfMake não disponível');
-    } catch (err) {
-        console.error('Erro na exportação PDF:', err);
-        showToast('Erro ao gerar PDF. Verifique consola.', 'error');
-    }
+    
+    // Anula o throw de erro e quebra o loop
+    return null;
 }
 
 function processAuxiliaryPlatformData(text, filename) {
