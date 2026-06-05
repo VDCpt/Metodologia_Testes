@@ -1333,24 +1333,46 @@
                     { text: '_____________________________________________', style: 'signatureLine', margin: [0, 20, 0, 4] },
                     { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
                 ],
-                footer: function(currentPage, pageCount) {
-                    const pendingIds = getPendingEvidenceIds();
-                    const hasPending = pendingIds.length > 0;
-                    const lang = window.currentLang || 'pt';
-                    const isPT = lang === 'pt';
-                    const safeguardText = hasPending 
-                        ? (isPT 
-                            ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
-                            : `\n⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
-                        : '';
-                    return {
-                        stack: [
-                            { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                            { text: `Master Hash SHA-256: ${currentMasterHash} | Página ${currentPage} de ${pageCount}${safeguardText}`, style: 'forensicSeal', margin: [0, 4, 0, 0] }
-                        ],
-                        margin: [40, 0, 40, 10]
-                    };
-                },
+footer: function(currentPage, pageCount) {
+    const pendingIds = getPendingEvidenceIds();
+    const hasPending = pendingIds.length > 0;
+    const lang = window.currentLang || 'pt';
+    const isPT = lang === 'pt';
+    const safeguardText = hasPending 
+        ? (isPT 
+            ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+            : `⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+        : '';
+    
+    const processoNum = m.session || 'UNIFED-SESSAO';
+    
+    return {
+        stack: [
+            // Linha de underscores (ocupando toda a largura)
+            { text: '______________________________________________________________________________________________________________', style: 'footerLine', alignment: 'center' },
+            // Primeira linha: título à esquerda, processo à direita
+            {
+                columns: [
+                    { text: "RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP", style: 'footerLeft', alignment: 'left' },
+                    { text: `PROCESSO N.: ${processoNum}`, style: 'footerRight', alignment: 'right' }
+                ],
+                margin: [0, 4, 0, 2]
+            },
+            // Segunda linha: Master Hash à esquerda, página à direita
+            {
+                columns: [
+                    { text: `Master Hash SHA-256: ${m.masterHash || 'INDISPONÍVEL'}`, style: 'footerLeft', alignment: 'left' },
+                    { text: `Página ${currentPage} de ${pageCount}`, style: 'footerRight', alignment: 'right' }
+                ],
+                margin: [0, 0, 0, 0]
+            },
+            // Aviso (se aplicável)
+            ...(hasPending ? [{ text: safeguardText, style: 'footerWarning', alignment: 'center', margin: [0, 6, 0, 0] }] : [])
+        ],
+        margin: [40, 0, 40, 20]
+    };
+}
+
                 styles: {
                     judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                     judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
@@ -1844,7 +1866,10 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             ],
             styles: {
                 headerTitle: { fontSize: 10, bold: true, color: '#1e3a8a' },
-                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
+                footerLine: { fontSize: 6, color: '#334155', margin: [0, 0, 0, 2] },
+		footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
+		footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
+		footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' }
                 h1: { fontSize: 11, bold: true, alignment: 'center', margin: [0, 12, 0, 6], color: '#1e3a8a' },
                 h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 14, 0, 4], color: '#2c3e66' },
                 normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
