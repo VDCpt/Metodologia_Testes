@@ -30,6 +30,9 @@
  * - construirConteudoDinamicoAnalista: versão enriquecida com nota metodológica, grelhas, veredito reforçado
  * - Estilos actualizados em _gerarBlobParecerTecnicoForense (tableHeader, tableMain, tableMeta, code, etc.)
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R19: REMOÇÃO DE 'font: Courier' DO ESTILO code
+ * - Corrigido objeto styles em _gerarBlobParecerTecnicoForense para evitar quebra no mapeamento de fontes do pdfMake
+ * ============================================================================
  */
 
 (function () {
@@ -1518,13 +1521,16 @@
             },
             content: construirConteudoDinamicoAnalista(m, sankeyImg, atfImg, qrCodeImg),
             defaultStyle: { fontSize: 10.5, color: '#334155' },
+            // =========================================================================
+            // RETIFICAÇÃO R19: ESTILO 'code' sem 'font: Courier' para evitar quebra no pdfMake
+            // =========================================================================
             styles: {
                 headerTitle: { fontSize: 11, bold: true, color: '#1e3a8a' },
                 footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
                 h1: { fontSize: 10, bold: true, alignment: 'left', margin: [0, 14, 0, 6], color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' },
                 h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 10, 0, 4], color: '#2c3e66' },
                 normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
-                code: { fontSize: 7, font: 'Courier', background: '#f8fafc', padding: 6, margin: [0, 3, 0, 3], color: '#0f172a' },
+                code: { fontSize: 7, background: '#f8fafc', padding: 6, margin: [0, 3, 0, 3], color: '#0f172a' },
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' },
                 tableMain: { fontSize: 8, margin: [0, 5, 0, 10] },
                 tableMeta: { fontSize: 8, fillColor: '#f1f5f9' }
@@ -2085,7 +2091,7 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B)
+// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B) + R19 (CODE FONT FIX)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2367,5 +2373,5 @@
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R18 instalado com sucesso (Mod. 03-B + estilos actualizados). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R19 instalado com sucesso (Mod. 03-B + estilos actualizados + code font fix). Consola 100% higienizada.');
 })();
