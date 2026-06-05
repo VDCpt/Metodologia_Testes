@@ -102,18 +102,19 @@
     <!-- ────────────────────────────────────────────────────────────────────────────
          BIBLIOTECAS CRIPTOGRÁFICAS COM FALLBACK LOCAL (OFFLINE-FIRST)
          ──────────────────────────────────────────────────────────────────────────── -->
-    <script src="js/vendor/crypto-js.min.js"></script>
+    <!-- CryptoJS - CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script>
         (function() {
             if (typeof CryptoJS === 'undefined') {
-                console.warn('[CRYPTO] Falha no carregamento local. Tentando fallback...');
+                console.warn('[CRYPTO] CDN falhou. A carregar fallback local...');
                 var script = document.createElement('script');
                 script.src = 'js/vendor/crypto-js.min.js';
                 script.onload = function() { console.info('[CRYPTO] Fallback local carregado.'); };
                 script.onerror = function() { console.error('[CRYPTO] Falha crítica: CryptoJS indisponível.'); };
                 document.head.appendChild(script);
             } else {
-                console.info('[CRYPTO] CryptoJS carregado (offline-first).');
+                console.info('[CRYPTO] CryptoJS carregado da CDN.');
             }
         })();
     </script>
@@ -147,30 +148,46 @@
         }
     </script>
 
-    <!-- FONTES E ICONES (recursos externos mantidos, não interferem na lógica forense) -->
+    <!-- FONTES E ICONES (recursos externos mantidos) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- BIBLIOTECAS AUXILIARES (VERSÕES LOCAIS) -->
-    <script src="js/vendor/chart.min.js"></script>
-    <script src="js/vendor/papaparse.min.js"></script>
-    <script src="js/vendor/pdf.min.js"></script>
-    <script src="js/vendor/qrcode.min.js"></script>
-    <script src="js/vendor/jspdf.umd.min.js"></script>
-    <script src="js/vendor/pdfmake.min.js"></script>
-    <script src="js/vendor/vfs_fonts.js"></script>
-    <script src="js/vendor/jszip.min.js"></script>
-    <script src="js/vendor/sweetalert2.min.js"></script>
-    <script src="js/vendor/docx.js"></script>
+    <!-- BIBLIOTECAS AUXILIARES (CDNs) -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- PDF.js -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jspdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- pdfmake + vfs_fonts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
+    <!-- JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- docx -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"
+            onerror="this.onerror=null;this.src='https://unpkg.com/docx@7.8.2/build/index.js'"></script>
     <script>
-        // Validação da biblioteca docx após carregamento local
         (function() {
-            if (typeof docx !== 'undefined') {
-                console.info('[DOCX] ✅ docx.js carregado com sucesso (local).');
+            var _check = function() {
+                if (typeof docx !== 'undefined') {
+                    console.info('[DOCX] ✅ docx.js v7.8.2 carregado com sucesso.');
+                } else {
+                    console.warn('[DOCX] ⚠️ docx.js não detectado. A Petição .docx não poderá ser gerada nesta sessão.');
+                }
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', _check);
             } else {
-                console.warn('[DOCX] ⚠️ docx.js não detectado. A Petição .docx não poderá ser gerada nesta sessão.');
+                _check();
             }
         })();
     </script>
@@ -1301,7 +1318,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
         window.pdfjsLib = window['pdfjs-dist/build/pdf'];
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-                'js/vendor/pdf.worker.min.js';  // worker local
+                'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
         }
 
         window._activatePurePanel = function() { };
