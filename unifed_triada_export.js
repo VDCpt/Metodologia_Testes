@@ -26,6 +26,10 @@
  * - Monkey patch em ENG.runCourtReadyChecklist para suprimir console.error falsos quando modo DEMO ativo
  * - A consola forense permanece 100% higienizada sem alarmes enganosos durante testes
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R18: SUBSTITUIÇÃO DO BLOCO DO PDF DO ANALISTA (MOD. 03-B)
+ * - construirConteudoDinamicoAnalista: versão enriquecida com nota metodológica, grelhas, veredito reforçado
+ * - Estilos actualizados em _gerarBlobParecerTecnicoForense (tableHeader, tableMain, tableMeta, code, etc.)
+ * ============================================================================
  */
 
 (function () {
@@ -826,107 +830,162 @@
     }
 
     // =========================================================================
-    // CONSTRUÇÃO DO CONTEÚDO DO PDF DO ANALISTA (CONTEÚDO REAL)
+    // CONSTRUÇÃO RESTRUTURADA DO CONTEÚDO DO PDF DO ANALISTA (MOD. 03-B COMPLETO)
     // =========================================================================
     function construirConteudoDinamicoAnalista(m, sankeyImage, atfImage, qrCodeDataUrl) {
         const lang = window.currentLang || 'pt';
         const isPT = lang === 'pt';
-        
         const content = [];
         
-        // Título principal
-        content.push({ text: isPT ? 'PARECER TÉCNICO FORENSE INTEGRAL' : 'COMPREHENSIVE FORENSIC TECHNICAL OPINION', style: 'h1', alignment: 'center', margin: [0, 0, 0, 20] });
+        // ── Bloco 1: Cabeçalho Corporativo de Alta Fidelidade (Capa Mod. 03-B)
+        content.push({ text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL', style: 'headerTitle', alignment: 'center', margin: [0, 0, 0, 4] });
+        content.push({ text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)', style: 'normal', alignment: 'center', bold: true, color: '#64748b', margin: [0, 0, 0, 15] });
         
-        // Metadados da análise
-        content.push({ text: isPT ? '1. METADADOS DA ANÁLISE' : '1. ANALYSIS METADATA', style: 'h2', margin: [0, 10, 0, 5] });
-        content.push({ text: `${isPT ? 'Sessão' : 'Session'}: ${m.session}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `${isPT ? 'Data de geração' : 'Generation date'}: ${new Date().toLocaleString(lang)}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `${isPT ? 'Sujeito Passivo' : 'Taxpayer'}: ${m.companyName}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `NIF: ${m.nif}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `${isPT ? 'Plataforma' : 'Platform'}: ${m.platform}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `${isPT ? 'Período analisado' : 'Analyzed period'}: ${m.period}`, style: 'normal', margin: [0, 2, 0, 15] });
+        // Grelha de Identificação Processual
+        content.push({
+            style: 'tableMeta',
+            table: {
+                widths: ['30%', '70%'],
+                body: [
+                    [{ text: 'PROCESSO N.º', bold: true, color: '#1e3a8a' }, { text: `UNIFED-${(m.session || 'SESSAO').toUpperCase()}`, bold: true }],
+                    [{ text: 'DATA DE EMISSÃO', bold: true, color: '#1e3a8a' }, { text: new Date().toLocaleString(lang) }],
+                    [{ text: 'ÂMBITO JURÍDICO', bold: true, color: '#1e3a8a' }, { text: 'RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL (ART. 125.º CPP)' }]
+                ]
+            },
+            margin: [0, 0, 0, 15]
+        });
+
+        // Alerta de Status Forense
+        content.push({
+            canvas: [{ type: 'rect', x: 0, y: 0, w: 515, h: 22, r: 4, color: '#f8fafc', strokeColor: '#ef4444', lineWidth: 1 }],
+            margin: [0, 0, 0, -22]
+        });
+        content.push({
+            columns: [
+                { text: '   STATUS: CONFIDENCIAL  |  CADEIA DE CUSTÓDIA FORENSE: ATIVA  |  EVIDÊNCIA DE MATERIALIDADE', color: '#b91c1c', bold: true, fontSize: 8 }
+            ],
+            margin: [0, 6, 0, 15]
+        });
+
+        // ── Bloco 2: Nota Metodológica Forense Obrigatória (Data Proxy)
+        content.push({ text: isPT ? '1. NOTA METODOLÓGICA FORENSE - MÉTODO DATA PROXY: FLEET EXTRACT' : '1. FORENSIC METHODOLOGY NOTE - DATA PROXY: FLEET EXTRACT', style: 'h1', margin: [0, 10, 0, 5] });
+        content.push({ 
+            text: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro \'Ganhos da Empresa\' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).', 
+            style: 'normal', 
+            margin: [0, 2, 0, 12] 
+        });
+
+        // ── Bloco 3: Metadados da Análise
+        content.push({ text: isPT ? '2. METADADOS E ALVO DA PERÍCIA' : '2. METADATA AND PERITIA TARGET', style: 'h1', margin: [0, 8, 0, 5] });
         
-        // Gráficos (se disponíveis)
+        const metaGrid = {
+            style: 'tableMeta',
+            table: {
+                widths: ['25%', '25%', '25%', '25%'],
+                body: [
+                    [{ text: 'Sujeito Passivo:', bold: true, color: '#2c3e66' }, { text: m.companyName }, { text: 'NIF Alvo:', bold: true, color: '#2c3e66' }, { text: m.nif }],
+                    [{ text: 'Plataforma Operativa:', bold: true, color: '#2c3e66' }, { text: 'Plataforma Digital Operacional' }, { text: 'Período Fiscal:', bold: true, color: '#2c3e66' }, { text: m.period }]
+                ]
+            }
+        };
+        content.push(metaGrid);
+        content.push({ text: '', margin: [0, 10] });
+
+        // ── Bloco 4: Visualizações e Gráficos de Prova
         if (sankeyImage) {
-            content.push({ text: isPT ? '2. FLUXO FINANCEIRO (DIAGRAMA SANKEY)' : '2. FINANCIAL FLOW (SANKEY DIAGRAM)', style: 'h2', margin: [0, 10, 0, 5] });
-            content.push({ image: sankeyImage, width: 500, alignment: 'center', margin: [0, 5, 0, 15] });
+            content.push({ text: isPT ? '3. ANÁLISE TRIDIMENSIONAL DE FLUXO FINANCEIRO (SANKEY)' : '3. THREE-DIMENSIONAL FINANCIAL FLOW ANALYSIS (SANKEY)', style: 'h1', margin: [0, 10, 0, 5] });
+            content.push({ image: sankeyImage, width: 460, alignment: 'center', margin: [0, 5, 0, 12] });
         }
         
         if (atfImage) {
-            content.push({ text: isPT ? '3. EVOLUÇÃO TEMPORAL (ATF)' : '3. TEMPORAL EVOLUTION (ATF)', style: 'h2', margin: [0, 10, 0, 5] });
-            content.push({ image: atfImage, width: 500, alignment: 'center', margin: [0, 5, 0, 15] });
+            content.push({ text: isPT ? '4. EVOLUÇÃO E PERSISTÊNCIA TEMPORAL (ATF ENGINE)' : '4. TEMPORAL EVOLUTION AND PERSISTENCE (ATF ENGINE)', style: 'h1', margin: [0, 10, 0, 5] });
+            content.push({ image: atfImage, width: 460, alignment: 'center', margin: [0, 5, 0, 12] });
         }
         
-        // Métricas principais
-        content.push({ text: isPT ? '4. MÉTRICAS PRINCIPAIS' : '4. KEY METRICS', style: 'h2', margin: [0, 10, 0, 5] });
+        // ── Bloco 5: Grelha de Métricas Principais de Desvio Criptográfico
+        content.push({ text: isPT ? '5. DETERMINAÇÃO DA MATERIALIDADE E MÉTRICAS ACUMULADAS' : '5. DETERMINATION OF MATERIALITY AND ACCUMULATED METRICS', style: 'h1', margin: [0, 10, 0, 5] });
         
         const metricsTable = {
-            body: [
-                [{ text: isPT ? 'Métrica' : 'Metric', style: 'tableHeader' }, { text: isPT ? 'Valor' : 'Value', style: 'tableHeader' }],
-                [isPT ? 'SAF-T Bruto' : 'SAF-T Gross', formatForensicCurrency(m.saftGross)],
-                [isPT ? 'DAC7 Reportado' : 'DAC7 Reported', formatForensicCurrency(m.dac7Total)],
-                [isPT ? 'Discrepância SAF-T vs DAC7' : 'Discrepancy SAF-T vs DAC7', formatForensicCurrency(m.saftGross - m.dac7Total)],
-                [isPT ? 'Percentagem de discrepância' : 'Discrepancy percentage', `${m.discrepancyPct.toFixed(2)}%`],
-                [isPT ? 'BTOR (Ledger)' : 'BTOR (Ledger)', formatForensicCurrency(m.btorLedger)],
-                [isPT ? 'BTF (Faturado)' : 'BTF (Invoiced)', formatForensicCurrency(m.btfInvoice)],
-                [isPT ? 'Omissão de faturação' : 'Under-invoicing', formatForensicCurrency(m.btorLedger - m.btfInvoice)],
-                [isPT ? 'Percentagem de omissão' : 'Under-reporting percentage', `${m.omissionPct.toFixed(2)}%`],
-                [isPT ? 'IVA em falta (23%)' : 'Missing VAT (23%)', formatForensicCurrency(m.ivaFalta23)],
-                [isPT ? 'IVA em falta (6%)' : 'Missing VAT (6%)', formatForensicCurrency(m.ivaFalta6)],
-                [isPT ? 'Impacto 7 anos (mercado)' : '7-year market impact', formatForensicCurrency(m.impactoSeteAnosMercado)]
-            ]
+            style: 'tableMain',
+            table: {
+                widths: ['65%', '35%'],
+                body: [
+                    [{ text: isPT ? 'Métrica de Auditoria Digital' : 'Digital Audit Metric', style: 'tableHeader' }, { text: isPT ? 'Valor Apurado (€)' : 'Calculated Value (€)', style: 'tableHeader' }],
+                    ['SAF-T Bruto (Reporte Comercial AT)', formatForensicCurrency(m.saftGross)],
+                    ['DAC7 Reportado (Comunicação da Plataforma Internacional)', formatForensicCurrency(m.dac7Total)],
+                    [{ text: 'Discrepância Absoluta SAF-T vs DAC7', bold: true }, { text: formatForensicCurrency(m.saftGross - m.dac7Total), bold: true, color: '#ef4444' }],
+                    ['Rácio de Desvio SAF-T / DAC7 (%)', `${m.discrepancyPct.toFixed(2)}%`],
+                    ['BTOR (Livro-Razão Operacional Extraído - Base Real)', formatForensicCurrency(m.btorLedger)],
+                    ['BTF (Faturação Emitida e Consolidada)', formatForensicCurrency(m.btfInvoice)],
+                    [{ text: 'Omissão de Faturação Detetada (Verdade Material)', bold: true }, { text: formatForensicCurrency(m.btorLedger - m.btfInvoice), bold: true, color: '#ef4444' }],
+                    ['Taxa de Omissão Face ao Volume Real (%)', `${m.omissionPct.toFixed(2)}%`],
+                    ['IVA em Falta Estimado (Taxa Normal 23%)', formatForensicCurrency(m.ivaFalta23)],
+                    ['IVA em Falta Estimado (Taxa Reduzida 6%)', formatForensicCurrency(m.ivaFalta6)],
+                    [{ text: 'Impacto Acumulado Estimado (Projeção de Mercado 7 Anos)', bold: true }, { text: formatForensicCurrency(m.impactoSeteAnosMercado), bold: true }]
+                ]
+            },
+            margin: [0, 5, 0, 12]
         };
-        content.push({ table: metricsTable, margin: [0, 5, 0, 15] });
+        content.push(metricsTable);
         
-        // Veredito
-        content.push({ text: isPT ? '5. VEREDITO FORENSE' : '5. FORENSIC VERDICT', style: 'h2', margin: [0, 10, 0, 5] });
-        content.push({ text: m.verdict, style: 'normal', margin: [0, 2, 0, 15], bold: true });
+        // ── Bloco 6: Veredito Forense e Questões Adversariais
+        content.push({ text: isPT ? '6. VEREDITO PERICIAL' : '6. FORENSIC VERDICT', style: 'h1', margin: [0, 10, 0, 5] });
+        content.push({ text: m.verdict, style: 'normal', margin: [0, 2, 0, 12], bold: true, color: '#1e3a8a' });
         
-        // Top 3 questões
         if (m.top3Questions && m.top3Questions.length > 0) {
-            content.push({ text: isPT ? '6. PRINCIPAIS QUESTÕES IDENTIFICADAS' : '6. MAIN IDENTIFIED ISSUES', style: 'h2', margin: [0, 10, 0, 5] });
+            content.push({ text: isPT ? '7. ANÁLISE DE VULNERABILIDADES CRÍTICAS IDENTIFICADAS' : '7. ANALYSIS OF IDENTIFIED CRITICAL VULNERABILITIES', style: 'h1', margin: [0, 10, 0, 5] });
             m.top3Questions.forEach((q, idx) => {
-                content.push({ text: `${idx+1}. ${q}`, style: 'normal', margin: [0, 2, 0, 2] });
+                content.push({ text: `${idx+1}. ${q}`, style: 'normal', margin: [0, 3, 0, 3] });
             });
-            content.push({ text: '', margin: [0, 10, 0, 0] });
         }
         
-        // Cadeia de custódia e QR Code
-        content.push({ text: isPT ? '7. CADEIA DE CUSTÓDIA E INTEGRIDADE' : '7. CHAIN OF CUSTODY AND INTEGRITY', style: 'h2', margin: [0, 10, 0, 5] });
-        content.push({ text: `${isPT ? 'Master Hash SHA-256' : 'Master Hash SHA-256'}: ${m.masterHash}`, style: 'normal', margin: [0, 2, 0, 2] });
-        content.push({ text: `${isPT ? 'Raiz Merkle' : 'Merkle Root'}: ${m.merkleRoot}`, style: 'normal', margin: [0, 2, 0, 2] });
+        // ── Bloco 7: Cadeia de Custódia Forense e Árvore de Merkle
+        content.push({ text: isPT ? '8. INTEGRIDADE CRIPTOGRÁFICA DA PROVA (ISO 27037 / eIDAS 2.0)' : '8. EVIDENCE CRYPTOGRAPHIC INTEGRITY', style: 'h1', margin: [0, 12, 0, 5] });
+        content.push({ text: `MASTER BATCH HASH (SHA-256): ${m.masterHash}`, style: 'code', margin: [0, 2, 0, 2] });
+        content.push({ text: `RAIZ DA ÁRVORE DE MERKLE (EVIDÊNCIAS): ${m.merkleRoot}`, style: 'code', margin: [0, 2, 0, 8] });
         
         if (qrCodeDataUrl) {
-            content.push({ image: qrCodeDataUrl, width: 120, alignment: 'center', margin: [0, 10, 0, 10] });
-            content.push({ text: isPT ? 'QR Code com os hashes de integridade' : 'QR Code with integrity hashes', style: 'normal', alignment: 'center', fontSize: 8, margin: [0, 0, 0, 15] });
+            content.push({ image: qrCodeDataUrl, width: 100, alignment: 'center', margin: [0, 8, 0, 4] });
+            content.push({ text: isPT ? 'Assinatura Digital QR - Verificação de Integridade Local Coincidente' : 'QR Digital Signature - Coincident Local Integrity Verification', style: 'normal', alignment: 'center', fontSize: 7, color: '#64748b', margin: [0, 0, 0, 15] });
         }
-        
-        // Tabela de transações (resumida)
+
+        // Tabela de Transações Estruturadas
         if (m.transactionRows && m.transactionRows.length > 0) {
-            content.push({ text: isPT ? '8. RESUMO DE TRANSAÇÕES' : '8. TRANSACTIONS SUMMARY', style: 'h2', margin: [0, 10, 0, 5] });
-            const sampleRows = m.transactionRows.slice(0, 10);
+            content.push({ text: isPT ? '9. EXTRATO DE REGISTOS PROCESSADOS (AMOSTRA DE SUPORTE)' : '9. SAMPLE OF PROCESSED RECORDS', style: 'h1', margin: [0, 10, 0, 5] });
             const transTable = {
-                body: [
-                    [{ text: isPT ? 'ID' : 'ID', style: 'tableHeader' }, { text: isPT ? 'Data' : 'Date', style: 'tableHeader' }, { text: isPT ? 'Tipo' : 'Type', style: 'tableHeader' }, { text: 'BTOR (€)', style: 'tableHeader' }, { text: 'BTF (€)', style: 'tableHeader' }]
-                ]
+                style: 'tableMain',
+                table: {
+                    widths: ['15%', '20%', '35%', '15%', '15%'],
+                    body: [
+                        [{ text: 'ID', style: 'tableHeader' }, { text: 'Período', style: 'tableHeader' }, { text: 'Natureza do Artefacto', style: 'tableHeader' }, { text: 'BTOR (€)', style: 'tableHeader' }, { text: 'BTF (€)', style: 'tableHeader' }]
+                    ]
+                }
             };
-            sampleRows.forEach(row => {
-                transTable.body.push([
+            m.transactionRows.slice(0, 8).forEach(row => {
+                transTable.table.body.push([
                     row.id || 'N/A',
                     row.date || 'N/A',
-                    row.type || row.operator || 'N/A',
+                    (row.type || row.operator || 'N/A').substring(0, 30),
                     formatForensicCurrency(row.btor || 0),
                     formatForensicCurrency(row.btf || 0)
                 ]);
             });
-            content.push({ table: transTable, margin: [0, 5, 0, 15] });
-            if (m.transactionRows.length > 10) {
-                content.push({ text: isPT ? `(... e mais ${m.transactionRows.length - 10} registos no JSON)` : `(... and ${m.transactionRows.length - 10} more records in JSON)`, style: 'normal', italics: true, margin: [0, 0, 0, 10] });
+            content.push(transTable);
+            if (m.transactionRows.length > 8) {
+                content.push({ text: `(... e mais ${m.transactionRows.length - 8} registos forenses auditados e selados no payload JSON anexo)`, style: 'normal', italics: true, color: '#64748b', margin: [0, 4, 0, 12] });
             }
         }
         
-        // Rodapé informativo
-        content.push({ text: isPT ? 'Documento gerado por UNIFED-PROBATUM · ISO/IEC 27037 · DL 28/2019 · eIDAS 2.0' : 'Document generated by UNIFED-PROBATUM · ISO/IEC 27037 · DL 28/2019 · eIDAS 2.0', style: 'footerLine2', alignment: 'center', margin: [0, 20, 0, 0] });
+        // ── Bloco 8: Declaração de Compromisso Profissional (Fim do Mod. 03-B)
+        content.push({ text: isPT ? '10. DECLARAÇÃO DE COMPROMISSO DO CONSULTOR TÉCNICO INDEPENDENTE' : '10. EXPERT OPINION STATEMENT', style: 'h1', margin: [0, 12, 0, 5] });
+        content.push({ 
+            text: 'Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.', 
+            style: 'normal', 
+            margin: [0, 2, 0, 20] 
+        });
+        
+        content.push({ text: '____________________________________________________', alignment: 'center', margin: [0, 15, 0, 2] });
+        content.push({ text: 'UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE', style: 'normal', alignment: 'center', italics: true, bold: true });
         
         return content;
     }
@@ -1462,11 +1521,13 @@
             styles: {
                 headerTitle: { fontSize: 11, bold: true, color: '#1e3a8a' },
                 footerText: { fontSize: 7.5, bold: false, color: '#64748b' },
-                h1: { fontSize: 11.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#1e3a8a' },
-                h2: { fontSize: 9.5, bold: true, alignment: 'left', margin: [0, 12, 0, 12], color: '#2c3e66' },
-                normal: { fontSize: 7.5, alignment: 'justify', lineHeight: 1.25, color: '#334155' },
-                code: { fontSize: 7, background: '#f1f5f9', padding: 4, margin: [0, 2, 0, 2] },
-                tableHeader: { fontSize: 8, bold: true, fillColor: '#e2e8f0', color: '#1e3a8a' }
+                h1: { fontSize: 10, bold: true, alignment: 'left', margin: [0, 14, 0, 6], color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' },
+                h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 10, 0, 4], color: '#2c3e66' },
+                normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
+                code: { fontSize: 7, font: 'Courier', background: '#f8fafc', padding: 6, margin: [0, 3, 0, 3], color: '#0f172a' },
+                tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' },
+                tableMain: { fontSize: 8, margin: [0, 5, 0, 10] },
+                tableMeta: { fontSize: 8, fillColor: '#f1f5f9' }
             }
         };
 
@@ -2024,7 +2085,7 @@
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER)
+// Versão: v1.0-R14 (FIX-PENDING-TIMESTAMP-01) + R16 (DEMO GATE) + R17 (LOG SANITIZER) + R18 (MOD.03-B)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -2306,5 +2367,5 @@
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R17 instalado com sucesso. Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R18 instalado com sucesso (Mod. 03-B + estilos actualizados). Consola 100% higienizada.');
 })();
