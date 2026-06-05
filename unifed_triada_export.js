@@ -1827,9 +1827,9 @@ Q2 — INCLUSÃO DE FLUXOS NÃO SUJEITOS A COMISSÃO NO DAC7:
 
 Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admissibilidade de Prova) · Art. 103.º/104.º RGIT (Fraude Fiscal/Qualificada) · Art. 36.º, n.º 11 CIVA · Decreto-Lei n.º 28/2019 (SAF-T/DAC7) · Diretiva (UE) 2021/514 (DAC7) · Termos e Condições da Plataforma · ISO/IEC 27037:2012 (prova digital)`, style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 33. DECLARAÇÃO DE COMPROMISSO E ASSINATURA ==========
+// ========== 33. DECLARAÇÃO DE COMPROMISSO E ASSINATURA ==========
 { text: "DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
-{ text: `O presente relatório é composto por múltiplas páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:\n\n${m.masterHash}\n\nconstituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.`, style: 'normal', margin: [0, 0, 0, 15] },
+{ text: "O presente relatório é composto por múltiplas páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:\n\n" + m.masterHash + "\n\nconstituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.", style: 'normal', margin: [0, 0, 0, 15] },
 
 ## ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP
 São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.
