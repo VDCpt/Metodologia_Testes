@@ -1675,8 +1675,82 @@
             },
             content: [
                 // ========== 1. TIMBRE E METADADOS DO PROCESSO ==========
-                { text: "UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL", style: 'h2', alignment: 'center' },
-                { text: "ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)", style: 'h1', alignment: 'center', margin: [0, 5, 0, 15] },
+                // ── Box de dupla linha azul ──
+                {
+                    table: {
+                        widths: ['*'],
+                        body: [[
+                            {
+                                stack: [
+                                    {
+                                        text: "UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL",
+                                        style: 'h2',
+                                        alignment: 'center',
+                                        margin: [0, 0, 0, 6]
+                                    },
+                                    {
+                                        text: "ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)",
+                                        style: 'h1',
+                                        alignment: 'center',
+                                        margin: [0, 0, 0, 0]
+                                    }
+                                ],
+                                margin: [18, 14, 18, 14]
+                            }
+                        ]]
+                    },
+                    layout: {
+                        hLineWidth: function(i, node) {
+                            // Linha exterior: 2.5pt; linha interior (offset 2pt): 0.8pt
+                            return (i === 0 || i === node.table.body.length) ? 2.5 : 0;
+                        },
+                        vLineWidth: function(i, node) {
+                            return (i === 0 || i === node.table.widths.length) ? 2.5 : 0;
+                        },
+                        hLineColor: function() { return '#1e3a8a'; },
+                        vLineColor: function() { return '#1e3a8a'; },
+                        paddingLeft:   function() { return 0; },
+                        paddingRight:  function() { return 0; },
+                        paddingTop:    function() { return 0; },
+                        paddingBottom: function() { return 0; }
+                    },
+                    margin: [0, 0, 0, 0]
+                },
+                // ── Segunda borda interna (linha dupla simulada via canvas) ──
+                {
+                    canvas: [
+                        // Topo interior
+                        { type: 'line', x1: 4,   y1: -3,  x2: 511, y2: -3,  lineWidth: 0.8, lineColor: '#1e3a8a' },
+                        // Fundo interior
+                        { type: 'line', x1: 4,   y1: 3,   x2: 511, y2: 3,   lineWidth: 0.8, lineColor: '#1e3a8a' }
+                    ],
+                    margin: [0, 0, 0, 0]
+                },
+                // ── Legenda abaixo da box: esq | dir ──
+                {
+                    table: {
+                        widths: ['*', 'auto'],
+                        body: [[
+                            {
+                                text: 'Cadeia de Custódia Forense: Ativa',
+                                fontSize: 7.5,
+                                bold: true,
+                                color: '#1e3a8a',
+                                border: [false, false, false, false]
+                            },
+                            {
+                                text: 'CONFIDENCIAL',
+                                fontSize: 7.5,
+                                bold: true,
+                                color: '#b91c1c',
+                                alignment: 'right',
+                                border: [false, false, false, false]
+                            }
+                        ]]
+                    },
+                    layout: 'noBorders',
+                    margin: [0, 5, 0, 14]
+                },
                 {
                     columns: [
                         { text: [
