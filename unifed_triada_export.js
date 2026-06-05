@@ -1589,13 +1589,54 @@
         // docDefinition completo com todas as secções do segundo ficheiro
         // =========================================================================
         const docDefinition = {
-            pageMargins: [40, 85, 40, 80],
+            pageMargins: [40, 105, 40, 80],
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) return null;
                 return {
-                    text: "UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)",
-                    style: 'headerTitle',
-                    margin: [40, 20, 40, 0]
+                    table: {
+                        widths: ['*'],
+                        body: [[
+                            {
+                                table: {
+                                    widths: ['*'],
+                                    body: [[
+                                        {
+                                            text: 'UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)',
+                                            fontSize: 9,
+                                            bold: true,
+                                            color: '#1e3a8a',
+                                            alignment: 'center',
+                                            fillColor: '#eef2ff',
+                                            border: [true, true, true, true]
+                                        }
+                                    ]]
+                                },
+                                layout: {
+                                    hLineWidth: function() { return 0.8; },
+                                    vLineWidth: function() { return 0.8; },
+                                    hLineColor: function() { return '#1e3a8a'; },
+                                    vLineColor: function() { return '#1e3a8a'; },
+                                    paddingLeft:   function() { return 0; },
+                                    paddingRight:  function() { return 0; },
+                                    paddingTop:    function() { return 7; },
+                                    paddingBottom: function() { return 7; }
+                                },
+                                fillColor: '#eef2ff',
+                                border: [true, true, true, true]
+                            }
+                        ]]
+                    },
+                    layout: {
+                        hLineWidth: function() { return 2.2; },
+                        vLineWidth: function() { return 2.2; },
+                        hLineColor: function() { return '#1e3a8a'; },
+                        vLineColor: function() { return '#1e3a8a'; },
+                        paddingLeft:   function() { return 5; },
+                        paddingRight:  function() { return 5; },
+                        paddingTop:    function() { return 5; },
+                        paddingBottom: function() { return 5; }
+                    },
+                    margin: [40, 14, 40, 0]
                 };
             },
             footer: function(currentPage, pageCount) {
@@ -1675,13 +1716,12 @@
             },
             content: [
                 // ========== 1. TIMBRE E METADADOS DO PROCESSO ==========
-                // ── BOX PROFISSIONAL: tabela com fillColor + layout de dupla borda ──
+                // ── BOX PROFISSIONAL: dupla borda azul, lettering ampliado ──
                 {
                     table: {
                         widths: ['*'],
                         body: [[
                             {
-                                // Célula interior: segunda borda via padding + tabela aninhada
                                 table: {
                                     widths: ['*'],
                                     body: [[
@@ -1689,15 +1729,16 @@
                                             stack: [
                                                 {
                                                     text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL',
-                                                    fontSize: 13,
+                                                    fontSize: 16,
                                                     bold: true,
                                                     color: '#1e3a8a',
                                                     alignment: 'center',
-                                                    margin: [0, 0, 0, 6]
+                                                    margin: [0, 0, 0, 10]
                                                 },
                                                 {
                                                     text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)',
-                                                    fontSize: 9,
+                                                    fontSize: 11,
+                                                    bold: false,
                                                     italics: true,
                                                     color: '#334155',
                                                     alignment: 'center',
@@ -1714,10 +1755,10 @@
                                     vLineWidth: function() { return 0.9; },
                                     hLineColor: function() { return '#1e3a8a'; },
                                     vLineColor: function() { return '#1e3a8a'; },
-                                    paddingLeft:   function() { return 12; },
-                                    paddingRight:  function() { return 12; },
-                                    paddingTop:    function() { return 10; },
-                                    paddingBottom: function() { return 10; }
+                                    paddingLeft:   function() { return 20; },
+                                    paddingRight:  function() { return 20; },
+                                    paddingTop:    function() { return 18; },
+                                    paddingBottom: function() { return 18; }
                                 },
                                 fillColor: '#eef2ff',
                                 border: [true, true, true, true]
@@ -1729,10 +1770,10 @@
                         vLineWidth: function() { return 2.5; },
                         hLineColor: function() { return '#1e3a8a'; },
                         vLineColor: function() { return '#1e3a8a'; },
-                        paddingLeft:   function() { return 4; },
-                        paddingRight:  function() { return 4; },
-                        paddingTop:    function() { return 4; },
-                        paddingBottom: function() { return 4; }
+                        paddingLeft:   function() { return 6; },
+                        paddingRight:  function() { return 6; },
+                        paddingTop:    function() { return 6; },
+                        paddingBottom: function() { return 6; }
                     },
                     margin: [0, 0, 0, 5]
                 },
