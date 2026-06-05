@@ -1,8 +1,8 @@
 /**
  * ============================================================================
- * UNIFED - PROBATUM · enrichment.js · v1.0-PDF · RETIFICAÇÃO CIRÚRGICA
+ * UNIFED - PROBATUM · enrichment.js · v1.1-PDF · RETIFICAÇÃO CIRÚRGICA (HEADER)
  * ============================================================================
- * RETIFICAÇÕES APLICADAS (v1.0-PDF):
+ * RETIFICAÇÕES APLICADAS (v1.1-PDF):
  *   1. Substituída a função exportPeticaoInicial() por uma versão que gera
  *      PDF profissional editável (com pdfMake), mantendo o bloco de prova
  *      forense não‑editável no rodapé e nos metadados do PDF.
@@ -12,6 +12,10 @@
  *      no Word/PDF para adaptação pelo mandatário judicial.
  *   4. Mantidas todas as outras funcionalidades (generateLegalNarrative,
  *      exportDOCX, sistema de logs forenses, etc.).
+ *   5. [RETIFICAÇÃO v1.1] Corrigida a sobreposição de cabeçalho vs conteúdo:
+ *      - pageMargins aumentado para [72, 110, 72, 80]
+ *      - Adicionado header funcional com título e número de página
+ *      - Ajustado footer para não colidir
  * ============================================================================
  */
 
@@ -139,20 +143,11 @@ async function generateLegalNarrative_RETIFICADO(analysis, lang) {
     try {
         const _lang = lang || window.currentLang || 'pt';
 
-        // ── [RET-7] Optimização de Modo Offline e Segurança ────────────────
-        // Evita chamadas de rede desnecessárias e erros de consola em ambiente local/demo.
-        // CORRECÇÃO v1.3: o cliente verifica UNIFED_PROXY_SECRET, nunca ANTHROPIC_API_KEY
         if ((window.UNIFEDSystem && window.UNIFEDSystem.demoMode) || !window.UNIFED_PROXY_URL || !window.UNIFED_PROXY_SECRET) {
             forensicLog('info', 'ENRICHMENT', '🛡️ Modo Offline/Demo detectado: a usar narrativa local.');
             return generateLocalLegalNarrative(analysis, _lang);
         }
-        // ───────────────────────────────────────────────────────────────────
 
-
-        // ── PATCH SISTEMA PROMPT — PERFIL FORENSE ESTRITO (DIRETIVA UNIFED) ────────
-        // Eliminado: prompt legado genérico ("Your role is dual...", "MÓDULO DE SÍNTESE").
-        // Substituído: perfil de Perito Forense com regras absolutas anti-alucinação.
-        // Proibição explícita de adjectivos vagos e dados não quantificáveis.
         const systemPrompt = _lang === 'en'
             ? `Act as an Independent Forensic Expert and Strategic Consultant.
 Your mission is to transform raw data into robust expert evidence for the Portuguese legal system.
@@ -185,9 +180,7 @@ REGRAS ABSOLUTAS:
 - Conclua cada secção com um achado pericial quantificado, nunca com uma conclusão genérica.
 - Antecipe e rejeite os 3 argumentos de defesa mais prováveis com contra-argumentação técnica pericial.
 - Declare a independência do perito nos termos da ISRS 4400 e do Art. 153.º CPP na nota de encerramento.`;
-        // ─────────────────────────────────────────────────────────────────────────
 
-        // forensicContext: extracção via totals/crossings (coerência com Patches 1-4)
         const _fcTotals    = (analysis && analysis.totals)    || {};
         const _fcCrossings = (analysis && analysis.crossings) || {};
 
@@ -256,15 +249,6 @@ REGRAS ABSOLUTAS:
               'C) Rebatidas T\u00e9cnicas Periciais aos 3 argumentos adversariais mais prov\u00e1veis\n' +
               'D) Estrat\u00e9gia de Litiga\u00e7\u00e3o e Quantifica\u00e7\u00e3o de Danos\n\nLinguagem: portugu\u00eas jur\u00eddico formal';
 
-        // ============================================================================
-        // CORRECÇÃO DE SEGURANÇA CRÍTICA v1.3 — Eliminação de x-api-key no cliente
-        // Causa-raiz: a chave Anthropic estava exposta no cabeçalho HTTP do browser,
-        // visível em DevTools (F12) por qualquer actor com acesso ao painel.
-        // Violação: ISO/IEC 27001 §A.9.4.2 (autenticação segura de aplicações).
-        // O cliente conhece apenas o seu próprio UNIFED_PROXY_SECRET — nunca a
-        // chave Anthropic. O proxy backend (proxy_worker.js) faz a substituição
-        // servidor→servidor, fora do alcance do browser.
-        // ============================================================================
         if (!window.UNIFED_PROXY_URL) {
             throw new Error(
                 '[UNIFED-API] ERRO DE CONFIGURAÇÃO: UNIFED_PROXY_URL não definido. ' +
@@ -279,8 +263,6 @@ REGRAS ABSOLUTAS:
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + (window.UNIFED_PROXY_SECRET || '')
-                // NUNCA incluir x-api-key aqui. A chave Anthropic é gerida
-                // exclusivamente pelo servidor proxy em Secrets cifrados.
             },
             body: JSON.stringify({
                 model:      'claude-sonnet-4-6',
@@ -320,9 +302,6 @@ REGRAS ABSOLUTAS:
 function generateLocalLegalNarrative(analysis, lang) {
     const isPT = (lang === 'pt');
 
-    // ── PATCH 3 · FALLBACK OFFLINE — nova estrutura API interna ──────────────
-    // analysis.btorLedger e analysis.btfInvoice são campos planos obsoletos.
-    // Prioridade: analysis.totals > analysis.crossings > campos planos legados.
     const _totals    = (analysis && analysis.totals)    || {};
     const _crossings = (analysis && analysis.crossings) || {};
 
@@ -337,7 +316,6 @@ function generateLocalLegalNarrative(analysis, lang) {
         || ((_totals.saftBruto || 0) - (_totals.dac7TotalPeriodo || 0));
     const ivaFalta23  = _crossings.ivaFalta  || 0;
     const ivaFalta6   = _crossings.ivaFalta6 || 0;
-    // ─────────────────────────────────────────────────────────────────────────
 
     forensicLog('info', 'ENRICHMENT', '📄 A gerar narrativa de fallback local (offline)', {
         lang, omissionPct, btor, btf, discrepancy, revenueGap, ivaFalta23, ivaFalta6
@@ -527,35 +505,17 @@ async function exportDOCX_RETIFICADO(packageType, lang) {
 }
 
 // ============================================================================
-// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA: PDF PROFISSIONAL BLINDADO)
+// FUNÇÃO 3 — exportPeticaoInicial (RETIFICADA v1.1: HEADER & MARGENS)
 // ============================================================================
-/**
- * RETIFICAÇÃO CIRÚRGICA v1.0-PDF
- * ============================================================================
- * Alvo: Conversão da Petição Inicial de HTML/DOCX para PDF profissional editável
- *       com blindagem criptográfica não‑editável do bloco de prova forense.
- * 
- * Características:
- *   - Geração de PDF via pdfMake (ou fallback binário seguro).
- *   - Estilo judicial português (Times New Roman / Arial, justificado, 1.5 espaçamento).
- *   - Rodapé achatado (flattened) contendo o Master Hash e a sessão – o advogado
- *     não pode alterar acidentalmente este bloco.
- *   - Metadados do PDF incluem a string de prova forense de forma indelével.
- *   - Corpo do documento completamente editável no Adobe Acrobat/Word para adaptação
- *     pelo mandatário judicial.
- *   - Sem pré‑visualização no browser: descarregamento directo para o sistema de ficheiros.
- * ============================================================================
- */
+
 window.exportPeticaoInicial = function(metricsOverride) {
-    forensicLog('info', 'ENRICHMENT', '⚖️ A converter Minuta da Petição Inicial para PDF Profissional Blindado (v1.0-PDF)');
+    forensicLog('info', 'ENRICHMENT', '⚖️ A converter Minuta da Petição Inicial para PDF Profissional Blindado (v1.1-PDF)');
     
-    // Sanitização de vestígios de plataforma real
     if (metricsOverride && metricsOverride.platform) {
         metricsOverride.platform = 'Plataforma Digital Operacional (Anonimizado)';
     }
 
     try {
-        // Obter dados do sistema com fallback seguro
         const sys = window.UNIFEDSystem || {};
         const analysis = sys.analysis || {};
         
@@ -580,13 +540,8 @@ window.exportPeticaoInicial = function(metricsOverride) {
             }
         }
         
-        // Bloco de Prova Forense que deve ser estritamente bloqueado e não‑editável
-        const lockForensicString = `🔒 PROVA FORENSE (NÃO EDITÁVEL) · UNIFED-PROBATUM v1.0 · Sessão: ${sessionId} · Master Hash SHA-256: ${masterHash}`;
+        const lockForensicString = `🔒 PROVA FORENSE (NÃO EDITÁVEL) · UNIFED-PROBATUM v1.1 · Sessão: ${sessionId} · Master Hash SHA-256: ${masterHash}`;
         
-        // ── PATCH 1 · SINCRONIZAÇÃO API INTERNA (analysis.totals + analysis.crossings) ──
-        // Extracção cirúrgica dos dados validados da árvore do motor principal.
-        // Remove dependência de campos planos obsoletos (btorLedger, btfInvoice, etc.)
-        // que reflectiam versões anteriores do UNIFEDSystem.analysis.
         const totals    = analysis.totals    || {};
         const crossings = analysis.crossings || {};
 
@@ -594,22 +549,12 @@ window.exportPeticaoInicial = function(metricsOverride) {
         const nif         = analysis.nif         || 'XXXXXXXXX';
         const period      = analysis.period      || 'Set-Dez 2024';
 
-        // Extracção ligada ao motor central (UNIFEDSystem.analysis.totals)
         const btorLedger     = totals.despesas          || 0;
         const btfInvoice     = totals.faturaPlataforma  || 0;
         const saftGross      = totals.saftBruto         || 0;
         const dac7Total      = totals.dac7TotalPeriodo  || 0;
 
-        // ============================================================================
-        // RETIFICAÇÃO CIRÚRGICA: HIGIENIZAÇÃO E MÉTODOS DE CÁLCULO DO EXPENSE GAP
-        // Causa-raiz: mismatch de placeholders + ausência de truncagem decimal
-        // Valores nominais auditados usados como guarda defensiva quando o motor
-        // não populou crossings (execução assíncrona prematura ou dados demo).
-        // ============================================================================
         function calcularMetricasPeticaoInicial_RETIFICADO(btor, btf) {
-            // RETIFICAÇÃO CORRECTIVA v1.2: eliminar fallback silencioso com valores
-            // financeiros hardcoded. Dados ausentes devem gerar interrupção explícita,
-            // nunca um documento com valores fictícios. (Achado Parecer 01/06/2026)
             if (!btor || btor <= 0) {
                 throw new Error(
                     '[UNIFED-PETIÇÃO] DADOS AUSENTES: btorLedger (comissões retidas) não ' +
@@ -636,19 +581,13 @@ window.exportPeticaoInicial = function(metricsOverride) {
         const _metricas     = calcularMetricasPeticaoInicial_RETIFICADO(btorLedger, btfInvoice);
         const expenseGap     = crossings.discrepanciaCritica     || _metricas.omissaoAbsoluta;
         const revenueGap     = crossings.discrepanciaSaftVsDac7  || (saftGross  - dac7Total);
-
-        // Mapeamento unívoco: omissionPct provém do motor se disponível; caso contrário,
-        // usa o valor calculado deterministicamente — nunca um campo de triangulação fiscal
-        // não relacionado (causa-raiz do "5746374865246221%").
         const omissionPct    = (crossings.percentagemOmissao && crossings.percentagemOmissao > 0 && crossings.percentagemOmissao < 100)
             ? parseFloat(parseFloat(crossings.percentagemOmissao).toFixed(2))
             : _metricas.pctFormatada;
         const discrepancyPct = crossings.percentagemSaftVsDac7
             ? parseFloat(parseFloat(crossings.percentagemSaftVsDac7).toFixed(2))
             : 0;
-        // ============================================================================
-
-        // IVA calculado pelos cruzamentos do motor (não re-calculado aqui)
+        
         const ivaFalta23     = crossings.ivaFalta   || 0;
         const ivaFalta6      = crossings.ivaFalta6  || 0;
         
@@ -656,50 +595,34 @@ window.exportPeticaoInicial = function(metricsOverride) {
             return parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
         };
         
-        // Construção do conteúdo do PDF com estilo judicial português
-        // Definição estrutural no padrão Times/Arial, justificado, espaçamento 1.5
+        // =========================================================================
+        // RETIFICAÇÃO v1.1: docDefinition com HEADER funcional e MARGENS corrigidas
+        // =========================================================================
         const docDefinition = {
             info: {
                 Title: 'Minuta de Petição Inicial - Transparência Forense',
                 Author: 'UNIFED-PROBATUM',
-                Subject: lockForensicString, // Embutido de forma indelével nos metadados do binário do PDF
+                Subject: lockForensicString,
                 Keywords: 'Petição Inicial, Prova Forense, Inversão Ónus da Prova, UNIFED'
             },
             pageSize: 'A4',
-            pageMargins: [ 72, 80, 72, 72 ], // 2,54 cm margens laterais, 2,54 cm topo, 2,54 cm rodapé
-            content: [
-                // Cabeçalho processual
-                { text: 'EXCELENTÍSSIMO SENHOR JUIZ DE DIREITO DO TRIBUNAL JUDICIAL DA COMARCA DE [COMARCA]', style: 'judicialHeader', margin: [0, 0, 0, 12] },
-                { text: 'JUÍZO [A PREENCHER PELO MANDATÁRIO]', style: 'judicialSubheader', margin: [0, 0, 0, 20] },
-                
-                { text: 'MINUTA DE PETIÇÃO INICIAL\n(Modelo Profissional Editável em Gabinete)', style: 'titleHeader', margin: [0, 0, 0, 20] },
-                
-                // Identificação das partes
-                { text: 'I. IDENTIFICAÇÃO DAS PARTES', style: 'sectionHeader', margin: [0, 16, 0, 8] },
-                { text: `AUTORA/REQUERENTE: ${companyName}, pessoa coletiva n.º ${nif}, com sede em [MORADA COMPLETA], doravante designada "Requerente".`, style: 'bodyText', margin: [0, 0, 0, 8] },
-                { text: `RÉ/REQUERIDA: Plataforma Digital Operacional (Anonimizado), com sede em [SEDE DA PLATAFORMA] e NIF [NIF PLATAFORMA], doravante designada "Requerida".`, style: 'bodyText', margin: [0, 0, 0, 16] },
-                
-                // Factos
-                { text: 'II. EXPOSIÇÃO DOS FACTOS CONSTITUTIVOS DO DIREITO', style: 'sectionHeader', margin: [0, 16, 0, 8] },
-                { text: `Artigo 1.º Durante o período fiscal ${period}, a Requerida reteve da Requerente comissões no montante global de ${fmtEur(btorLedger)} (BTOR), tendo emitido faturas no valor de ${fmtEur(btfInvoice)} (BTF), gerando uma omissão de faturação de ${fmtEur(expenseGap)} (${omissionPct}%).`, style: 'bodyText', margin: [0, 0, 0, 8] },
-                { text: `Artigo 2.º O valor bruto reportado pela Requerida à Autoridade Tributária ao abrigo da DAC7 foi de ${fmtEur(dac7Total)}, quando o valor real das transações (SAF‑T) era de ${fmtEur(saftGross)}, verificando-se uma discrepância de ${fmtEur(revenueGap)} (${discrepancyPct}%), configurando sub-reporte de valores.`, style: 'bodyText', margin: [0, 0, 0, 8] },
-                { text: `Artigo 3.º A Requerida detém o monopólio da emissão documental (Art. 36.º, n.º 11 CIVA), encontrando-se a Requerente em situação de indefesa técnica (Art. 344.º, n.º 2 CC — inversão do ónus da prova).`, style: 'bodyText', margin: [0, 0, 0, 8] },
-                { text: `Artigo 4.º Os factos configuram indícios de infração fiscal qualificada (Art. 103.º e 104.º Normas de Conformidade Fiscal) e fundamento de responsabilidade civil extracontratual (Art. 483.º CC).`, style: 'bodyText', margin: [0, 0, 0, 16] },
-                
-                // Enquadramento jurídico
-                { text: 'III. ENQUADRAMENTO JURÍDICO E INVERSÃO DO ÓNUS DA PROVA', style: 'sectionHeader', margin: [0, 16, 0, 8] },
-                { text: `Nos termos do Art. 344.º, n.º 2 do Código Civil, quando uma parte esteja impossibilitada de fazer prova dos factos constitutivos do seu direito por razões alheias à sua vontade, inverte-se o ónus da prova, competindo à outra parte demonstrar o contrário. A Requerente encontra-se num "limbo contabilístico", pelo que deve ser declarada a inversão do ónus da prova, cabendo à Requerida demonstrar a correção e integralidade das suas faturas e comunicações DAC7.`, style: 'bodyText', margin: [0, 0, 0, 16] },
-                
-                // Pedido
-                { text: 'IV. PEDIDO', style: 'sectionHeader', margin: [0, 16, 0, 8] },
-                { text: `Nestes termos, requer-se a Vossa Excelência que se digne:\n\na) Declarar a omissão de faturação no valor de ${fmtEur(expenseGap)} e a assimetria de informação DAC7 no montante de ${fmtEur(revenueGap)};\n\nb) Inverter o ónus da prova nos termos do Art. 344.º, n.º 2 do Código Civil, condenando a Requerida a demonstrar a correção das suas faturas e comunicações;\n\nc) Condenar a Requerida a pagar à Requerente a quantia correspondente à omissão de faturação, acrescida de juros de mora, desde a citação, à taxa legal supletiva (Art. 559.º CC);\n\nd) Condenar a Requerida a indemnizar a Requerente pelos danos reputacionais decorrentes do seu perfil de risco na Autoridade Tributária, a liquidar em execução de sentença;\n\ne) Condenar a Requerida nas custas do processo e nos honorários do Mandatário Judicial.`, style: 'bodyText', margin: [0, 0, 0, 16] },
-                
-                { text: `Valor da ação: ${fmtEur(Math.abs(expenseGap) + Math.abs(revenueGap))} (a que acrescem juros e indemnizações a liquidar).`, style: 'bodyText', margin: [0, 0, 0, 24] },
-                
-                { text: `[LOCALIDADE], ${new Date().toLocaleDateString('pt-PT')}`, style: 'bodyText', margin: [0, 0, 0, 12] },
-                { text: '_____________________________________________', style: 'signatureLine', margin: [0, 20, 0, 4] },
-                { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
-            ],
+            // [esquerda, superior, direita, inferior]
+            // Margem superior aumentada para 110pt para evitar colisão com o cabeçalho
+            pageMargins: [72, 110, 72, 80],
+            
+            // HEADER FUNCIONAL com título e número de página
+            header: function(currentPage, pageCount, pageSize) {
+                return {
+                    margin: [72, 20, 72, 0],
+                    columns: [
+                        { text: 'EXCELENTÍSSIMO SENHOR JUIZ DE DIREITO', style: 'headerTitle', alignment: 'left' },
+                        { text: 'Pág. ' + currentPage.toString() + ' de ' + pageCount, style: 'headerPage', alignment: 'right' }
+                    ],
+                    columnGap: 10
+                };
+            },
+            
+            // FOOTER com a string forense achatada (não editável)
             footer: function(currentPage, pageCount) {
                 return {
                     stack: [
@@ -709,8 +632,36 @@ window.exportPeticaoInicial = function(metricsOverride) {
                     margin: [40, 0, 40, 10]
                 };
             },
-            // ========== ESTILOS CORRIGIDOS (sem referências a fontes externas) ==========
+            
+            content: [
+                { text: 'MINUTA DE PETIÇÃO INICIAL\n(Modelo Profissional Editável em Gabinete)', style: 'titleHeader', margin: [0, 20, 0, 30] },
+                
+                { text: 'I. IDENTIFICAÇÃO DAS PARTES', style: 'sectionHeader', margin: [0, 16, 0, 8] },
+                { text: `AUTORA/REQUERENTE: ${companyName}, pessoa coletiva n.º ${nif}, com sede em [MORADA COMPLETA], doravante designada "Requerente".`, style: 'bodyText', margin: [0, 0, 0, 8] },
+                { text: `RÉ/REQUERIDA: Plataforma Digital Operacional (Anonimizado), com sede em [SEDE DA PLATAFORMA] e NIF [NIF PLATAFORMA], doravante designada "Requerida".`, style: 'bodyText', margin: [0, 0, 0, 16] },
+                
+                { text: 'II. EXPOSIÇÃO DOS FACTOS CONSTITUTIVOS DO DIREITO', style: 'sectionHeader', margin: [0, 16, 0, 8] },
+                { text: `Artigo 1.º Durante o período fiscal ${period}, a Requerida reteve da Requerente comissões no montante global de ${fmtEur(btorLedger)} (BTOR), tendo emitido faturas no valor de ${fmtEur(btfInvoice)} (BTF), gerando uma omissão de faturação de ${fmtEur(expenseGap)} (${omissionPct}%).`, style: 'bodyText', margin: [0, 0, 0, 8] },
+                { text: `Artigo 2.º O valor bruto reportado pela Requerida à Autoridade Tributária ao abrigo da DAC7 foi de ${fmtEur(dac7Total)}, quando o valor real das transações (SAF‑T) era de ${fmtEur(saftGross)}, verificando-se uma discrepância de ${fmtEur(revenueGap)} (${discrepancyPct}%), configurando sub-reporte de valores.`, style: 'bodyText', margin: [0, 0, 0, 8] },
+                { text: `Artigo 3.º A Requerida detém o monopólio da emissão documental (Art. 36.º, n.º 11 CIVA), encontrando-se a Requerente em situação de indefesa técnica (Art. 344.º, n.º 2 CC — inversão do ónus da prova).`, style: 'bodyText', margin: [0, 0, 0, 8] },
+                { text: `Artigo 4.º Os factos configuram indícios de infração fiscal qualificada (Art. 103.º e 104.º Normas de Conformidade Fiscal) e fundamento de responsabilidade civil extracontratual (Art. 483.º CC).`, style: 'bodyText', margin: [0, 0, 0, 16] },
+                
+                { text: 'III. ENQUADRAMENTO JURÍDICO E INVERSÃO DO ÓNUS DA PROVA', style: 'sectionHeader', margin: [0, 16, 0, 8] },
+                { text: `Nos termos do Art. 344.º, n.º 2 do Código Civil, quando uma parte esteja impossibilitada de fazer prova dos factos constitutivos do seu direito por razões alheias à sua vontade, inverte-se o ónus da prova, competindo à outra parte demonstrar o contrário. A Requerente encontra-se num "limbo contabilístico", pelo que deve ser declarada a inversão do ónus da prova, cabendo à Requerida demonstrar a correção e integralidade das suas faturas e comunicações DAC7.`, style: 'bodyText', margin: [0, 0, 0, 16] },
+                
+                { text: 'IV. PEDIDO', style: 'sectionHeader', margin: [0, 16, 0, 8] },
+                { text: `Nestes termos, requer-se a Vossa Excelência que se digne:\n\na) Declarar a omissão de faturação no valor de ${fmtEur(expenseGap)} e a assimetria de informação DAC7 no montante de ${fmtEur(revenueGap)};\n\nb) Inverter o ónus da prova nos termos do Art. 344.º, n.º 2 do Código Civil, condenando a Requerida a demonstrar a correção das suas faturas e comunicações;\n\nc) Condenar a Requerida a pagar à Requerente a quantia correspondente à omissão de faturação, acrescida de juros de mora, desde a citação, à taxa legal supletiva (Art. 559.º CC);\n\nd) Condenar a Requerida a indemnizar a Requerente pelos danos reputacionais decorrentes do seu perfil de risco na Autoridade Tributária, a liquidar em execução de sentença;\n\ne) Condenar a Requerida nas custas do processo e nos honorários do Mandatário Judicial.`, style: 'bodyText', margin: [0, 0, 0, 16] },
+                
+                { text: `Valor da ação: ${fmtEur(Math.abs(expenseGap) + Math.abs(revenueGap))} (a que acrescem juros e indemnizações a liquidar).`, style: 'bodyText', margin: [0, 0, 0, 24] },
+                
+                { text: `[LOCALIDADE], ${new Date().toLocaleDateString('pt-PT')}`, style: 'bodyText', margin: [0, 0, 0, 12] },
+                { text: '_____________________________________________', style: 'signatureLine', margin: [0, 20, 0, 4] },
+                { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
+            ],
+            
             styles: {
+                headerTitle: { fontSize: 9, bold: true, alignment: 'left', color: '#1e3a8a' },
+                headerPage: { fontSize: 9, alignment: 'right', color: '#475569' },
                 judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                 judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
                 titleHeader: { fontSize: 14, bold: true, alignment: 'center', color: '#0ea5e9', lineHeight: 1.5 },
@@ -719,22 +670,21 @@ window.exportPeticaoInicial = function(metricsOverride) {
                 signatureLine: { fontSize: 10, alignment: 'center', lineHeight: 1.5 },
                 signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true },
                 forensicSeal: { fontSize: 7, bold: true, alignment: 'center', color: '#0f172a', background: '#f1f5f9' }
+            },
+            defaultStyle: {
+                font: 'Roboto'
             }
         };
         
-        // Geração do PDF profissional editável nas camadas de texto, mas com o rodapé achatado (flattened)
         const fileName = `UNIFED-PETICAO-INICIAL-${sessionId}.pdf`;
         
         if (typeof pdfMake !== 'undefined' && pdfMake && pdfMake.createPdf) {
             return new Promise((resolve, reject) => {
                 try {
-                    // FIX-FONT-ENR-01 v2: pdfMake 0.2.7 usa Roboto via VFS CDN — não suporta Core14 nativas.
-                    // Não alterar pdfMake.fonts nem forçar 'Helvetica' (causa fontProvider crash).
-                    // Air-gap: coberto pelo jsPDF (PATCH-PDF-01 v2) — pdfMake é fallback online.
                     if (typeof pdfMake.vfs === 'undefined' || Object.keys(pdfMake.vfs || {}).length === 0) {
                         console.warn('[enrichment] VFS pdfMake vazio — Petição PDF requer CDN online ou jsPDF.');
                     }
-
+                    
                     pdfMake.createPdf(docDefinition).getBlob((blob) => {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
@@ -745,13 +695,13 @@ window.exportPeticaoInicial = function(metricsOverride) {
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                         
-                        forensicLog('info', 'ENRICHMENT', '✅ PDF profissional blindado exportado com sucesso', { fileName: fileName, session: sessionId });
+                        forensicLog('info', 'ENRICHMENT', '✅ PDF profissional blindado exportado com sucesso (v1.1)', { fileName: fileName, session: sessionId });
                         
                         if (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody) {
                             window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.addEntry(
                                 'PETICAO_INICIAL_PDF_EXPORTED',
                                 { fileName: fileName, session: sessionId, masterHash: masterHash.substring(0, 16) },
-                                { format: 'application/pdf', version: 'v1.0-PDF-blindado' }
+                                { format: 'application/pdf', version: 'v1.1-PDF-blindado' }
                             ).catch(e => forensicLog('warn', 'ENRICHMENT', 'Erro ao adicionar entry na chainOfCustody', e));
                         }
                         
@@ -763,13 +713,11 @@ window.exportPeticaoInicial = function(metricsOverride) {
                 }
             });
         } else {
-            // Fallback seguro: carregar pdfMake dinamicamente via CDN e tentar novamente
             forensicLog('warn', 'ENRICHMENT', 'pdfMake não disponível; tentando carregar via CDN...');
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
                 script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js';
                 script.onload = () => {
-                    // Carregar também vfs_fonts para suporte a Times/Helvetica/Courier
                     const vfsScript = document.createElement('script');
                     vfsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js';
                     vfsScript.onload = () => {
@@ -796,9 +744,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
     }
 };
 
-// Fallback binário seguro (caso pdfMake não carregue)
 function _fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash) {
-    // Gera um PDF mínimo mas válido com metadados e string forense
     const pdfDummy = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -844,10 +790,6 @@ startxref
     return fileName;
 }
 
-// ============================================================================
-// FUNÇÃO AUXILIAR - _exportDocxMimeNativo (mantida para compatibilidade com exportDOCX)
-// ============================================================================
-
 function _exportDocxMimeNativo(_package, _lang, docxLanguage, UNIFEDSys, analysis, t) {
     const _isEn = (_lang === 'en');
     const sessao = UNIFEDSys.sessionId || 'UNIFED-SESSION';
@@ -857,13 +799,11 @@ function _exportDocxMimeNativo(_package, _lang, docxLanguage, UNIFEDSys, analysi
     const platform = 'Plataforma Digital Operacional (Anonimizado)';
     const periodo = analysis.period || 'Set-Dez 2024';
 
-    // ── PATCH 4 · _exportDocxMimeNativo — nova estrutura API interna ─────────
     const _docxTotals    = analysis.totals    || {};
     const _docxCrossings = analysis.crossings || {};
 
     const btorLedger = _docxTotals.despesas         || analysis.btorLedger || 0;
     const btfInvoice = _docxTotals.faturaPlataforma || analysis.btfInvoice || 0;
-    // CORRECÇÃO v1.2: dados ausentes geram excepção — nunca fallback silencioso
     if (!btorLedger || btorLedger <= 0 || !btfInvoice || btfInvoice <= 0) {
         throw new Error(
             '[UNIFED-DOCX] DADOS AUSENTES: btorLedger=' + btorLedger +
@@ -881,7 +821,6 @@ function _exportDocxMimeNativo(_package, _lang, docxLanguage, UNIFEDSys, analysi
         : _pct;
     const ivaFalta23  = _docxCrossings.ivaFalta  || 0;
     const ivaFalta6   = _docxCrossings.ivaFalta6 || 0;
-    // ─────────────────────────────────────────────────────────────────────────
 
     const dataHoje = new Date().toLocaleDateString('pt-PT');
 
@@ -964,14 +903,10 @@ ${top3}
     return 'UNIFED-PETICAO-INICIAL-' + sessao + '.docx';
 }
 
-// ============================================================================
-// EXPORT GLOBAL — UNIFED_ENRICHMENT
-// ============================================================================
-
 window.UNIFED_ENRICHMENT = {
     generateLegalNarrative: generateLegalNarrative_RETIFICADO,
     exportDOCX:             exportDOCX_RETIFICADO,
-    exportPeticaoInicial:   window.exportPeticaoInicial, // já definida acima
+    exportPeticaoInicial:   window.exportPeticaoInicial,
     enrichmentData: {},
     enrichSAFTData: function (saftData) {
         if (!saftData) { return null; }
@@ -1029,17 +964,9 @@ window.UNIFED_ENRICHMENT = {
     }
 };
 
-// Manter os atalhos globais para compatibilidade
 window.exportDOCX             = exportDOCX_RETIFICADO;
 window.generateLegalNarrative = generateLegalNarrative_RETIFICADO;
-// window.exportPeticaoInicial já foi atribuído acima
 
-// ══════════════════════════════════════════════════════════════════════════════
-// _enrichmentGetLanguagePrompt — PERFIL FORENSE ESTRITO v2 (DIRETIVA UNIFED-PROBATUM)
-// Formato: 10 Regras Absolutas numeradas — Segurança de Prompt máxima.
-// Bilingue: PT-PT (default) + EN-US (ramo 'en').
-// Referência: ISRS 4400 · Art. 153.º CPP · ISO/IEC 27037:2012
-// ══════════════════════════════════════════════════════════════════════════════
 window._enrichmentGetLanguagePrompt = function(lang) {
     lang = lang || window.currentLang || 'pt';
 
@@ -1060,7 +987,6 @@ ABSOLUTE RULES:
 10. Always conclude with the declaration of independence per ISRS 4400 and Art. 153.º CPP.`;
     }
 
-    // PT-PT (default) — formato da diretiva exacto, com numeração 1–10
     return `Atue como Perito Forense e Consultor Estratégico Independente.
     A sua missão é transformar dados brutos em prova pericial robusta para o ordenamento jurídico de Portugal.
 
@@ -1077,10 +1003,10 @@ ABSOLUTE RULES:
     10. Conclua sempre com a declaração de independência nos termos da ISRS 4400 e Art. 153.º CPP.`;
 };
 
-forensicLog('info', 'ENRICHMENT', '✅ Módulo carregado com sucesso — v1.0-PDF (Petição Inicial em PDF blindado)');
+forensicLog('info', 'ENRICHMENT', '✅ Módulo carregado com sucesso — v1.1-PDF (Petição Inicial em PDF blindado com HEADER corrigido)');
 forensicLog('info', 'ENRICHMENT', '🔬 Funcionalidades activas:');
 forensicLog('info', 'ENRICHMENT', '   • formatForensicCurrency (global)        — centralizado');
 forensicLog('info', 'ENRICHMENT', '   • generateLegalNarrative(analysis, lang) — Função 1 (com fallback local)');
 forensicLog('info', 'ENRICHMENT', '   • exportDOCX(packageType, lang)          — Função 2');
-forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.0-PDF: PDF profissional blindado)');
+forensicLog('info', 'ENRICHMENT', '   • exportPeticaoInicial(metricsOverride)  — Função 3 (v1.1-PDF: HEADER + MARGENS)');
 forensicLog('info', 'ENRICHMENT', '   • getEnrichedData() com deep freeze      — Imutabilidade total');
