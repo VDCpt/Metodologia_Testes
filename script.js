@@ -8689,6 +8689,48 @@ window._syncPureDashboard = (function() {
             }
             // ── FIM RECTIFICAÇÃO R24-PASSO3 ──────────────────────────────────────────
 
+            // ── RECTIFICAÇÃO R24-WC-INDICATORS ───────────────────────────────────────
+            // Actualizar indicadores do Colarinho Branco com valores calculados em cross,
+            // eliminando os valores estáticos do estado inicial limpo (0%, 0,00 €).
+            const wcInd1 = document.getElementById('pure-wc-ind1-val');
+            if (wcInd1) {
+                wcInd1.setAttribute('data-i18n-ignore', 'true');
+                wcInd1.innerText = (cross.percentagemOmissao || 0).toFixed(2) + '%';
+                updated++;
+            }
+            const wcInd2 = document.getElementById('pure-wc-ind2-val');
+            if (wcInd2) {
+                wcInd2.setAttribute('data-i18n-ignore', 'true');
+                wcInd2.innerText = (cross.percentagemSaftVsDac7 || 0).toFixed(2) + '%';
+                updated++;
+            }
+            const wcInd3 = document.getElementById('pure-wc-ind3-val');
+            if (wcInd3) {
+                wcInd3.setAttribute('data-i18n-ignore', 'true');
+                wcInd3.innerText = window.formatForensicCurrency
+                    ? window.formatForensicCurrency(cross.ircEstimado || 0)
+                    : fmt(cross.ircEstimado || 0);
+                updated++;
+            }
+            // Actualizar veredicto principal e percentagem
+            const verdictEl = document.getElementById('pure-verdict');
+            if (verdictEl && system.analysis && system.analysis.verdict) {
+                const lang = window.currentLang || 'pt';
+                const vLevel = system.analysis.verdict.level;
+                verdictEl.setAttribute('data-i18n-ignore', 'true');
+                verdictEl.innerText = (typeof vLevel === 'object')
+                    ? (vLevel[lang] || vLevel.pt || '---')
+                    : (vLevel || '---');
+                updated++;
+            }
+            const verdictPctEl = document.getElementById('pure-verdict-pct');
+            if (verdictPctEl) {
+                verdictPctEl.setAttribute('data-i18n-ignore', 'true');
+                verdictPctEl.innerText = (cross.percentagemOmissao || 0).toFixed(2) + '%';
+                updated++;
+            }
+            // ── FIM RECTIFICAÇÃO R24-WC-INDICATORS ───────────────────────────────────
+
             // Percentagens
             const pctSG1 = cross.percentagemSaftVsDac7 ?? (totals.saftBruto ? ((totals.saftBruto - totals.dac7TotalPeriodo)/totals.saftBruto*100) : 0);
             const pctSG2 = cross.percentagemOmissao ?? (totals.despesas ? ((totals.despesas - totals.faturaPlataforma)/totals.despesas*100) : 0);

@@ -1949,12 +1949,14 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
         }
 
-        window._activatePurePanel = function() { };
+        // Funções reais definidas dentro da #pureDashboard – não sobrescrever
+        // window._activatePurePanel = function() { };
         window.closeATFModal = function() {
             var modal = document.getElementById('atfModal');
             if (modal) modal.style.display = 'none';
         };
-        window.translateDataLangElements = function(lang) { };
+        // Funções reais definidas dentro da #pureDashboard – não sobrescrever
+        // window.translateDataLangElements = function(lang) { };
         window.toggleSandboxBanner = function(show) {
             var SANDBOX_TEXT = 'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA';
             var dict = window.UNIFED_TRANSLATIONS && window.UNIFED_TRANSLATIONS.DICTIONARY;
