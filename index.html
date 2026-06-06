@@ -915,31 +915,31 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
     <div class="pure-wc-grid">
       <div class="pure-wc-indicator">
         <div class="pure-wc-indicator-title" id="pure-wc-ind1-title" data-pt="Indicador 1: Omissão Estruturada" data-en="Indicator 1: Structured Omission">Indicador 1: Omissão Estruturada</div>
-        <div class="pure-wc-indicator-value" id="pure-wc-ind1-val" data-i18n-ignore>89,26%</div>
+        <div class="pure-wc-indicator-value" id="pure-wc-ind1-val" data-i18n-ignore>0%</div>
         <div class="pure-wc-indicator-sub" id="pure-wc-ind1-sub" data-pt="Nível de omissão consistente & documentado (€2.184,95 de €2.447,89)" data-en="Omission level consistent & documented (€2,184.95 of €2,447.89)">Nível de omissão consistente & documentado (€2.184,95 de €2.447,89)</div>
       </div>
 
       <div class="pure-wc-indicator">
         <div class="pure-wc-indicator-title" id="pure-wc-ind2-title" data-pt="Indicador 2: Discrepância SAF-T/DAC7" data-en="Indicator 2: SAF-T/DAC7 Discrepancy">Indicador 2: Discrepância SAF-T/DAC7</div>
-        <div class="pure-wc-indicator-value" id="pure-wc-ind2-val" data-i18n-ignore>23,65%</div>
+        <div class="pure-wc-indicator-value" id="pure-wc-ind2-val" data-i18n-ignore>0%</div>
         <div class="pure-wc-indicator-sub" id="pure-wc-ind2-sub" data-pt="Diferença entre declaração oficial & reporte AT (€2.402,57)" data-en="Difference between official declaration & TA report (€2,402.57)">Diferença entre declaração oficial & reporte AT (€2.402,57)</div>
       </div>
 
       <div class="pure-wc-indicator">
         <div class="pure-wc-indicator-title" id="pure-wc-ind3-title" data-pt="Indicador 3: Impacto Fiscal" data-en="Indicator 3: Fiscal Impact">Indicador 3: Impacto Fiscal</div>
-        <div class="pure-wc-indicator-value" id="pure-wc-ind3-val" data-i18n-ignore>€ 458,84</div>
+        <div class="pure-wc-indicator-value" id="pure-wc-ind3-val" data-i18n-ignore>0,00 €</div>
         <div class="pure-wc-indicator-sub" id="pure-wc-ind3-sub" data-pt="IRC estimado não cobrado (21% sobre omissão)" data-en="Estimated IRC not charged (21% on omission)">IRC estimado não cobrado (21% sobre omissão)</div>
       </div>
 
       <div class="pure-wc-indicator" style="grid-column: span 1; background: #0f172a; border-left: 3px solid #eab308;">
         <div class="pure-impacto-panel" style="padding: 8px 0;">
           <div class="pure-badge-simulacao" style="background:#eab308; color:#000; padding:2px 6px; font-size:10px; font-weight:bold; margin-bottom:5px; display:inline-block;">SIMULAÇÃO MACROECONÓMICA</div>
-          <div style="font-size:12px; margin:4px 0;">Média mensal: <span class="pure-mono" style="color:#facc15;">534,15 €</span></div>
-          <div style="font-size:12px; margin:4px 0;">Impacto Mensal Mercado Estimado (38k): <span class="pure-mono" style="color:#facc15;">20 297 605,00 €</span></div>
-          <div style="font-size:12px; margin:4px 0;">Impacto Anual Mercado Estimado: <span class="pure-mono" style="color:#facc15;">243 571 260,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Média mensal: <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Impacto Mensal Mercado Estimado (38k): <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Impacto Anual Mercado Estimado: <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
           <div style="border-top:1px solid #334155; margin-top:5px; padding-top:5px; font-weight:bold; font-size:12px;">
             PROJEÇÃO 7 ANOS (S/ VARIANTE):
-            <span class="pure-mono" style="color:#f87171;">1 704 998 820,00 €</span>
+            <span class="pure-mono" style="color:#f87171;">0,00 €</span>
           </div>
           <div style="font-size:9px; color:#94a3b8; margin-top:4px;">* Modelo linear estrito ($E_{7y} = \mu \times 12 \times 7 \times N$). Exclui sazonalidade e desvio-padrão. Uso exclusivo para aferição de materialidade económica da conduta.</div>
         </div>
@@ -963,7 +963,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
   </div>
 
   <!-- ── PAINEL III · ANÁLISE TEMPORAL FORENSE (ATF) ───────────────────────── -->
-  <div class="pure-card" id="pureATFCard">
+  <div class="pure-card" id="pureATFCard" style="display:none;">
     <h3 class="pure-card-title">
       <span class="pure-icon">⏳</span>
       <span id="pure-card3-title" data-pt="III. ANÁLISE TEMPORAL FORENSE (ATF) — SCORE DE PERSISTÊNCIA" data-en="III. FORENSIC TEMPORAL ANALYSIS (ATF) — PERSISTENCE SCORE">III. ANÁLISE TEMPORAL FORENSE (ATF) — SCORE DE PERSISTÊNCIA</span>
@@ -972,25 +972,25 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
     <div class="pure-atf-grid">
       <div class="pure-atf-block pure-atf-sp">
         <div class="pure-atf-label" id="pure-atf-sp-label" data-pt="SCORE DE PERSISTÊNCIA (SP)" data-en="PERSISTENCE SCORE (SP)">SCORE DE PERSISTÊNCIA (SP)</div>
-        <div id="pure-atf-sp" class="pure-atf-big" data-i18n-ignore>40<span style="font-size:1rem;opacity:0.6">/100</span></div>
-        <div class="pure-atf-classify" id="pure-atf-sp-classify" data-pt="OMISSÃO PONTUAL / RISCO MODERADO" data-en="POINT OMISSION / MODERATE RISK">OMISSÃO PONTUAL / RISCO MODERADO</div>
+        <div id="pure-atf-sp" class="pure-atf-big" data-i18n-ignore>0<span style="font-size:1rem;opacity:0.6">/100</span></div>
+        <div class="pure-atf-classify" id="pure-atf-sp-classify" data-i18n-ignore>---</div>
       </div>
 
       <div class="pure-atf-block">
         <div class="pure-atf-label" id="pure-atf-trend-label" data-pt="TENDÊNCIA" data-en="TREND">TENDÊNCIA</div>
-        <div id="pure-atf-trend" class="pure-atf-trend-val" data-pt="📉 DESCENDENTE" data-en="📉 DESCENDING">📉 DESCENDENTE</div>
+        <div id="pure-atf-trend" class="pure-atf-trend-val" data-i18n-ignore>---</div>
         <div class="pure-atf-sub" id="pure-atf-trend-sub" data-pt="Regressão linear (OLS) · 3 pontos" data-en="Linear regression (OLS) · 3 points">Regressão linear (OLS) · 3 pontos</div>
       </div>
 
       <div class="pure-atf-block">
         <div class="pure-atf-label" id="pure-atf-outliers-label" data-pt="OUTLIERS > 2σ" data-en="OUTLIERS > 2σ">OUTLIERS > 2σ</div>
-        <div id="pure-atf-outliers" class="pure-atf-outlier-val" data-i18n-ignore>0 outliers &gt; 2σ</div>
+        <div id="pure-atf-outliers" class="pure-atf-outlier-val" data-i18n-ignore>0 outliers</div>
         <div class="pure-atf-sub" id="pure-atf-outliers-sub" data-pt="Sem picos estatisticamente anómalos" data-en="No statistically anomalous peaks">Sem picos estatisticamente anómalos</div>
       </div>
 
       <div class="pure-atf-block">
         <div class="pure-atf-label" id="pure-atf-history-label" data-pt="HISTÓRICO" data-en="HISTORY">HISTÓRICO</div>
-        <div id="pure-atf-meses" class="pure-atf-meses-val" data-pt="2.º Semestre 2024 — 4 meses com dados (Set–Dez)" data-en="2nd Semester 2024 — 4 months with data (Sep–Dec)">2.º Semestre 2024 — 4 meses com dados (Set–Dez)</div>
+        <div id="pure-atf-meses" class="pure-atf-meses-val" data-i18n-ignore>---</div>
         <div class="pure-atf-sub" id="pure-atf-meses-sub" data-pt="4 meses com dados (Set–Dez 2024)" data-en="4 months with data (Sep–Dec 2024)">4 meses com dados (Set–Dez 2024)</div>
       </div>
     </div>
@@ -1038,7 +1038,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
   </div>
 
   <!-- ── PAINEL IV · ZONA CINZENTA (valores não sujeitos a comissão) ───────── -->
-  <div class="pure-card" id="pureZonaCinzentaCard" style="display: none;">
+  <div class="pure-card" id="pureZonaCinzentaCard" style="display:none;">
     <h3 class="pure-card-title">
       <span class="pure-icon">🔍</span>
       <span id="pure-card4-title" data-pt="IV. ZONA CINZENTA — VALORES NÃO SUJEITOS A COMISSÃO (ISOLADOS)" data-en="IV. GREY ZONE — VALUES NOT SUBJECT TO COMMISSION (ISOLATED)">IV. ZONA CINZENTA — VALORES NÃO SUJEITOS A COMISSÃO (ISOLADOS)</span>
@@ -1047,13 +1047,13 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       <span id="pure-zc-intro-text" data-pt="O sistema isolou" data-en="The system isolated">O sistema isolou</span>
       <strong id="pure-zc-amount" data-i18n-ignore
                data-source-id="pure-zona-total"
-               title="R24: valor sincronizado dinamicamente com #pure-zona-total">€ 451,15</strong>
+               title="R24: valor sincronizado dinamicamente com #pure-zona-total">0,00 €</strong>
       <span id="pure-zc-intro-end" data-pt="em fluxos não sujeitos a comissão pela plataforma (Campanhas + Gorjetas — Período Set-Dez 2024 · acumulado do quadrimestre). A reconciliação DAC7 deve verificar se estes valores foram indevidamente incluídos na base de reporte à AT, explicando parte da discrepância C1." data-en="in flows not subject to commission by the platform (Campaigns + Tips — Sep-Dec 2024 Period · four-month cumulative). DAC7 reconciliation must verify whether these values were improperly included in the reporting base to the TA, explaining part of the C1 discrepancy.">em fluxos não sujeitos a comissão pela plataforma (Campanhas + Gorjetas — Período Set-Dez 2024 · acumulado do quadrimestre). A reconciliação DAC7 deve verificar se estes valores foram indevidamente incluídos na base de reporte à AT, explicando parte da discrepância C1.</span>
     </p>
     <div class="pure-zc-grid">
       <div class="pure-zc-item">
         <span class="pure-zc-label" id="pure-zc-campanhas-label" data-pt="Campanhas (total período)" data-en="Campaigns (total period)">Campanhas (total período)</span>
-        <span id="pure-zona-campanhas" class="pure-zc-val" data-i18n-ignore>€ 405,00</span>
+        <span id="pure-zona-campanhas" class="pure-zc-val" data-i18n-ignore>0,00 €</span>
         <span class="pure-zc-tag" id="pure-zc-campanhas-tag" data-pt="Isento comissão · 0%" data-en="Commission exempt · 0%">Isento comissão · 0%</span>
       </div>
       <div class="pure-zc-item">
@@ -1063,7 +1063,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       </div>
       <div class="pure-zc-item">
         <span class="pure-zc-label" id="pure-zc-portagens-label" data-pt="Portagens (total período)" data-en="Tolls (total period)">Portagens (total período)</span>
-        <span id="pure-zona-portagens" class="pure-zc-val" data-i18n-ignore>€ 0,15</span>
+        <span id="pure-zona-portagens" class="pure-zc-val" data-i18n-ignore>0,00 €</span>
         <span class="pure-zc-tag" id="pure-zc-portagens-tag" data-pt="Reembolso operacional · 0%" data-en="Operational reimbursement · 0%">Reembolso operacional · 0%</span>
       </div>
       <div class="pure-zc-item">
@@ -1073,7 +1073,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       </div>
       <div class="pure-zc-item pure-zc-total">
         <span class="pure-zc-label" id="pure-zc-total-label" data-pt="Total Não Sujeitos (Set–Dez 2024)" data-en="Total Not Subject (Sep–Dec 2024)">Total Não Sujeitos (Set–Dez 2024)</span>
-        <span id="pure-zona-total" class="pure-zc-val" data-i18n-ignore>€ 451,15</span>
+        <span id="pure-zona-total" class="pure-zc-val" data-i18n-ignore>0,00 €</span>
         <span class="pure-zc-tag" id="pure-zc-total-tag" data-pt="Fora da base tributável TVDE" data-en="Outside TVDE taxable base">Fora da base tributável TVDE</span>
       </div>
     </div>
@@ -1088,8 +1088,8 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
     <div class="pure-verdict-row">
       <div class="pure-verdict-block">
         <div class="pure-verdict-label" id="pure-verdict-label" data-pt="VEREDICTO PERICIAL" data-en="EXPERT VERDICT">VEREDICTO PERICIAL</div>
-        <div id="pure-verdict" class="pure-verdict-value" data-pt="RISCO ELEVADO" data-en="HIGH RISK">RISCO ELEVADO</div>
-        <div id="pure-verdict-pct" class="pure-verdict-pct" data-i18n-ignore>89,26%</div>
+        <div id="pure-verdict" class="pure-verdict-value" data-i18n-ignore>---</div>
+        <div id="pure-verdict-pct" class="pure-verdict-pct" data-i18n-ignore>0%</div>
         <div class="pure-verdict-basis" id="pure-verdict-basis" data-pt="Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP" data-en="Art. 103 / 104 Normas de Conformidade Fiscal · Art. 125 CPP">Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP</div>
       </div>
       <div class="pure-integrity-block">
