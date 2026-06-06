@@ -40,6 +40,21 @@
     function interceptTimestampRequests() {
         // ── GUARDA DE PRODUÇÃO eIDAS ──────────────────────────────────────────
         if (!window.UNIFEDSystem || !window.UNIFEDSystem.demoMode) {
+            // RETIFICAÇÃO R24: fallback offline não-bloqueante para produção air-gapped
+            if (navigator.onLine === false) {
+                console.warn('[NEXUS·PROD·OFFLINE] Produção offline – utilizando selagem local PENDING_TIMESTAMP (não bloqueante).');
+                if (typeof forensicLog === 'function') {
+                    forensicLog('warn', 'NEXUS',
+                        '⚠️ Produção air-gapped: PENDING_TIMESTAMP activo. ' +
+                        'Selagem externa RFC 3161 obrigatória antes de submissão judicial.');
+                }
+                return {
+                    success:        true,
+                    status:         'PENDING_TIMESTAMP',
+                    warning:        'Timestamp simulado por ausência de rede. Selagem externa necessária antes de submissão judicial.',
+                    eidas2Compliant: false
+                };
+            }
             if (typeof forensicLog === 'function') {
                 forensicLog('error', 'NEXUS',
                     '⚠️ Violação eIDAS: Produção exige TSA externa acreditada. ' +

@@ -5733,10 +5733,18 @@ async function performAudit() {
         // sobrescreve o registo selado em chainOfCustody.seal().
         // Conformidade: ISO/IEC 27037:2012 §8.4 — integridade da cadeia de custódia
         // deve ser selada antes de qualquer acção de validação ou exportação.
+        // RETIFICAÇÃO R24-ASYNC: await explícito de calculateMasterHash() antes de seal()
+        // para garantir que UNIFEDSystem.masterHash nunca contenha [object Promise].
       if (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody) {
-    		await window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.seal();
+            const chain = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody;
+            if (typeof chain.calculateMasterHash === 'function') {
+                const finalHash = await chain.calculateMasterHash();
+                UNIFEDSystem.masterHash = finalHash;
+                console.log('[UNIFED-COC] 🔑 calculateMasterHash() resolvido:', finalHash ? finalHash.substring(0,16)+'...' : 'FALHOU');
+            }
+    		await chain.seal();
    		 // ⭐ Garantir que o masterHash do sistema é o mesmo da cadeia
-   		 UNIFEDSystem.masterHash = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash;
+   		 UNIFEDSystem.masterHash = chain.masterHash || UNIFEDSystem.masterHash;
    		 // Sincronizar interface
    		 if (typeof window._syncPureDashboard === 'function') {
        		 window._syncPureDashboard(UNIFEDSystem);
@@ -6139,9 +6147,20 @@ function performForensicCrossings() {
     cross.btor = despesas;
     cross.btf  = faturaPlataforma;
 
-    cross.impactoMensalMercado  = discrepanciaMensalMedia * 38000;
-    cross.impactoAnualMercado   = cross.impactoMensalMercado * 12;
-    cross.impactoSeteAnosMercado= cross.impactoAnualMercado * 7;
+    // RETIFICAÇÃO R24-CONSERVADOR: usar calcularDanoConservador() com factor 0.85
+    if (window.calcularDanoConservador && typeof window.calcularDanoConservador === 'function') {
+        const impactoAnualConservador = window.calcularDanoConservador(discrepanciaMensalMedia, 38000);
+        cross.impactoMensalMercado   = impactoAnualConservador / 12;
+        cross.impactoAnualMercado    = impactoAnualConservador;
+        cross.impactoSeteAnosMercado = impactoAnualConservador * 7;
+        console.log('[UNIFED-CONSERVADOR] 📊 Impacto calculado via calcularDanoConservador() (factor 0.85):', impactoAnualConservador.toFixed(2));
+    } else {
+        // Fallback: cálculo directo sem factor conservador (sem calcularDanoConservador disponível)
+        cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
+        cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
+        cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+        console.warn('[UNIFED-CONSERVADOR] ⚠️ calcularDanoConservador() não disponível — usando cálculo directo.');
+    }
 
     cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;
     cross.agravamentoBrutoIRC  = (cross.discrepancia / mesesDados) * 12;

@@ -677,7 +677,9 @@ window.exportPeticaoInicial = function(metricsOverride) {
                 sectionHeader: { fontSize: 12, bold: true, alignment: 'left', lineHeight: 1.5, color: '#1e3a8a' },
                 bodyText: { fontSize: 11, alignment: 'justify', lineHeight: 1.5, firstLineIndent: 40 },
                 signatureLine: { fontSize: 10, alignment: 'center', lineHeight: 1.5 },
-                signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true }
+                signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true },
+                code: { fontSize: 7, background: '#f8fafc', color: '#0f172a', wordBreak: 'break-all' },
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b', wordBreak: 'break-all' }
             },
             defaultStyle: {
                 font: 'Roboto'

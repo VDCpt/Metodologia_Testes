@@ -388,7 +388,7 @@ window.initLanguageSwitcher = function() {
     // Executa a actualização inicial
     _updateUI();
 
-    // MutationObserver com throttle reduzido para 50ms (UNIFED-TRANS-RET-10)
+    // MutationObserver com throttle ajustado para 150ms (RETIFICAÇÃO R24: reduz re-renders)
     let _updateUITimer = null;
     const observer = new MutationObserver(() => {
         if(window._isTranslating) return;
@@ -396,7 +396,7 @@ window.initLanguageSwitcher = function() {
         setTimeout(() => {
             if(window.currentLang) window.translateAll();
             window._isTranslating = false;
-        }, 50);
+        }, 150); // R24: 50ms → 150ms
     });
     observer.observe(document.body, { childList: true, subtree: true });
     console.log('[I18N] MutationObserver activo com flag _isTranslating.');
@@ -447,7 +447,8 @@ console.log('[UNIFED-TRANSLATIONS] ✅ Módulo v1.0-NACIONALIZADO carregado (190
     // Correcção de emergência sobre qualquer textContent activo no DOM
     if (typeof document !== 'undefined') {
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('*').forEach(function(el) {
+            // R24: seletor restrito — evita varrimento global DOM
+            document.querySelectorAll('.pure-section-title, span, h1, h2, h3, p').forEach(function(el) {
                 if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
                     if (el.textContent.includes('INVIO LABILIDADE')) {
                         el.textContent = el.textContent.replace(/INVIO LABILIDADE/g, 'INVIOLABILIDADE');

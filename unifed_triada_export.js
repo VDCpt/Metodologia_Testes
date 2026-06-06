@@ -1073,9 +1073,9 @@
         content.push({ text: isPT ? '1. PROPÓSITO' : '1. PURPOSE', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: isPT ? 'Este anexo documenta a cadeia de custódia das provas digitais, a árvore de Merkle que garante a integridade das evidências e o carimbo temporal RFC 3161, em conformidade com a ISO/IEC 27037 e o Regulamento eIDAS 2.0.' : 'This annex documents the chain of custody of digital evidence, the Merkle tree ensuring evidence integrity, and the RFC 3161 timestamp, in compliance with ISO/IEC 27037 and eIDAS 2.0 Regulation.', style: 'normal', margin: [0, 2, 0, 15] });
         content.push({ text: isPT ? '2. HASH MASTER (SHA-256)' : '2. MASTER HASH (SHA-256)', style: 'h2', margin: [0, 10, 0, 5] });
-        content.push({ text: m.masterHash, style: 'code', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
+        content.push({ text: m.masterHash, style: 'code', wordBreak: 'break-all', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
         content.push({ text: isPT ? '3. RAIZ MERKLE' : '3. MERKLE ROOT', style: 'h2', margin: [0, 10, 0, 5] });
-        content.push({ text: m.merkleRoot, style: 'code', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
+        content.push({ text: m.merkleRoot, style: 'code', wordBreak: 'break-all', margin: [0, 2, 0, 15], background: '#f1f5f9', padding: 8 });
         content.push({ text: isPT ? '4. SESSÃO' : '4. SESSION', style: 'h2', margin: [0, 10, 0, 5] });
         content.push({ text: m.session, style: 'normal', margin: [0, 2, 0, 15] });
         
@@ -2070,7 +2070,7 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
 
                 // ========== 27. CADEIA DE CUSTÓDIA COMPLETA ==========
                 { text: "11. CADEIA DE CUSTÓDIA", style: 'h2' },
-                { text: `Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura) ${m.masterHash}`, style: 'code', margin: [0, 0, 0, 10] },
+                { text: `Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura) ${m.masterHash}`, style: 'code', wordBreak: 'break-all', margin: [0, 0, 0, 10] },
                 { text: "REFERENCIAL NORMATIVO (ISO/IEC 27037 e DL 28/2019):", style: 'h2' },
                 { text: "A recolha, preservação e análise das evidências digitais seguiram as diretrizes estabelecidas pela norma ISO/IEC 27037 (Linhas de orientação para identificação, recolha, aquisição e preservação de prova digital), em conformidade com o Decreto-Lei n.º 28/2019.\n\nEvidências processadas e respetivos hashes SHA-256 completos:", style: 'normal', margin: [0, 0, 0, 8] },
                 {
@@ -2227,11 +2227,11 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
                 footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
                 footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' },
-                footerText: { fontSize: 7.5, bold: false, color: '#64748b' },   // <-- CORRECÇÃO R23: estilo adicionado
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b', wordBreak: 'break-all' },   // <-- CORRECÇÃO R24: wordBreak adicionado
                 h1: { fontSize: 11, bold: true, alignment: 'center', margin: [0, 12, 0, 6], color: '#1e3a8a' },
                 h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 14, 0, 4], color: '#2c3e66' },
                 normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
-                code: { fontSize: 7, background: '#f8fafc', padding: 5, margin: [0, 2, 0, 2], color: '#0f172a' },
+                code: { fontSize: 7, background: '#f8fafc', padding: 5, margin: [0, 2, 0, 2], color: '#0f172a', wordBreak: 'break-all' },
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' }
             },
             watermark: {
