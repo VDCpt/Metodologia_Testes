@@ -1589,7 +1589,7 @@
         // docDefinition completo com todas as secções do segundo ficheiro
         // =========================================================================
         const docDefinition = {
-            pageMargins: [40, 105, 40, 80],
+            pageMargins: [40, 75, 40, 80],
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) return null;
                 return {
@@ -1636,7 +1636,7 @@
                         paddingTop:    function() { return 5; },
                         paddingBottom: function() { return 5; }
                     },
-                    margin: [40, 14, 40, 0]
+                    margin: [40, 10, 40, 0]
                 };
             },
             footer: function(currentPage, pageCount) {
@@ -1775,7 +1775,7 @@
                         paddingTop:    function() { return 6; },
                         paddingBottom: function() { return 6; }
                     },
-                    margin: [0, 0, 0, 5]
+                    margin: [0, -20, 0, 5]
                 },
                 // ── Legendas: Cadeia de Custódia (esq) | CONFIDENCIAL (dir) ──
                 {
