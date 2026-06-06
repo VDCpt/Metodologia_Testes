@@ -1981,19 +1981,38 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             const qrTarget = document.getElementById('qr-code-explorer-target');
-            if(qrTarget && typeof QRCode !== 'undefined') {
+            if (qrTarget && typeof QRCode !== 'undefined') {
                 const masterHash = window.UNIFEDSystem && window.UNIFEDSystem.masterHash ? window.UNIFEDSystem.masterHash : '';
                 const sessionId  = window.UNIFEDSystem && window.UNIFEDSystem.sessionId  ? window.UNIFEDSystem.sessionId  : '';
-                if(masterHash && masterHash.length === 64) {
+                if (masterHash && masterHash.length === 64) {
                     qrTarget.innerHTML = '';
                     try {
-                        new QRCode(qrTarget, {
+                        // Isolar a criação num elemento temporário fora do DOM visível
+                        // para evitar o erro "Illegal invocation" em alguns contextos de canvas
+                        const tempDiv = document.createElement('div');
+                        tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+                        document.body.appendChild(tempDiv);
+                        new QRCode(tempDiv, {
                             text: 'UNIFED-PROBATUM|SESSAO:' + sessionId + '|SHA256:' + masterHash,
                             width: 84, height: 84,
                             colorDark: '#000000', colorLight: '#ffffff',
                             correctLevel: QRCode.CorrectLevel.L
                         });
+                        // Aguardar renderização assíncrona do canvas antes de mover para o target
+                        setTimeout(function() {
+                            const canvas = tempDiv.querySelector('canvas');
+                            if (canvas) {
+                                qrTarget.innerHTML = '';
+                                qrTarget.appendChild(canvas);
+                            } else {
+                                qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">QR indisponível</span>';
+                            }
+                            if (document.body.contains(tempDiv)) {
+                                document.body.removeChild(tempDiv);
+                            }
+                        }, 50);
                     } catch(e) {
+                        console.warn('[QRCode] Erro ao gerar QR:', e);
                         qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">QR indisponível</span>';
                     }
                 } else {

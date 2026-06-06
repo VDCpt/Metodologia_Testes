@@ -5834,9 +5834,19 @@ async function performAudit() {
         // apenas no clique do botão "Regenerar". O TOP 3 nunca era renderizado
         // automaticamente após a perícia. Corrigido aqui.
         if (window.UNIFED_AnalysisCognitive && typeof window.UNIFED_AnalysisCognitive.triggerAnalysisComplete === 'function') {
-            const btorMetrics = UNIFEDSystem.analysis && UNIFEDSystem.analysis.btor
+            // Obter métricas de forma defensiva — em fluxos DEMO, btor pode ser undefined
+            let btorMetrics = UNIFEDSystem.analysis && UNIFEDSystem.analysis.btor
                 ? UNIFEDSystem.analysis.btor
-                : UNIFEDSystem.analysis;
+                : (UNIFEDSystem.analysis || null);
+
+            // Garantir que é sempre passado um objecto válido (nunca undefined/null puro)
+            if (!btorMetrics || typeof btorMetrics !== 'object') {
+                btorMetrics = {
+                    totals:    (UNIFEDSystem.analysis && UNIFEDSystem.analysis.totals)    || {},
+                    crossings: (UNIFEDSystem.analysis && UNIFEDSystem.analysis.crossings) || {}
+                };
+            }
+
             window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(btorMetrics)
                 .then(ok => {
                     if (ok) console.log('[UNIFED-TOP3] ✅ TOP 3 gerado automaticamente após análise forense.');
