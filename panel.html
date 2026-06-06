@@ -100,7 +100,7 @@
 
       <!-- ELEMENTO DE PROVA DETERMINANTE 2 — REVELAÇÃO DINÂMICA (CORRIGIDO: LABEL E VALOR ABSOLUTO) -->
       <div class="pure-sg pure-sg-critical" id="smoking-gun-2" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg2-label" data-pt="ELEMENTO DE PROVA DETERMINANTE 2 — Despesas/Comissões (Extrato) vs Comissões Faturadas (BTF)" data-en="DETERMINING EVIDENTIARY ELEMENT 2 — Expenses/Commissions (Statement) vs Invoiced Commissions (BTF)">ELEMENTO DE PROVA DETERMINANTE 2 — Despesas/Comissões (Extrato) vs Comissões Faturadas (BTF)</div>
+        <div class="pure-sg-label" id="pure-sg2-label" data-pt="🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)" data-en="🔫 SMOKING GUN II: Invoicing Omission (Underreporting)">🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)</div>
         <div class="pure-sg-row">
           <span class="pure-sg-key" id="pure-sg2-btor-label" data-pt="BTOR (Extrato):" data-en="BTOR (Statement):">BTOR (Extrato):</span>
           <span class="pure-sg-val" id="pure-sg2-btor-val" data-i18n-ignore>€ 0,00</span>
@@ -120,7 +120,7 @@
 
       <!-- ELEMENTO DE PROVA DETERMINANTE 1 — REVELAÇÃO DINÂMICA -->
       <div class="pure-sg pure-sg-secondary" id="smoking-gun-1" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg1-label" data-pt="ELEMENTO DE PROVA DETERMINANTE 1 — SAF-T Bruto vs DAC7 Reportado" data-en="DETERMINING EVIDENTIARY ELEMENT 1 — SAF-T Gross vs DAC7 Reported">ELEMENTO DE PROVA DETERMINANTE 1 — SAF-T Bruto vs DAC7 Reportado</div>
+        <div class="pure-sg-label" id="pure-sg1-label" data-pt="🔫 PROVA RAINHA I: Retenção Ilícita de Comissões" data-en="🔫 SMOKING GUN I: Illegal Commission Withholding">🔫 PROVA RAINHA I: Retenção Ilícita de Comissões</div>
         <div class="pure-sg-row">
           <span class="pure-sg-key" id="pure-sg1-saft-label" data-pt="SAF-T (Bruto):" data-en="SAF-T (Gross):">SAF-T (Bruto):</span>
           <span class="pure-sg-val" id="pure-sg1-saft-val" data-i18n-ignore>€ 0,00</span>
@@ -745,67 +745,4 @@
     window._initTop3Buttons = initTop3Buttons;
 </script>
 
-<!-- ========================================================================= -->
-<!-- CORREÇÃO ADICIONAL: SCRIPT PARA TRATAR VALORES ABSOLUTOS E PREVENIR UNDEFINED -->
-<!-- ========================================================================= -->
-<script>
-(function() {
-    // Corrige a exibição do elemento de omissão para valor absoluto com formatação adequada
-    function corrigirValorOmissao() {
-        const deltaElement = document.getElementById('pure-sg2-delta');
-        if (!deltaElement) return;
-
-        // Fallback para [undefined] ou valores vazios
-        let conteudo = deltaElement.textContent || deltaElement.innerText;
-        if (!conteudo || conteudo === '[undefined]' || conteudo === 'undefined' || conteudo === '') {
-            deltaElement.textContent = '€ 0,00';
-            deltaElement.setAttribute('data-valor-original', '0');
-            return;
-        }
-
-        // Extrair número do conteúdo (ex: "€ 0,00" ou "-1.785,14 €" ou "1.785,14 €")
-        let match = conteudo.match(/€?\s*([+-]?\s*\d+[\.\s]?\d*[\s,]*\d*)/);
-        if (match) {
-            let numStr = match[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-            let valor = parseFloat(numStr);
-            if (!isNaN(valor)) {
-                // Converter para absoluto (positivo)
-                let absoluto = Math.abs(valor);
-                // Formatar com espaço como separador de milhar
-                let formatado = absoluto.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                // Substituir ponto por vírgula e adicionar espaços nos milhares
-                formatado = formatado.replace(/,/g, ' ');
-                formatado = formatado.replace(/\./g, ',');
-                // Adicionar sufixo (VALOR ABSOLUTO OCULTADO)
-                deltaElement.textContent = formatado + ' € (VALOR ABSOLUTO OCULTADO)';
-                deltaElement.setAttribute('data-valor-original', absoluto.toString());
-                return;
-            }
-        }
-    }
-
-    // Observa mudanças no DOM para capturar quando o elemento for populado via JavaScript
-    function observarMudancas() {
-        const targetNode = document.getElementById('pure-sg2-delta');
-        if (!targetNode) return;
-
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    corrigirValorOmissao();
-                }
-            });
-        });
-
-        observer.observe(targetNode, { childList: true, characterData: true, subtree: true });
-        // Executar imediatamente
-        corrigirValorOmissao();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', observarMudancas);
-    } else {
-        observarMudancas();
-    }
-})();
-</script>
+<!-- R24: script fantasma pure-sg2-delta removido — Math.abs tratado em script.js na origem -->
