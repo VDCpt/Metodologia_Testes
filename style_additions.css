@@ -1592,3 +1592,10 @@
     0%, 100% { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5)); }
     50%       { filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.85)); }
 }
+
+/* Correcção sobreposição das Smoking Guns — Problema 1 */
+.pure-sg-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}

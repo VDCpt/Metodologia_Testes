@@ -5829,32 +5829,7 @@ async function performAudit() {
         }));
         console.log('[UNIFED-SYNC] ✅ UNIFED_ANALYSIS_COMPLETE despachado (systemData incluído).');
 
-        // ── RECTIFICAÇÃO R24-TOP3 ─────────────────────────────────────────────────
-        // triggerAnalysisComplete não era invocado no fluxo performAudit —
-        // apenas no clique do botão "Regenerar". O TOP 3 nunca era renderizado
-        // automaticamente após a perícia. Corrigido aqui.
-        if (window.UNIFED_AnalysisCognitive && typeof window.UNIFED_AnalysisCognitive.triggerAnalysisComplete === 'function') {
-            // Obter métricas de forma defensiva — em fluxos DEMO, btor pode ser undefined
-            let btorMetrics = UNIFEDSystem.analysis && UNIFEDSystem.analysis.btor
-                ? UNIFEDSystem.analysis.btor
-                : (UNIFEDSystem.analysis || null);
-
-            // Garantir que é sempre passado um objecto válido (nunca undefined/null puro)
-            if (!btorMetrics || typeof btorMetrics !== 'object') {
-                btorMetrics = {
-                    totals:    (UNIFEDSystem.analysis && UNIFEDSystem.analysis.totals)    || {},
-                    crossings: (UNIFEDSystem.analysis && UNIFEDSystem.analysis.crossings) || {}
-                };
-            }
-
-            window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(btorMetrics)
-                .then(ok => {
-                    if (ok) console.log('[UNIFED-TOP3] ✅ TOP 3 gerado automaticamente após análise forense.');
-                    else    console.warn('[UNIFED-TOP3] ⚠️ triggerAnalysisComplete retornou falso — verificar UNIFED_QUESTIONNAIRE.');
-                })
-                .catch(err => console.error('[UNIFED-TOP3] ❌ Erro em triggerAnalysisComplete:', err));
-        }
-        // ── FIM RECTIFICAÇÃO R24-TOP3 ─────────────────────────────────────────────
+        // TOP 3 não é gerado automaticamente. O utilizador deve clicar em "Regenerar TOP 3".
 
 if (typeof window._syncPureDashboard === 'function') {
     // ── RECTIFICAÇÃO D-03 ────────────────────────────────────────────────────
