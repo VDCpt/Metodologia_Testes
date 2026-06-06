@@ -2697,6 +2697,7 @@ const translations = {
         clearConsoleBtn: "LIMPAR CONSOLE",
         revenueGapTitle: "OMISSÃO DE FATURAÇÃO",
         expenseGapTitle: "OMISSÃO DE CUSTOS/IVA",
+        expenseGapLabel: "OMISSÃO DE CUSTOS/IVA",  // R24: chave para showTwoAxisAlerts
         revenueGapDesc: "SAF-T Bruto vs Ganhos",
         expenseGapDesc: "Despesas/Comissões (Extrato) vs Faturadas (BTF)",
         hashModalTitle: "VERIFICAÇÃO DE INTEGRIDADE · CADEIA DE CUSTÓDIA",
@@ -2827,6 +2828,7 @@ const translations = {
         clearConsoleBtn: "CLEAR CONSOLE",
         revenueGapTitle: "REVENUE OMISSION",
         expenseGapTitle: "COST/VAT OMISSION",
+        expenseGapLabel: "COST/VAT OMISSION",  // R24: chave para showTwoAxisAlerts
         revenueGapDesc: "SAF-T Gross vs Earnings",
         expenseGapDesc: "Expenses/Commissions (Statement) vs Invoiced (BTF)",
         hashModalTitle: "INTEGRITY VERIFICATION · CHAIN OF CUSTODY",
@@ -5326,6 +5328,15 @@ function activateDemoMode() {
     document.getElementById('clientNameFixed').value = clientName;
     document.getElementById('clientNIFFixed').value = '999 999 990';
     registerClient();
+    // RETIFICAÇÃO R24-1.4: esconder formulário de registo em modo DEMO
+    (function() {
+        const formGroups = document.querySelectorAll('.client-identification-fixed .form-group-fixed');
+        const btnGroup = document.querySelector('.btn-group-fixed');
+        if (formGroups.length) formGroups.forEach(el => el.style.display = 'none');
+        if (btnGroup) btnGroup.style.display = 'none';
+        const clientStatus = document.getElementById('clientStatusFixed');
+        if (clientStatus) clientStatus.style.display = 'flex';
+    })();
     if (!UNIFEDSystem.client) UNIFEDSystem.client = {};
     UNIFEDSystem.client.name = clientName;
     UNIFEDSystem.client.nif  = '999 999 990';
@@ -5719,6 +5730,8 @@ async function performAudit() {
         updateModulesUI();
         renderChart();
         renderDiscrepancyChart();
+        // RETIFICAÇÃO R24-1.5: forçar renderização do gráfico ATF
+        if (typeof window.renderATFChart === 'function') window.renderATFChart();
         showAlerts();
         showTwoAxisAlerts();
         filterDAC7ByPeriod();
@@ -5815,6 +5828,11 @@ if (typeof window._syncPureDashboard === 'function') {
     const syncResult = window._syncPureDashboard(window.UNIFEDSystem);
     const syncCount = syncResult !== undefined ? syncResult : 1;
     console.log(`[UNIFED-SYNC] 🔬 Painel Puro sincronizado.`);
+    // RETIFICAÇÃO R24-1.6: tornar visível card colarinho branco
+    const whiteCollarCard = document.getElementById('colarinho-branco');
+    if (whiteCollarCard) whiteCollarCard.style.display = 'block';
+    // RETIFICAÇÃO R24-forceTranslate: garantir textos traduzidos após análise
+    if (typeof window.forceTranslateUI === 'function') window.forceTranslateUI();
     if (syncCount === 0) {
         console.warn('[UNIFED-SYNC] ⚠️ Nenhum elemento mapeado na sincronização.');
         // (console.error e lógica de retry redundante removidos — RETIFICAÇÃO)
@@ -5989,7 +6007,7 @@ function calculateTwoAxisDiscrepancy() {
     const totals = UNIFEDSystem.analysis.totals;
     const twoAxis = UNIFEDSystem.analysis.twoAxis;
 
-    twoAxis.revenueGap = totals.saftBruto - totals.ganhos;
+    twoAxis.revenueGap = totals.ganhos - totals.saftBruto;   // R24-1.3: sinal invertido — positivo quando ganhos > SAF-T
     twoAxis.revenueGapActive = Math.abs(twoAxis.revenueGap) > 0.01;
 
     twoAxis.expenseGap = totals.despesas - totals.faturaPlataforma;
@@ -6340,7 +6358,10 @@ function showTwoAxisAlerts() {
             omissaoValue.textContent = pctFormatted;
             omissaoCard.style.display = 'block';
             if (omissaoDesc) {
-                omissaoDesc.textContent = `(${formatCurrency(despesas)} / ${formatCurrency(ganhos)}) × 100  [${t.expenseGapLabel}]`;
+                // RETIFICAÇÃO R24-1.1: evitar [undefined] quando t.expenseGapLabel não existe
+                const label = (t && t.expenseGapLabel) ? t.expenseGapLabel
+                    : (currentLang === 'pt' ? 'OMISSÃO DE CUSTOS/IVA' : 'COST/VAT OMISSION');
+                omissaoDesc.textContent = `(${formatCurrency(despesas)} / ${formatCurrency(ganhos)}) × 100  [${label}]`;
             }
             if (pct > 25) {
                 omissaoCard.classList.add('omissao-threshold-alert');
@@ -8602,7 +8623,7 @@ window._syncPureDashboard = (function() {
                 'pure-fatura-btf': totals.faturaPlataforma,
                 'pure-sg1-saft-val': totals.saftBruto,
                 'pure-sg1-dac7-val': totals.dac7TotalPeriodo,
-                'pure-sg1-delta': cross.discrepanciaSaftVsDac7 ?? (totals.saftBruto - totals.dac7TotalPeriodo),
+                'pure-sg1-delta': cross.discrepanciaSaftVsDac7 ?? (totals.ganhos - totals.dac7TotalPeriodo),  // R24-1.3: alinhado com revenueGap
                 'pure-sg2-btor-val': totals.despesas,
                 'pure-sg2-btf-val': totals.faturaPlataforma,
                 'pure-sg2-delta': cross.discrepanciaCritica ?? (totals.despesas - totals.faturaPlataforma)

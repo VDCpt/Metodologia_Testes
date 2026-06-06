@@ -141,7 +141,16 @@
   </div>
 
   <!-- ── PAINEL II-B · NOVO CARD: COLARINHO BRANCO (Criminalidade Financeira) ─ -->
-  <div class="pure-card pure-card-alert pure-card-white-collar" id="colarinho-branco" style="display:none;">
+  <!-- RETIFICAÇÃO R24-2.2: cards IVA 23% e IVA 6% -->
+  <div class="pure-card" id="iva23Card" style="display:none; margin-bottom:8px;">
+    <h4 id="iva23CardTitle" data-pt="IVA 23% — Cenário A (Comissões)" data-en="VAT 23% — Scenario A (Commissions)">IVA 23% — Cenário A (Comissões)</h4>
+    <p id="iva23Value" data-i18n-ignore style="font-size:1.2rem;font-weight:700;color:#b91c1c;">0,00 €</p>
+  </div>
+  <div class="pure-card" id="iva6Card" style="display:none; margin-bottom:8px;">
+    <h4 id="iva6CardTitle" data-pt="IVA 6% — Cenário B (Transporte não declarado)" data-en="VAT 6% — Scenario B (Undeclared Transport)">IVA 6% — Cenário B (Transporte não declarado)</h4>
+    <p id="iva6Value" data-i18n-ignore style="font-size:1.2rem;font-weight:700;color:#b91c1c;">0,00 €</p>
+  </div>
+    <div class="pure-card pure-card-alert pure-card-white-collar" id="colarinho-branco" style="display:none;">
     <h3 class="pure-card-title">
       <span class="pure-icon">💼</span>
       <span id="pure-wc-title" data-pt="II-B. ALERTA DE CRIMINALIDADE FINANCEIRA — COLARINHO BRANCO" data-en="II-B. FINANCIAL CRIME ALERT — WHITE COLLAR">II-B. ALERTA DE CRIMINALIDADE FINANCEIRA — COLARINHO BRANCO</span>
@@ -330,6 +339,8 @@
         <div class="pure-verdict-basis" id="pure-verdict-basis" data-pt="Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP" data-en="Art. 103 / 104 Normas de Conformidade Fiscal · Art. 125 CPP">Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP</div>
       </div>
       <div class="pure-integrity-block">
+        <!-- RETIFICAÇÃO R24-2.1: badge criminalidade de colarinho branco -->
+        <span class="pure-badge-crime" id="pure-badge-crime" data-i18n="white_collar_crime" style="display:none;">CRIMINALIDADE DE COLARINHO BRANCO</span>
         <div class="pure-verdict-label" id="pure-integrity-label" data-pt="CADEIA DE CUSTÓDIA" data-en="CHAIN OF CUSTODY">CADEIA DE CUSTÓDIA</div>
         <div class="pure-section-content" style="font-size: 9px; line-height: 1.5; margin-bottom: 8px;">
           V. CADEIA DE CUSTÓDIA:<br>
@@ -346,6 +357,24 @@
 
   </div>
 
+
+  <script>
+  // RETIFICAÇÃO R24: sincronizar visibilidade do badge com o card colarinho-branco
+  (function() {
+    const orig = window.HTMLElement.prototype.style;
+    const observer = new MutationObserver(function(muts) {
+      const card = document.getElementById('colarinho-branco');
+      const badge = document.getElementById('pure-badge-crime');
+      if (card && badge) {
+        badge.style.display = card.style.display === 'none' ? 'none' : 'inline-block';
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      const card = document.getElementById('colarinho-branco');
+      if (card) observer.observe(card, { attributes: true, attributeFilter: ['style'] });
+    });
+  })();
+  </script>
 </section>
 
 <script>

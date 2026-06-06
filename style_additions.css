@@ -1540,3 +1540,27 @@
 .pure-btn-led {
     font-size: 10px !important; /* para ecrã, sem afectar PDF */
 }
+
+/* ── RETIFICAÇÃO R24-4: Badge Criminalidade de Colarinho Branco ─────────── */
+.pure-badge-crime {
+    display: inline-block;
+    background: linear-gradient(135deg, #7f1a1a 0%, #991b1b 100%);
+    border: 1px solid #ef4444;
+    color: #fff;
+    padding: 4px 12px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 20px;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+    margin-left: 12px;
+    margin-bottom: 6px;
+    vertical-align: middle;
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+    50%       { box-shadow: 0 0 20px rgba(239, 68, 68, 0.85); }
+}

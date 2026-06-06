@@ -196,7 +196,12 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'PLATFORM_MONOPOLY_NOTE': 'Nos termos do Art. 36.º n.º 11 do CIVA, a centralização da emissão documental pela plataforma cria um monopólio de facto, resultando em penalização indevida do sujeito passivo por omissões de terceiros.',
     'COMPLIANCE_BADGE':    'CERTIFICAÇÕES & CONFORMIDADE',
     'COMPLIANCE_ITEMS':    ['ISO 27001', 'ISO 27035', 'ISO 27037', 'Privacy by Design', 'Processamento 100% local (browser)'],
-    'SANDBOX_LABEL':       'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA'
+    'SANDBOX_LABEL':       'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA',
+    // RETIFICAÇÃO R24-3: novas chaves jurídicas
+    'smoking_gun_1':    { 'pt': '🔫 PROVA RAINHA I: Retenção Ilícita de Comissões', 'en': '🔫 SMOKING GUN I: Illegal Commission Withholding' },
+    'smoking_gun_2':    { 'pt': '🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)', 'en': '🔫 SMOKING GUN II: Invoicing Omission (Underreporting)' },
+    'white_collar_crime': { 'pt': 'CRIMINALIDADE DE COLARINHO BRANCO', 'en': 'WHITE‑COLLAR CRIME' },
+    'expense_gap_label':  { 'pt': 'OMISSÃO DE CUSTOS/IVA', 'en': 'COST/VAT OMISSION' }
 };
 
 // ============================================================================
