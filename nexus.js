@@ -1023,18 +1023,21 @@ function _injectForecastIntoChart(forecast, historicLen) {
                 return;
             }
 
+            // R24-R2: reduzir atraso 280ms → 80ms com requestAnimationFrame
+            // para garantir que o canvas ATF já foi pintado antes da injecção do forecast
             setTimeout(function() {
-                _injectForecastIntoChart(forecast, months.length);
-                _injectRiscoFuturoPanel(forecast);
-
-                console.info(
-                    '[NEXUS·M3] ✅ Motor Preditivo ATF — Risco Futuro 6M calculado.\n' +
-                    '  Omissão proj. : ' + new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(forecast.risco) + '\n' +
-                    '  IVA em falta  : ' + new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(forecast.ivaRisco) + '\n' +
-                    '  Confiança     : ' + forecast.confidence + '\n' +
-                    '  Tendência     : ' + forecast.trend
-                );
-            }, 280);
+                requestAnimationFrame(function() {
+                    _injectForecastIntoChart(forecast, months.length);
+                    _injectRiscoFuturoPanel(forecast);
+                    console.info(
+                        '[NEXUS·M3] ✅ Motor Preditivo ATF — Risco Futuro 6M calculado.\n' +
+                        '  Omissão proj. : ' + new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(forecast.risco) + '\n' +
+                        '  IVA em falta  : ' + new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(forecast.ivaRisco) + '\n' +
+                        '  Confiança     : ' + forecast.confidence + '\n' +
+                        '  Tendência     : ' + forecast.trend
+                    );
+                });
+            }, 80); // R24: 280ms → 80ms + rAF garante canvas pintado
         };
 
         console.info('[NEXUS·M3] ✅ Motor Preditivo ATF hook instalado — aguarda abertura do modal ATF.');

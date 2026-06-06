@@ -7693,7 +7693,8 @@ function resetSystem() {
     ForensicLogger.addEntry('SYSTEM_RESET');
 
     localStorage.removeItem('ifde_client_data_v12_8');
-    location.reload();
+    // R24-R3: reload robusto
+    try { location.reload(true); } catch(e) { location.href = location.href.split('?')[0]; }
 }
 
 function updateAnalysisButton() {
@@ -8084,7 +8085,8 @@ function endSession() {
         sessionStorage.removeItem('unifed_session_state');
         sessionStorage.removeItem('currentSession');
         ForensicLogger.addEntry('SESSION_ENDED', { sessionId: UNIFEDSystem.sessionId });
-        location.reload();
+        // R24-R3: reload robusto
+    try { location.reload(true); } catch(e) { location.href = location.href.split('?')[0]; }
     }
 }
 
@@ -9681,12 +9683,13 @@ function executarRetificacoesFinaisUnifed() {
         for (const [id, value] of Object.entries(metricsGz)) {
             const el = document.getElementById(id);
             if (el) {
-                // RETIFICAÇÃO v1.0-R1: Marcar elemento como intocável pelo motor
-                // de tradução (data-i18n-ignore), blindando o valor dinâmico contra
-                // sobrescrita pelo translateAll() / updateUI(). Resolve o ciclo de
-                // retroalimentação: _syncPureDashboard escreve → i18n apaga → repeat.
                 el.setAttribute('data-i18n-ignore', 'true');
                 el.innerText = value;
+                // R24-R1: sincronizar #pure-zc-amount com #pure-zona-total (elimina duplicação estática)
+                if (id === 'pure-zona-total') {
+                    const zcRef = document.querySelector('[data-source-id="pure-zona-total"]');
+                    if (zcRef) { zcRef.innerText = value; zcRef.setAttribute('data-i18n-ignore','true'); }
+                }
             }
         }
     }
@@ -9970,7 +9973,12 @@ console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u0
         console.log('[UNIFED-PURGE] ✅ PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA) concluída. A encerrar sessão.');
 
         // ── FASE 6: Encerramento do sistema (reload forçado sem cache) ──
-        window.location.reload(true);
+        // R24-R3: reload(true) obsoleto em browsers modernos — fallback robusto
+        try {
+            window.location.reload(true);
+        } catch(e) {
+            window.location.href = window.location.href.split('?')[0] + '?_purge=' + Date.now();
+        }
     }
 
     // Função que anexa o listener ao botão (se ele existir)

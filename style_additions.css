@@ -1560,7 +1560,35 @@
     animation: badge-pulse 2s ease-in-out infinite;
 }
 
+/* R24: badge-pulse migrado para filter (GPU) — ver bloco de optimizações abaixo */
+
+/* ── REFINAÇÃO R24-4: Performance LEDs intermitentes ───────────────────────
+   Adicionar contain e will-change às classes de animação que não os têm.
+   Previne reflows desnecessários em browsers com renderização agressiva.  */
+
+.kpi-card.alert-intermitent,
+.stat-card.alert-intermitent {
+    contain: layout style;
+    will-change: box-shadow, border-color, background;
+}
+
+.kpi-card.omissao-threshold-alert {
+    contain: layout style;
+    will-change: box-shadow, border-color;
+}
+
+.has-blink {
+    contain: layout style;
+    will-change: opacity;
+}
+
+/* Optimização do badge-pulse: substituir box-shadow por filter para GPU */
+.pure-badge-crime {
+    will-change: filter;
+    contain: layout style;
+}
+
 @keyframes badge-pulse {
-    0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
-    50%       { box-shadow: 0 0 20px rgba(239, 68, 68, 0.85); }
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5)); }
+    50%       { filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.85)); }
 }
