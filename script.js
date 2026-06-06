@@ -5732,6 +5732,15 @@ async function performAudit() {
         renderDiscrepancyChart();
         // RETIFICAÇÃO R24-1.5: forçar renderização do gráfico ATF
         if (typeof window.renderATFChart === 'function') window.renderATFChart();
+        // R24-C6: forçar update/resize após render para evitar canvas vazio
+        requestAnimationFrame(() => {
+            if (window.currentMainChart)        { try { window.currentMainChart.resize();        window.currentMainChart.update('none');        } catch(e) {} }
+            if (window.currentDiscrepancyChart) { try { window.currentDiscrepancyChart.resize(); window.currentDiscrepancyChart.update('none'); } catch(e) {} }
+            const mainCanvas = document.getElementById('mainChart');
+            const discCanvas = document.getElementById('discrepancyChart');
+            if (mainCanvas && !window.currentMainChart)        renderChart();
+            if (discCanvas && !window.currentDiscrepancyChart) renderDiscrepancyChart();
+        });
         showAlerts();
         showTwoAxisAlerts();
         filterDAC7ByPeriod();
@@ -5829,8 +5838,14 @@ if (typeof window._syncPureDashboard === 'function') {
     const syncCount = syncResult !== undefined ? syncResult : 1;
     console.log(`[UNIFED-SYNC] 🔬 Painel Puro sincronizado.`);
     // RETIFICAÇÃO R24-1.6: tornar visível card colarinho branco
+    // R24-C3: forçar colarinho branco + badge em modo DEMO
     const whiteCollarCard = document.getElementById('colarinho-branco');
-    if (whiteCollarCard) whiteCollarCard.style.display = 'block';
+    if (whiteCollarCard) {
+        whiteCollarCard.removeAttribute('style');
+        whiteCollarCard.style.display = 'block';
+        const demoBadge = document.getElementById('pure-badge-crime');
+        if (demoBadge) { demoBadge.removeAttribute('style'); demoBadge.style.display = 'inline-block'; }
+    }
     // RETIFICAÇÃO R24-forceTranslate: garantir textos traduzidos após análise
     if (typeof window.forceTranslateUI === 'function') window.forceTranslateUI();
     if (syncCount === 0) {
@@ -6403,7 +6418,9 @@ function updateDashboard() {
     setElementText('iva6Value', formatCurrency(cross.ivaFalta6 || 0));
     setElementText('iva23Value', formatCurrency(cross.ivaFalta || 0));
 
-    setElementText('quantumValue', formatCurrency(cross.impactoSeteAnosMercado || 0));
+    // R24-C4: quantumValue — desvio individual (discrepanciaCritica) em vez do impacto macro 7 anos
+    const desvioIndividual = cross.discrepanciaCritica || (totals.despesas - totals.faturaPlataforma) || 0;
+    setElementText('quantumValue', formatCurrency(Math.abs(desvioIndividual)));
 
     const kpiCommText = document.getElementById('kpiCommText');
     if (kpiCommText) kpiCommText.textContent = t.kpiCommText;
@@ -7049,9 +7066,9 @@ function processAuxiliaryPlatformData(text, filename) {
 
     _updateAuxiliaryBoxes();
 
-    if (typeof injectGrayZoneValues === 'function') {
-        injectGrayZoneValues();
-    }
+    // R24-C5: injectGrayZoneValues desactivada — zona cinzenta servida exclusivamente
+    // por _syncPureDashboard via IDs pure-zona-* para evitar duplicação visual
+    // if (typeof injectGrayZoneValues === 'function') { injectGrayZoneValues(); }
 
     const anyFound = campanhas > 0 || portagens > 0 || gorjetas > 0 || cancelamentos > 0;
     if (anyFound) {
@@ -8637,6 +8654,18 @@ window._syncPureDashboard = (function() {
                     updated++;
                 }
             }
+            // R24-C1: injectar IVA23 e IVA6 nos cards
+            const iva23Val = cross.ivaFalta  || 0;
+            const iva6Val  = cross.ivaFalta6 || 0;
+            const iva23El  = document.getElementById('iva23Value');
+            const iva6El   = document.getElementById('iva6Value');
+            const iva23Card = document.getElementById('iva23Card');
+            const iva6Card  = document.getElementById('iva6Card');
+            if (iva23El) { iva23El.setAttribute('data-i18n-ignore','true'); iva23El.innerText = fmt(iva23Val); updated++; }
+            if (iva6El)  { iva6El.setAttribute('data-i18n-ignore','true');  iva6El.innerText  = fmt(iva6Val);  updated++; }
+            if (iva23Card) iva23Card.style.display = iva23Val > 0 ? 'block' : 'none';
+            if (iva6Card)  iva6Card.style.display  = iva6Val  > 0 ? 'block' : 'none';
+
             // Percentagens
             const pctSG1 = cross.percentagemSaftVsDac7 ?? (totals.saftBruto ? ((totals.saftBruto - totals.dac7TotalPeriodo)/totals.saftBruto*100) : 0);
             const pctSG2 = cross.percentagemOmissao ?? (totals.despesas ? ((totals.despesas - totals.faturaPlataforma)/totals.despesas*100) : 0);
@@ -8645,25 +8674,28 @@ window._syncPureDashboard = (function() {
             const pct2 = document.getElementById('pure-sg2-pct');
             if(pct2) { pct2.setAttribute('data-i18n-ignore','true'); pct2.innerText = `(${pctSG2.toFixed(2)}%)`; updated++; }
 
-            // Mostrar cards smoking gun se delta > 0
-            // R24: removeAttribute('style') garante que o display inline não sobrepõe o setProperty
+            // R24-C2: smoking guns — removeAttribute + is-visible + colarinho branco
+            const sg1Delta = mapping['pure-sg1-delta'];
+            const sg2Delta = mapping['pure-sg2-delta'];
             const sg1El = document.getElementById('smoking-gun-1');
             const sg2El = document.getElementById('smoking-gun-2');
-            if (mapping['pure-sg1-delta'] > 0.01 && sg1El) {
+            if (sg1El && sg1Delta > 0.01) {
                 sg1El.removeAttribute('style');
-                sg1El.style.display = 'flex';
+                sg1El.style.display = 'flex'; // R24: flex alinhado com CSS .is-visible
+                sg1El.classList.add('is-visible');
             }
-            if (mapping['pure-sg2-delta'] > 0.01 && sg2El) {
+            if (sg2El && sg2Delta > 0.01) {
                 sg2El.removeAttribute('style');
-                sg2El.style.display = 'flex';
+                sg2El.style.display = 'flex'; // R24: flex alinhado com CSS .is-visible
+                sg2El.classList.add('is-visible');
             }
-            // Mostrar card colarinho branco se qualquer smoking gun activa
+            // Colarinho branco: activar se qualquer smoking gun > limiar
             const wcCard = document.getElementById('colarinho-branco');
-            if (wcCard && (mapping['pure-sg1-delta'] > 0.01 || mapping['pure-sg2-delta'] > 0.01)) {
+            if (wcCard && (sg1Delta > 0.01 || sg2Delta > 0.01)) {
                 wcCard.removeAttribute('style');
                 wcCard.style.display = 'block';
                 const badge = document.getElementById('pure-badge-crime');
-                if (badge) badge.style.display = 'inline-block';
+                if (badge) { badge.removeAttribute('style'); badge.style.display = 'inline-block'; }
             }
 
             // Master hash consolidado
