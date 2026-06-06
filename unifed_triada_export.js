@@ -1775,7 +1775,7 @@
                         paddingTop:    function() { return 6; },
                         paddingBottom: function() { return 6; }
                     },
-                    margin: [0, -20, 0, 5]
+                    margin: [0, -48, 0, 5]
                 },
                 // ── Legendas: Cadeia de Custódia (esq) | CONFIDENCIAL (dir) ──
                 {
@@ -1825,7 +1825,35 @@
                 // ========== 4. PROTOCOLO DE CADEIA DE CUSTÓDIA ==========
                 { text: "PROTOCOLO DE CADEIA DE CUSTÓDIA", style: 'h2' },
                 { text: "O sistema UNIFED - PROBATUM assegura a inviolabilidade dos dados através de funções criptográficas SHA-256. As seguintes evidências foram processadas e incorporadas na análise, garantindo a rastreabilidade total da prova:", style: 'normal', margin: [0, 0, 0, 8] },
-                { text: evidenceItems || "Nenhuma evidência carregada.", style: 'code', margin: [0, 0, 0, 10] },
+                {
+                    table: {
+                        widths: ['auto', '*'],
+                        headerRows: 1,
+                        body: [
+                            [
+                                { text: 'Ficheiro', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'center' },
+                                { text: 'Hash SHA-256 (parcial)', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'center' }
+                            ],
+                            ...(evidenceItems
+                                ? evidenceItems.split('\n').filter(l => l.trim()).map((line, i) => {
+                                    const parts = line.split(' - Hash: ');
+                                    return [
+                                        { text: parts[0] || line, fontSize: 7.5, fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' },
+                                        { text: parts[1] ? parts[1] + '...' : '—', fontSize: 7.5, style: 'code', fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' }
+                                    ];
+                                })
+                                : [[{ text: 'Nenhuma evidência carregada.', colSpan: 2, alignment: 'center', fontSize: 8 }, {}]]
+                            )
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 1.5 : 0.4; },
+                        vLineWidth: function() { return 0.4; },
+                        hLineColor: function(i) { return i === 0 || i === 1 ? '#1e3a8a' : '#cbd5e1'; },
+                        vLineColor: function() { return '#cbd5e1'; }
+                    },
+                    margin: [0, 0, 0, 10]
+                },
 
                 // ========== 5. INVIOLABILIDADE DO ALGORITMO ==========
                 { text: "INVIOLABILIDADE DO ALGORITMO:", style: 'h2' },
@@ -1837,7 +1865,38 @@
 
                 // ========== 7. ANÁLISE FINANCEIRA CRUZADA ==========
                 { text: "2. ANÁLISE FINANCEIRA CRUZADA / CROSS-FINANCIAL ANALYSIS", style: 'h2' },
-                { table: crossAnalysisTable, layout: 'lightHorizontalLines', margin: [0, 0, 0, 10] },
+                {
+                    table: {
+                        widths: ['*', 'auto', 'auto'],
+                        headerRows: 1,
+                        dontBreakRows: true,
+                        body: [
+                            [
+                                { text: 'Descrição / Description', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'left' },
+                                { text: 'Valor', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'right' },
+                                { text: 'Fonte', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'center' }
+                            ],
+                            ...(crossAnalysisTable && crossAnalysisTable.body
+                                ? crossAnalysisTable.body.slice(1).map((row, i) => row.map(cell => ({
+                                    text: typeof cell === 'object' ? (cell.text || '') : cell,
+                                    fontSize: 8,
+                                    bold: typeof cell === 'object' && cell.bold ? true : false,
+                                    color: typeof cell === 'object' && cell.color ? cell.color : '#0f172a',
+                                    fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff',
+                                    alignment: typeof cell === 'object' && cell.alignment ? cell.alignment : 'left'
+                                  })))
+                                : [[{ text: 'Dados indisponíveis', colSpan: 3, alignment: 'center', fontSize: 8 }, {}, {}]]
+                            )
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 1.5 : 0.4; },
+                        vLineWidth: function() { return 0.4; },
+                        hLineColor: function(i) { return i === 0 || i === 1 ? '#1e3a8a' : '#cbd5e1'; },
+                        vLineColor: function() { return '#cbd5e1'; }
+                    },
+                    margin: [0, 0, 0, 10]
+                },
                 { text: `[I] Percentagem Omissão Custos (Retenção vs Fatura): ${percOmissaoCustos.toFixed(2)}%\nNota Pericial: ${percOmissaoCustos.toFixed(2)}% de omissão é estatisticamente impossível de ser erro administrativo.\nOmissão de Receita (Bruto vs DAC7): ${formatForensicCurrency(omissaoReceita)}\nOmissão de Custos (Retenção vs Fatura): ${formatForensicCurrency(omissaoCustos)}`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 8. VEREDICTO DE RISCO ==========
@@ -1897,7 +1956,38 @@ ADMISSIBILIDADE DA PROVA DIGITAL:
 
                 // ========== 18. IMPACTO FISCAL (TABELA) ==========
                 { text: "10. IMPACTO FISCAL / FISCAL IMPACT & MANAGEMENT AGGRAVATION", style: 'h2' },
-                { table: fiscalImpactTable, layout: 'lightHorizontalLines', margin: [0, 0, 0, 15] },
+                {
+                    table: {
+                        widths: ['*', 'auto', 'auto'],
+                        headerRows: 1,
+                        dontBreakRows: false,
+                        body: [
+                            [
+                                { text: 'Indicador Fiscal / Tax Indicator', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'left' },
+                                { text: 'Valor', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'right' },
+                                { text: '%', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8.5, alignment: 'center' }
+                            ],
+                            ...(fiscalImpactTable && fiscalImpactTable.body
+                                ? fiscalImpactTable.body.slice(1).map((row, i) => row.map((cell, ci) => ({
+                                    text: typeof cell === 'object' ? (cell.text || '') : cell,
+                                    fontSize: 8,
+                                    bold: typeof cell === 'object' && cell.bold ? true : false,
+                                    color: typeof cell === 'object' && cell.color ? cell.color : '#0f172a',
+                                    fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff',
+                                    alignment: ci === 0 ? 'left' : 'right'
+                                  })))
+                                : [[{ text: 'Dados indisponíveis', colSpan: 3, alignment: 'center', fontSize: 8 }, {}, {}]]
+                            )
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 1.5 : 0.4; },
+                        vLineWidth: function() { return 0.4; },
+                        hLineColor: function(i) { return i === 0 || i === 1 ? '#1e3a8a' : '#cbd5e1'; },
+                        vLineColor: function() { return '#cbd5e1'; }
+                    },
+                    margin: [0, 0, 0, 15]
+                },
 
                 // ========== 19. IMPACTO SISTÉMICO ESTIMADO ==========
                 { text: `IMPACTO SISTÉMICO ESTIMADO (7 Anos · 38.000 operadores x 12 meses): ${formatForensicCurrency(impacto7Anos)}`, style: 'h2' },
@@ -1983,13 +2073,36 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                 { text: `Master Hash: SHA256(Hash_SAFT + Hash_Extrato + Hash_Fatura) ${m.masterHash}`, style: 'code', margin: [0, 0, 0, 10] },
                 { text: "REFERENCIAL NORMATIVO (ISO/IEC 27037 e DL 28/2019):", style: 'h2' },
                 { text: "A recolha, preservação e análise das evidências digitais seguiram as diretrizes estabelecidas pela norma ISO/IEC 27037 (Linhas de orientação para identificação, recolha, aquisição e preservação de prova digital), em conformidade com o Decreto-Lei n.º 28/2019.\n\nEvidências processadas e respetivos hashes SHA-256 completos:", style: 'normal', margin: [0, 0, 0, 8] },
-                ...evidenceList.map(ev => ({
-                    stack: [
-                        { text: `${ev.filename}`, bold: true },
-                        { text: `${ev.hash || 'HASH_INDISPONÍVEL'}`, style: 'code' },
-                        { text: `Processado: ${new Date().toISOString()}`, italics: true, fontSize: 7 }
-                    ], margin: [0, 5, 0, 5]
-                })),
+                {
+                    table: {
+                        widths: ['auto', '*'],
+                        headerRows: 1,
+                        dontBreakRows: true,
+                        body: [
+                            [
+                                { text: 'Ficheiro / Evidência', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'left' },
+                                { text: 'Hash SHA-256 (Completo) · Timestamp', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'left' }
+                            ],
+                            ...evidenceList.map((ev, i) => [
+                                { text: ev.filename, fontSize: 7.5, bold: true, fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' },
+                                {
+                                    stack: [
+                                        { text: ev.hash || 'HASH_INDISPONÍVEL', fontSize: 6.5, style: 'code', color: '#0f172a' },
+                                        { text: `Processado: ${new Date().toISOString()}`, fontSize: 6, italics: true, color: '#64748b' }
+                                    ],
+                                    fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff'
+                                }
+                            ])
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 1.5 : 0.4; },
+                        vLineWidth: function() { return 0.4; },
+                        hLineColor: function(i) { return i === 0 || i === 1 ? '#1e3a8a' : '#cbd5e1'; },
+                        vLineColor: function() { return '#cbd5e1'; }
+                    },
+                    margin: [0, 0, 0, 10]
+                },
                 { text: `Página ${Math.floor(Math.random() * 5) + 15} de 19 Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
 
                 // ========== 28. VALIDAÇÃO DE SELAGEM (TSA) ==========
@@ -2006,23 +2119,43 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
 • NÚMERO DE SÉRIE (TSR):
 • HASH MASTER SHA-256: ${m.masterHash.substring(0, 16)}...
 
-## DETALHES DO PROTOCOLO RFC 3161 (TimeStampToken):
-O protocolo RFC 3161 (Internet X.509 PKI Timestamping Protocol — IETF RFC 3161) define um mecanismo para obtenção de provas de existência temporal com validade jurídica (non-repudiation).
-• A TSA (Time Stamping Authority) recebe o hash SHA-256 do documento/prova.
+DETALHES DO PROTOCOLO RFC 3161 (TimeStampToken):
+O protocolo RFC 3161 define um mecanismo para obtenção de provas de existência temporal com validade jurídica (non-repudiation).
+• A TSA recebe o hash SHA-256 do documento/prova.
 • Gera um TimeStampToken (TST) assinado digitalmente com o certificado X.509 da TSA.
 • O TST inclui: hash, data/hora UTC certificada e número de série imutável.
 • Validade jurídica: eIDAS (UE) 910/2014, Art. 41.º — Serviço de Carimbo de Tempo Qualificado.
 
-## CONFORMIDADE NORMATIVA ACUMULADA:
+CONFORMIDADE NORMATIVA ACUMULADA:
 • eIDAS (UE) 910/2014 — Serviço Eletrónico de Confiança Qualificado
 • RFC 3161 (IETF) — Protocolo de Carimbo de Tempo Internet PKI
 • ISO/IEC 27037:2012 — Diretrizes para Identificação e Recolha de Provas Digitais
 • DORA (UE) 2022/2554 — Resiliência Operacional Digital do Sector Financeiro
-• Art. 30.º RGPD — Registo das Atividades de Tratamento de Dados Pessoais
-
-## STATUS DE SELAGEM POR EVIDÊNCIA:
-${evidenceList.map(ev => `${ev.filename} — %E Sem Selagem`).join('\n')}`, style: 'normal', margin: [0, 0, 0, 15] },
-
+• Art. 30.º RGPD — Registo das Atividades de Tratamento de Dados Pessoais`, style: 'normal', margin: [0, 0, 0, 8] },
+                { text: 'STATUS DE SELAGEM POR EVIDÊNCIA', bold: true, fontSize: 9, color: '#1e3a8a', margin: [0, 4, 0, 4] },
+                {
+                    table: {
+                        widths: ['*', 'auto'],
+                        headerRows: 1,
+                        body: [
+                            [
+                                { text: 'Ficheiro / Evidência', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'left' },
+                                { text: 'Estado de Selagem RFC 3161', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'center' }
+                            ],
+                            ...evidenceList.map((ev, i) => [
+                                { text: ev.filename, fontSize: 7.5, fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' },
+                                { text: ev.hasValidTimestamp ? '✅ Selado' : '⚠ Sem Selagem', fontSize: 7.5, alignment: 'center', color: ev.hasValidTimestamp ? '#15803d' : '#b91c1c', fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' }
+                            ])
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i) { return i === 0 || i === 1 ? 1.5 : 0.4; },
+                        vLineWidth: function() { return 0.4; },
+                        hLineColor: function(i) { return i === 0 || i === 1 ? '#1e3a8a' : '#cbd5e1'; },
+                        vLineColor: function() { return '#cbd5e1'; }
+                    },
+                    margin: [0, 0, 0, 15]
+                },
                 // ========== 29. QUESTIONÁRIO PERICIAL ESTRATÉGICO ==========
                 { text: "12. QUESTIONÁRIO PERICIAL ESTRATÉGICO", style: 'h2' },
                 { text: `1. [* CRÍTICA] Qual a justificação técnica para o desvio de base tributável (BTOR vs BTF) detetado na triangulação IFDE?
