@@ -1870,25 +1870,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
 
     <div id="tsaProductionPanelAnchor" style="display:none;"></div>
 
-    <div id="sandboxBanner" style="
-        display: none;
-        position: relative;
-        clear: both;
-        width: 100%;
-        margin-top: 0;
-        color: #f59e0b;
-        border-top: 1px solid rgba(245,158,11,0.4);
-        border-bottom: 1px solid rgba(245,158,11,0.4);
-        padding: 10px 20px;
-        text-align: center;
-        background: rgba(30,20,5,0.97);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.72rem;
-        letter-spacing: 1.2px;
-        font-weight: bold;
-        box-sizing: border-box;
-        z-index: 10;
-    "></div>
+    <!-- #sandboxBanner removido: elemento duplicado. Utilizar apenas #sandboxBannerInline (dentro do footer). -->
 
     <div id="complianceFooter" class="compliance-footer" style="display:none; position:fixed; bottom:28px; right:5px; font-size:9px; color:#64748b; font-family:monospace; background:rgba(15,23,42,0.92); padding:8px 10px; border:1px solid #334155; z-index:9997;">
         <strong>CERTIFICAÇÕES &amp; CONFORMIDADE</strong>
@@ -1974,15 +1956,11 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
             var SANDBOX_TEXT = 'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA';
             var dict = window.UNIFED_TRANSLATIONS && window.UNIFED_TRANSLATIONS.DICTIONARY;
             var label = (dict && dict.SANDBOX_LABEL) ? dict.SANDBOX_LABEL : SANDBOX_TEXT;
+            // Usar apenas o inlineBanner (dentro do footer) – #sandboxBanner foi removido
             var inlineBanner = document.getElementById('sandboxBannerInline');
             if (inlineBanner) {
                 inlineBanner.style.display = show ? 'block' : 'none';
                 if (show) inlineBanner.textContent = label;
-            }
-            var banner = document.getElementById('sandboxBanner');
-            if (banner) {
-                banner.style.display = show ? 'block' : 'none';
-                if (show) banner.textContent = label;
             }
             var disclaimer = document.getElementById('forensic-disclaimer');
             if (disclaimer) {
