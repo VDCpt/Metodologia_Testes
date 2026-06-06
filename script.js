@@ -5837,6 +5837,15 @@ if (typeof window._syncPureDashboard === 'function') {
     const syncResult = window._syncPureDashboard(window.UNIFEDSystem);
     const syncCount = syncResult !== undefined ? syncResult : 1;
     console.log(`[UNIFED-SYNC] 🔬 Painel Puro sincronizado.`);
+    // ── RECTIFICAÇÃO R24-PASSO1 ──────────────────────────────────────────────
+    // Tornar o contentor #pureDashboard visível após sincronização bem-sucedida.
+    // Sem esta instrução, o painel permanece oculto (display:none por defeito CSS)
+    // mesmo com todos os valores correctamente injectados.
+    const pureDashboardContainer = document.getElementById('pureDashboard');
+    if (pureDashboardContainer) {
+        pureDashboardContainer.style.display = 'block';
+    }
+    // ── FIM RECTIFICAÇÃO R24-PASSO1 ──────────────────────────────────────────
     // RETIFICAÇÃO R24-1.6: tornar visível card colarinho branco
     // R24-C3: forçar colarinho branco + badge em modo DEMO
     const whiteCollarCard = document.getElementById('colarinho-branco');
@@ -8667,6 +8676,18 @@ window._syncPureDashboard = (function() {
             if (iva6El)  { iva6El.setAttribute('data-i18n-ignore','true');  iva6El.innerText  = fmt(iva6Val);  updated++; }
             if (iva23Card) iva23Card.style.display = iva23Val > 0 ? 'block' : 'none';
             if (iva6Card)  iva6Card.style.display  = iva6Val  > 0 ? 'block' : 'none';
+            // ── RECTIFICAÇÃO R24-PASSO3 ──────────────────────────────────────────────
+            // Eliminar zeros residuais no quantumNote: injectar valores reais de iva23Val
+            // e iva6Val directamente no elemento, suprimindo o placeholder estático "0,00 €".
+            // Esta instrução substitui a actualização tardia de updateQuantumCard() para
+            // garantir coerência imediata no pipeline _syncPureDashboard.
+            const quantumNoteEl = document.getElementById('quantumNote');
+            if (quantumNoteEl) {
+                quantumNoteEl.setAttribute('data-i18n-ignore', 'true');
+                quantumNoteEl.innerHTML = `IVA 23% (Omissão Custos): ${fmt(iva23Val)} | IVA 6% (SAF-T Ilíquido): ${fmt(iva6Val)}`;
+                updated++;
+            }
+            // ── FIM RECTIFICAÇÃO R24-PASSO3 ──────────────────────────────────────────
 
             // Percentagens
             const pctSG1 = cross.percentagemSaftVsDac7 ?? (totals.saftBruto ? ((totals.saftBruto - totals.dac7TotalPeriodo)/totals.saftBruto*100) : 0);
