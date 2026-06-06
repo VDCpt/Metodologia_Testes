@@ -5829,6 +5829,23 @@ async function performAudit() {
         }));
         console.log('[UNIFED-SYNC] ✅ UNIFED_ANALYSIS_COMPLETE despachado (systemData incluído).');
 
+        // ── RECTIFICAÇÃO R24-TOP3 ─────────────────────────────────────────────────
+        // triggerAnalysisComplete não era invocado no fluxo performAudit —
+        // apenas no clique do botão "Regenerar". O TOP 3 nunca era renderizado
+        // automaticamente após a perícia. Corrigido aqui.
+        if (window.UNIFED_AnalysisCognitive && typeof window.UNIFED_AnalysisCognitive.triggerAnalysisComplete === 'function') {
+            const btorMetrics = UNIFEDSystem.analysis && UNIFEDSystem.analysis.btor
+                ? UNIFEDSystem.analysis.btor
+                : UNIFEDSystem.analysis;
+            window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(btorMetrics)
+                .then(ok => {
+                    if (ok) console.log('[UNIFED-TOP3] ✅ TOP 3 gerado automaticamente após análise forense.');
+                    else    console.warn('[UNIFED-TOP3] ⚠️ triggerAnalysisComplete retornou falso — verificar UNIFED_QUESTIONNAIRE.');
+                })
+                .catch(err => console.error('[UNIFED-TOP3] ❌ Erro em triggerAnalysisComplete:', err));
+        }
+        // ── FIM RECTIFICAÇÃO R24-TOP3 ─────────────────────────────────────────────
+
 if (typeof window._syncPureDashboard === 'function') {
     // ── RECTIFICAÇÃO D-03 ────────────────────────────────────────────────────
     // Argumento `system` era omitido → performSync() recebia undefined →
@@ -8730,6 +8747,80 @@ window._syncPureDashboard = (function() {
                 updated++;
             }
             // ── FIM RECTIFICAÇÃO R24-WC-INDICATORS ───────────────────────────────────
+
+            // ── RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────────
+            // Actualizar simulação macroeconómica com valores calculados a partir de
+            // cross.discrepanciaCritica e system.dataMonths.size (media mensal real).
+            // Os spans têm IDs dedicados (pure-macro-*) adicionados ao panel HTML.
+            const macroMeses = (system.dataMonths && system.dataMonths.size > 0)
+                ? system.dataMonths.size : 1;
+            const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
+            const macroMensal   = macroMedia * 38000;
+            const macroAnual    = macroMensal * 12;
+            const macro7Anos    = macroAnual * 7;
+            const fmtMacro = window.formatForensicCurrency || fmt;
+            const macroMediaEl  = document.getElementById('pure-macro-media');
+            const macroMensalEl = document.getElementById('pure-macro-mensal');
+            const macroAnualEl  = document.getElementById('pure-macro-anual');
+            const macro7AnosEl  = document.getElementById('pure-macro-7anos');
+            if (macroMediaEl)  { macroMediaEl.innerText  = fmtMacro(macroMedia);  updated++; }
+            if (macroMensalEl) { macroMensalEl.innerText = fmtMacro(macroMensal); updated++; }
+            if (macroAnualEl)  { macroAnualEl.innerText  = fmtMacro(macroAnual);  updated++; }
+            if (macro7AnosEl)  { macro7AnosEl.innerText  = fmtMacro(macro7Anos);  updated++; }
+            // ── FIM RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────
+
+            // ── RECTIFICAÇÃO R24-ATF ──────────────────────────────────────────────────
+            // Calcular Score de Persistência (SP) a partir de monthlyData.
+            // Coeficiente de Variação (CV) dos diferenciais mensais → score 0–100.
+            const atfSpEl       = document.getElementById('pure-atf-sp');
+            const atfClassifyEl = document.getElementById('pure-atf-sp-classify');
+            const atfTrendEl    = document.getElementById('pure-atf-trend');
+            const atfMesesEl    = document.getElementById('pure-atf-meses');
+            const monthlyData   = system.monthlyData || {};
+            const monthKeys     = Object.keys(monthlyData).sort();
+            if (monthKeys.length >= 2) {
+                const diffs = monthKeys.map(m =>
+                    Math.abs((monthlyData[m].despesas || 0) - (monthlyData[m].faturaPlataforma || 0))
+                );
+                const avg    = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+                const stdDev = Math.sqrt(diffs.map(x => Math.pow(x - avg, 2)).reduce((a, b) => a + b, 0) / diffs.length);
+                const cv     = avg > 0 ? stdDev / avg : 1;
+                const score  = Math.round(Math.max(0, Math.min(100, 100 * (1 - Math.min(1, cv)))));
+                const classify = score > 75 ? 'OMISSÃO SISTÉMICA / RISCO ELEVADO'
+                    : score > 40 ? 'OMISSÃO PONTUAL / RISCO MODERADO'
+                    : 'VARIAÇÃO ESPORÁDICA / RISCO BAIXO';
+                // Tendência simples: compare última metade vs primeira metade
+                const mid    = Math.floor(diffs.length / 2);
+                const firstH = diffs.slice(0, mid).reduce((a, b) => a + b, 0) / (mid || 1);
+                const lastH  = diffs.slice(mid).reduce((a, b) => a + b, 0) / ((diffs.length - mid) || 1);
+                const trendTxt = lastH > firstH * 1.05 ? '📈 ASCENDENTE'
+                    : lastH < firstH * 0.95 ? '📉 DESCENDENTE' : '➡️ ESTÁVEL';
+                if (atfSpEl) {
+                    atfSpEl.setAttribute('data-i18n-ignore', 'true');
+                    atfSpEl.innerHTML = score + '<span style="font-size:1rem;opacity:0.6">/100</span>';
+                    updated++;
+                }
+                if (atfClassifyEl) {
+                    atfClassifyEl.setAttribute('data-i18n-ignore', 'true');
+                    atfClassifyEl.innerText = classify;
+                    updated++;
+                }
+                if (atfTrendEl) {
+                    atfTrendEl.setAttribute('data-i18n-ignore', 'true');
+                    atfTrendEl.innerText = trendTxt;
+                    updated++;
+                }
+                if (atfMesesEl) {
+                    atfMesesEl.setAttribute('data-i18n-ignore', 'true');
+                    atfMesesEl.innerText = `${monthKeys.length} meses com dados (${monthKeys.join(', ')})`;
+                    updated++;
+                }
+            } else if (monthKeys.length === 1) {
+                if (atfSpEl)       { atfSpEl.innerHTML = '0<span style="font-size:1rem;opacity:0.6">/100</span>'; }
+                if (atfClassifyEl) { atfClassifyEl.innerText = 'DADOS INSUFICIENTES (1 mês)'; }
+                if (atfMesesEl)    { atfMesesEl.innerText = `1 mês com dados (${monthKeys[0]})`; }
+            }
+            // ── FIM RECTIFICAÇÃO R24-ATF ──────────────────────────────────────────────
 
             // Percentagens
             const pctSG1 = cross.percentagemSaftVsDac7 ?? (totals.saftBruto ? ((totals.saftBruto - totals.dac7TotalPeriodo)/totals.saftBruto*100) : 0);

@@ -934,12 +934,12 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       <div class="pure-wc-indicator" style="grid-column: span 1; background: #0f172a; border-left: 3px solid #eab308;">
         <div class="pure-impacto-panel" style="padding: 8px 0;">
           <div class="pure-badge-simulacao" style="background:#eab308; color:#000; padding:2px 6px; font-size:10px; font-weight:bold; margin-bottom:5px; display:inline-block;">SIMULAÇÃO MACROECONÓMICA</div>
-          <div style="font-size:12px; margin:4px 0;">Média mensal: <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
-          <div style="font-size:12px; margin:4px 0;">Impacto Mensal Mercado Estimado (38k): <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
-          <div style="font-size:12px; margin:4px 0;">Impacto Anual Mercado Estimado: <span class="pure-mono" style="color:#facc15;">0,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Média mensal: <span id="pure-macro-media" class="pure-mono" style="color:#facc15;" data-i18n-ignore>0,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Impacto Mensal Mercado Estimado (38k): <span id="pure-macro-mensal" class="pure-mono" style="color:#facc15;" data-i18n-ignore>0,00 €</span></div>
+          <div style="font-size:12px; margin:4px 0;">Impacto Anual Mercado Estimado: <span id="pure-macro-anual" class="pure-mono" style="color:#facc15;" data-i18n-ignore>0,00 €</span></div>
           <div style="border-top:1px solid #334155; margin-top:5px; padding-top:5px; font-weight:bold; font-size:12px;">
             PROJEÇÃO 7 ANOS (S/ VARIANTE):
-            <span class="pure-mono" style="color:#f87171;">0,00 €</span>
+            <span id="pure-macro-7anos" class="pure-mono" style="color:#f87171;" data-i18n-ignore>0,00 €</span>
           </div>
           <div style="font-size:9px; color:#94a3b8; margin-top:4px;">* Modelo linear estrito ($E_{7y} = \mu \times 12 \times 7 \times N$). Exclui sazonalidade e desvio-padrão. Uso exclusivo para aferição de materialidade económica da conduta.</div>
         </div>
@@ -1388,6 +1388,16 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
 
     .pure-verdict-block {
         flex: 0 0 auto;
+    }
+
+    /* ── BOTÕES TOP 3 — visibilidade de texto ──────────────────────────────── */
+    #regenerateTop3Btn {
+        color: #00e5ff !important;
+        background: rgba(0, 229, 255, 0.1) !important;
+        border-color: #00e5ff !important;
+    }
+    #acceptTop3Btn {
+        color: #ffffff !important;
     }
 </style>
 
@@ -1949,14 +1959,17 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
         }
 
-        // Funções reais definidas dentro da #pureDashboard – não sobrescrever
-        // window._activatePurePanel = function() { };
+        // Guarda defensiva: apenas define se a função real (do #pureDashboard) ainda não foi carregada
+        if (typeof window._activatePurePanel !== 'function') {
+            window._activatePurePanel = function() { };
+        }
         window.closeATFModal = function() {
             var modal = document.getElementById('atfModal');
             if (modal) modal.style.display = 'none';
         };
-        // Funções reais definidas dentro da #pureDashboard – não sobrescrever
-        // window.translateDataLangElements = function(lang) { };
+        if (typeof window.translateDataLangElements !== 'function') {
+            window.translateDataLangElements = function(lang) { };
+        }
         window.toggleSandboxBanner = function(show) {
             var SANDBOX_TEXT = 'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA';
             var dict = window.UNIFED_TRANSLATIONS && window.UNIFED_TRANSLATIONS.DICTIONARY;
