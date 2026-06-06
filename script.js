@@ -8646,8 +8646,25 @@ window._syncPureDashboard = (function() {
             if(pct2) { pct2.setAttribute('data-i18n-ignore','true'); pct2.innerText = `(${pctSG2.toFixed(2)}%)`; updated++; }
 
             // Mostrar cards smoking gun se delta > 0
-            if (mapping['pure-sg1-delta'] > 0.01) document.getElementById('smoking-gun-1')?.style.setProperty('display','flex');
-            if (mapping['pure-sg2-delta'] > 0.01) document.getElementById('smoking-gun-2')?.style.setProperty('display','flex');
+            // R24: removeAttribute('style') garante que o display inline não sobrepõe o setProperty
+            const sg1El = document.getElementById('smoking-gun-1');
+            const sg2El = document.getElementById('smoking-gun-2');
+            if (mapping['pure-sg1-delta'] > 0.01 && sg1El) {
+                sg1El.removeAttribute('style');
+                sg1El.style.display = 'flex';
+            }
+            if (mapping['pure-sg2-delta'] > 0.01 && sg2El) {
+                sg2El.removeAttribute('style');
+                sg2El.style.display = 'flex';
+            }
+            // Mostrar card colarinho branco se qualquer smoking gun activa
+            const wcCard = document.getElementById('colarinho-branco');
+            if (wcCard && (mapping['pure-sg1-delta'] > 0.01 || mapping['pure-sg2-delta'] > 0.01)) {
+                wcCard.removeAttribute('style');
+                wcCard.style.display = 'block';
+                const badge = document.getElementById('pure-badge-crime');
+                if (badge) badge.style.display = 'inline-block';
+            }
 
             // Master hash consolidado
             const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';

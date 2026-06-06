@@ -93,14 +93,16 @@
     </h3>
 
     <div style="margin-bottom: 16px;">
-      <span id="pure-sg-title" class="pure-sg-section-label" data-pt="ELEMENTO DE PROVA DETERMINANTE" data-en="DETERMINING EVIDENTIARY ELEMENT" style="display: inline-block; background: #0f172a; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; letter-spacing: 1px; border-left: 3px solid #f97316;">ELEMENTO DE PROVA DETERMINANTE</span>
+      <span id="pure-sg-title" class="pure-sg-section-label" data-pt="🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA" data-en="🔫 SMOKING GUNS · CRITICAL DIVERGENCE" style="display: inline-block; background: #0f172a; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; letter-spacing: 1px; border-left: 3px solid #ef4444;">🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA</span>
     </div>
 
-    <div class="pure-smoking-guns">
+    <div class="pure-sg-container">
 
-      <!-- ELEMENTO DE PROVA DETERMINANTE 2 — REVELAÇÃO DINÂMICA (CORRIGIDO: LABEL E VALOR ABSOLUTO) -->
+      <!-- PROVA RAINHA II — SMOKING GUN 2 -->
       <div class="pure-sg pure-sg-critical" id="smoking-gun-2" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg2-label" data-pt="🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)" data-en="🔫 SMOKING GUN II: Invoicing Omission (Underreporting)">🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)</div>
+        <div class="pure-sg-label" id="pure-sg2-label"
+             data-pt="🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)"
+             data-en="🔫 SMOKING GUN II: Invoicing Omission (Underreporting)">🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)</div>
         <div class="pure-sg-row">
           <span class="pure-sg-key" id="pure-sg2-btor-label" data-pt="BTOR (Extrato):" data-en="BTOR (Statement):">BTOR (Extrato):</span>
           <span class="pure-sg-val" id="pure-sg2-btor-val" data-i18n-ignore>€ 0,00</span>
@@ -109,18 +111,21 @@
           <span class="pure-sg-key" id="pure-sg2-btf-label" data-pt="BTF (Fatura):" data-en="BTF (Invoice):">BTF (Fatura):</span>
           <span class="pure-sg-val" id="pure-sg2-btf-val" data-i18n-ignore>€ 0,00</span>
         </div>
-        <!-- CORREÇÃO: label alterada para "OMISSÃO DE FATURAÇÃO" e valor em absoluto -->
-        <div class="pure-sg-delta">
+        <div class="pure-sg-value-wrapper">
           <span id="pure-sg2-delta-label" data-pt="OMISSÃO DE FATURAÇÃO:" data-en="INVOICE OMISSION:">OMISSÃO DE FATURAÇÃO:</span>
-          <span class="pure-delta-value" id="pure-sg2-delta" data-i18n-ignore>€ 0,00</span>
-          <span class="pure-delta-pct" id="pure-sg2-pct" data-i18n-ignore>(0%)</span>
+          <span class="pure-sg-value has-blink pure-delta-value" id="pure-sg2-delta" data-i18n-ignore>€ 0,00</span>
+          <span class="pure-sg-pct pure-delta-pct" id="pure-sg2-pct" data-i18n-ignore>(0%)</span>
         </div>
-        <div class="pure-sg-legal" id="pure-sg2-legal" data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)" data-en="Violation: Art. 103 (Reporting Obligation) · Art. 78 CIVA (Invoicing) · Art. 125 CPP (Expert Evidence)">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)</div>
+        <div class="pure-sg-legal" id="pure-sg2-legal"
+             data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)"
+             data-en="Violation: Art. 103 (Reporting Obligation) · Art. 78 CIVA (Invoicing) · Art. 125 CPP (Expert Evidence)">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)</div>
       </div>
 
-      <!-- ELEMENTO DE PROVA DETERMINANTE 1 — REVELAÇÃO DINÂMICA -->
+      <!-- PROVA RAINHA I — SMOKING GUN 1 -->
       <div class="pure-sg pure-sg-secondary" id="smoking-gun-1" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg1-label" data-pt="🔫 PROVA RAINHA I: Retenção Ilícita de Comissões" data-en="🔫 SMOKING GUN I: Illegal Commission Withholding">🔫 PROVA RAINHA I: Retenção Ilícita de Comissões</div>
+        <div class="pure-sg-label" id="pure-sg1-label"
+             data-pt="🔫 PROVA RAINHA I: Retenção Ilícita de Comissões"
+             data-en="🔫 SMOKING GUN I: Illegal Commission Withholding">🔫 PROVA RAINHA I: Retenção Ilícita de Comissões</div>
         <div class="pure-sg-row">
           <span class="pure-sg-key" id="pure-sg1-saft-label" data-pt="SAF-T (Bruto):" data-en="SAF-T (Gross):">SAF-T (Bruto):</span>
           <span class="pure-sg-val" id="pure-sg1-saft-val" data-i18n-ignore>€ 0,00</span>
@@ -129,12 +134,14 @@
           <span class="pure-sg-key" id="pure-sg1-dac7-label" data-pt="DAC7 (AT):" data-en="DAC7 (TA):">DAC7 (AT):</span>
           <span class="pure-sg-val" id="pure-sg1-dac7-val" data-i18n-ignore>€ 0,00</span>
         </div>
-        <div class="pure-sg-delta">
+        <div class="pure-sg-value-wrapper">
           <span id="pure-sg1-delta-label" data-pt="DISCREPÂNCIA:" data-en="DISCREPANCY:">DISCREPÂNCIA:</span>
-          <span class="pure-delta-value" id="pure-sg1-delta" data-i18n-ignore>€ 0,00</span>
-          <span class="pure-delta-pct" id="pure-sg1-pct" data-i18n-ignore>(0%)</span>
+          <span class="pure-sg-value has-blink pure-delta-value" id="pure-sg1-delta" data-i18n-ignore>€ 0,00</span>
+          <span class="pure-sg-pct pure-delta-pct" id="pure-sg1-pct" data-i18n-ignore>(0%)</span>
         </div>
-        <div class="pure-sg-legal" id="pure-sg1-legal" data-pt="Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP" data-en="Violation: Art. 406 CC (SAF-T Declaration) · Law 8/2012 (DAC7) · Art. 125 CPP">Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP</div>
+        <div class="pure-sg-legal" id="pure-sg1-legal"
+             data-pt="Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP"
+             data-en="Violation: Art. 406 CC (SAF-T Declaration) · Law 8/2012 (DAC7) · Art. 125 CPP">Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP</div>
       </div>
 
     </div>
