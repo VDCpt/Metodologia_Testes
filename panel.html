@@ -96,108 +96,64 @@
       <span id="pure-sg-title" class="pure-sg-section-label" data-pt="🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA" data-en="🔫 SMOKING GUNS · CRITICAL DIVERGENCE" style="display: inline-block; background: #0f172a; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; letter-spacing: 1px; border-left: 3px solid #ef4444;">🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA</span>
     </div>
 
-    <!-- ── SMOKING GUNS · GRID 8 COLUNAS ─────────────────────────────────────
-         Col 1 : barra colorida lateral (4px)
-         Col 2 : título + subtítulo da prova (180px)
-         Col 3 : fonte A — BTOR / SAF-T (1fr)
-         Col 4 : seta → (24px)
-         Col 5 : fonte B — BTF / DAC7 (1fr)
-         Col 6 : igual = (24px)
-         Col 7 : delta + % destacado (160px)
-         Col 8 : referência legal (160px)
-         Visibilidade controlada por script.js via #smoking-gun-1 e #smoking-gun-2
-    ──────────────────────────────────────────────────────────────────────── -->
-    <div id="smoking-gun-table" style="display:none; margin-top:8px; border: 0.5px solid var(--color-border-tertiary, #334155); border-radius: 8px; overflow:hidden;">
+    <div class="pure-sg-container">
 
-      <!-- LINHA 1 — SMOKING GUN II · Omissão de Faturação (vermelho) -->
-      <div id="smoking-gun-2" style="display:none; grid-template-columns: 4px 180px 1fr 24px 1fr 24px 160px 160px; align-items:stretch; border-bottom: 0.5px solid rgba(239,68,68,0.25); background: rgba(239,68,68,0.03);">
+      <!-- Tabela unificada — 5 colunas, 2 linhas (Smoking Guns I e II) -->
+      <!-- Visibilidade controlada por script.js via #smoking-gun-1 e #smoking-gun-2 -->
+      <table id="smoking-gun-table" style="width:100%; border-collapse:collapse; margin-top:8px; display:none;">
+        <colgroup>
+          <col style="width:18%;"><!-- col 1: título da prova -->
+          <col style="width:18%;"><!-- col 2: BTOR / SAF-T -->
+          <col style="width:18%;"><!-- col 3: BTF / DAC7 -->
+          <col style="width:22%;"><!-- col 4: delta + pct -->
+          <col style="width:24%;"><!-- col 5: legal -->
+        </colgroup>
 
-        <!-- C1 · barra colorida -->
-        <div style="background:#ef4444;"></div>
+        <!-- LINHA 1 — SMOKING GUN II (Omissão de Faturação) -->
+        <tr id="smoking-gun-2" style="display:none;">
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.04); border-left:3px solid #ef4444;">
+            <div style="font-size:0.65rem; font-weight:700; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;" id="pure-sg2-label">🔫 PROVA RAINHA II</div>
+            <div style="font-size:0.7rem; color:#94a3b8;">Omissão de Faturação (Subdeclaração)</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); text-align:center;">
+            <div style="font-size:0.65rem; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">BTOR (Extrato)</div>
+            <div style="font-size:1.05rem; font-weight:800; color:#f8fafc;" id="pure-sg2-btor-val">€ 0,00</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); text-align:center;">
+            <div style="font-size:0.65rem; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">BTF (Fatura)</div>
+            <div style="font-size:1.05rem; font-weight:800; color:#f8fafc;" id="pure-sg2-btf-val">€ 0,00</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); text-align:center; background:rgba(239,68,68,0.06);">
+            <div style="font-size:0.65rem; font-weight:700; color:#ef4444; text-transform:uppercase; margin-bottom:4px;" id="pure-sg2-delta-label">OMISSÃO DE FATURAÇÃO</div>
+            <div style="font-size:1.15rem; font-weight:900; color:#ef4444;" id="pure-sg2-delta">€ 0,00</div>
+            <div style="font-size:0.8rem; font-weight:600; color:#f87171;" id="pure-sg2-pct">(0%)</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); font-size:0.65rem; color:#94a3b8; line-height:1.5;" id="pure-sg2-legal">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)</td>
+        </tr>
 
-        <!-- C2 · título da prova -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:11px; font-weight:600; color:#ef4444; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px;" id="pure-sg2-label">PROVA RAINHA II</div>
-          <div style="font-size:11px; color:#94a3b8; line-height:1.4;">Omissão de Faturação<br>(Subdeclaração)</div>
-        </div>
+        <!-- LINHA 2 — SMOKING GUN I (Retenção Ilícita de Comissões) -->
+        <tr id="smoking-gun-1" style="display:none;">
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(245,158,11,0.3); background:rgba(245,158,11,0.04); border-left:3px solid #f59e0b;">
+            <div style="font-size:0.65rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;" id="pure-sg1-label">🔫 PROVA RAINHA I</div>
+            <div style="font-size:0.7rem; color:#94a3b8;">Retenção Ilícita de Comissões</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(245,158,11,0.15); text-align:center;">
+            <div style="font-size:0.65rem; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">SAF-T (Bruto)</div>
+            <div style="font-size:1.05rem; font-weight:800; color:#f8fafc;" id="pure-sg1-saft-val">€ 0,00</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(245,158,11,0.15); text-align:center;">
+            <div style="font-size:0.65rem; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:4px;">DAC7 (AT)</div>
+            <div style="font-size:1.05rem; font-weight:800; color:#f8fafc;" id="pure-sg1-dac7-val">€ 0,00</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(245,158,11,0.15); text-align:center; background:rgba(245,158,11,0.06);">
+            <div style="font-size:0.65rem; font-weight:700; color:#f59e0b; text-transform:uppercase; margin-bottom:4px;" id="pure-sg1-delta-label">DISCREPÂNCIA</div>
+            <div style="font-size:1.15rem; font-weight:900; color:#f59e0b;" id="pure-sg1-delta">€ 0,00</div>
+            <div style="font-size:0.8rem; font-weight:600; color:#fbbf24;" id="pure-sg1-pct">(0%)</div>
+          </td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(245,158,11,0.15); font-size:0.65rem; color:#94a3b8; line-height:1.5;" id="pure-sg1-legal">Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP</td>
+        </tr>
 
-        <!-- C3 · BTOR (Extrato) -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">BTOR (Extrato)</div>
-          <div style="font-size:16px; font-weight:700; color:#f8fafc; white-space:nowrap;" id="pure-sg2-btor-val">€ 0,00</div>
-        </div>
-
-        <!-- C4 · seta -->
-        <div style="display:flex; align-items:center; justify-content:center; font-size:12px; color:#475569;">→</div>
-
-        <!-- C5 · BTF (Fatura) -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">BTF (Fatura)</div>
-          <div style="font-size:16px; font-weight:700; color:#f8fafc; white-space:nowrap;" id="pure-sg2-btf-val">€ 0,00</div>
-        </div>
-
-        <!-- C6 · igual -->
-        <div style="display:flex; align-items:center; justify-content:center; font-size:12px; color:#475569;">=</div>
-
-        <!-- C7 · Delta + % -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155); background:rgba(239,68,68,0.06);">
-          <div style="font-size:10px; font-weight:600; color:#ef4444; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;" id="pure-sg2-delta-label">OMISSÃO</div>
-          <div style="font-size:16px; font-weight:700; color:#ef4444; white-space:nowrap;" id="pure-sg2-delta">€ 0,00</div>
-          <div style="font-size:11px; color:#f87171; margin-top:2px;" id="pure-sg2-pct">(0%)</div>
-        </div>
-
-        <!-- C8 · Referência legal -->
-        <div style="padding:12px 14px;">
-          <div style="font-size:10px; color:#64748b; line-height:1.6;" id="pure-sg2-legal">Art. 103.º · Art. 78.º CIVA · Art. 125.º CPP</div>
-        </div>
-
-      </div><!-- /smoking-gun-2 -->
-
-      <!-- LINHA 2 — SMOKING GUN I · Retenção Ilícita de Comissões (âmbar) -->
-      <div id="smoking-gun-1" style="display:none; grid-template-columns: 4px 180px 1fr 24px 1fr 24px 160px 160px; align-items:stretch; background: rgba(245,158,11,0.02);">
-
-        <!-- C1 · barra colorida -->
-        <div style="background:#f59e0b;"></div>
-
-        <!-- C2 · título da prova -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:11px; font-weight:600; color:#f59e0b; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px;" id="pure-sg1-label">PROVA RAINHA I</div>
-          <div style="font-size:11px; color:#94a3b8; line-height:1.4;">Retenção Ilícita<br>de Comissões</div>
-        </div>
-
-        <!-- C3 · SAF-T (Bruto) -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">SAF-T (Bruto)</div>
-          <div style="font-size:16px; font-weight:700; color:#f8fafc; white-space:nowrap;" id="pure-sg1-saft-val">€ 0,00</div>
-        </div>
-
-        <!-- C4 · seta -->
-        <div style="display:flex; align-items:center; justify-content:center; font-size:12px; color:#475569;">→</div>
-
-        <!-- C5 · DAC7 (AT) -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155);">
-          <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">DAC7 (AT)</div>
-          <div style="font-size:16px; font-weight:700; color:#f8fafc; white-space:nowrap;" id="pure-sg1-dac7-val">€ 0,00</div>
-        </div>
-
-        <!-- C6 · igual -->
-        <div style="display:flex; align-items:center; justify-content:center; font-size:12px; color:#475569;">=</div>
-
-        <!-- C7 · Delta + % -->
-        <div style="padding:12px 14px; border-right:0.5px solid var(--color-border-tertiary,#334155); background:rgba(245,158,11,0.06);">
-          <div style="font-size:10px; font-weight:600; color:#f59e0b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;" id="pure-sg1-delta-label">DISCREPÂNCIA</div>
-          <div style="font-size:16px; font-weight:700; color:#f59e0b; white-space:nowrap;" id="pure-sg1-delta">€ 0,00</div>
-          <div style="font-size:11px; color:#fbbf24; margin-top:2px;" id="pure-sg1-pct">(0%)</div>
-        </div>
-
-        <!-- C8 · Referência legal -->
-        <div style="padding:12px 14px;">
-          <div style="font-size:10px; color:#64748b; line-height:1.6;" id="pure-sg1-legal">Art. 406.º CC · Lei 8/2012 (DAC7) · Art. 125.º CPP</div>
-        </div>
-
-      </div><!-- /smoking-gun-1 -->
-
-    </div><!-- /smoking-gun-table -->
+      </table>
 
     </div>
   </div>

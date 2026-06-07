@@ -46,7 +46,7 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     // ════════════════════════════════════════════════════════════════════════
     // PAINEL DO ADVOGADO (TOP 3)
     // ════════════════════════════════════════════════════════════════════════
-    'panel_lawyer_title': { 'pt': '⚖️ PAINEL DO ADVOGADO: CONTRADITÓRIO DINÂMICO', 'en': '⚖️ LAWYER PANEL: DYNAMIC CONTRADICTION' },
+    'panel_lawyer_title': { 'pt': '⚖️ PAINEL DO ADVOGADO: CONTRADITÓRIO DINÂMICO', 'en': '⚖️ LAWYER PANEL: DYNAMIC ADVERSARIAL EXAMINATION' },
     'panel_lawyer_subtitle': { 'pt': 'Motor Recomenda TOP 3 Questões Automáticas (Heurística Forense)', 'en': 'Engine Recommends TOP 3 Automatic Questions (Forensic Heuristics)' },
     'panel_lawyer_instructions': { 'pt': '✓ Instruções do Advogado: Cada questão abaixo pode ser editada, revista ou rectificada antes de gerar o pacote final. O sistema recalcula a assinatura digital (Merkle Root) em tempo real após edições.', 'en': '✓ Lawyer Instructions: Each question below can be edited, reviewed, or corrected before generating the final package. The system recalculates the digital signature (Merkle Root) in real-time after edits.' },
 
@@ -108,7 +108,7 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     // ════════════════════════════════════════════════════════════════════════
     // CADUCIDADE (LGT Art. 45º)
     // ════════════════════════════════════════════════════════════════════════
-    'lgt_cadducity_title': { 'pt': 'Conformidade com o art. 45.º da LGT (Caducidade)', 'en': 'LGT Art. 45 Compliance (Statute of Limitation)' },
+    'lgt_cadducity_title': { 'pt': 'Conformidade com o art. 45.º da LGT (Caducidade)', 'en': 'LGT Art. 45 Compliance (Statute of Limitations)' },
     'lgt_years_elapsed': { 'pt': 'Anos Decorridos', 'en': 'Years Elapsed' },
     'lgt_cadducity_valid': { 'pt': 'Válido para Auditoria', 'en': 'Valid for Audit' },
     'lgt_cadducity_expiring': { 'pt': 'Caducidade Iminente', 'en': 'Imminent Expiry' },
@@ -192,11 +192,27 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'SUJEITO_PASSIVO':    { 'pt': 'Sujeito Passivo',                  'en': 'Respondent / Taxpayer'               },
 
     // ── RETIFICAÇÃO: Terminologia TVDE e Monopólio Documental ──
-    'OPERADOR_TVDE_DEF':   'Operador TVDE: Entidade (singular ou coletiva) registada no IMT, titular da licença, frota e contratos ativos. Responsável legal, fiscal e laboral (IVA/IRS/IRC).',
-    'PLATFORM_MONOPOLY_NOTE': 'Nos termos do Art. 36.º n.º 11 do CIVA, a centralização da emissão documental pela plataforma cria um monopólio de facto, resultando em penalização indevida do sujeito passivo por omissões de terceiros.',
-    'COMPLIANCE_BADGE':    'CERTIFICAÇÕES & CONFORMIDADE',
-    'COMPLIANCE_ITEMS':    ['ISO 27001', 'ISO 27035', 'ISO 27037', 'Privacy by Design', 'Processamento 100% local (browser)'],
-    'SANDBOX_LABEL':       'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA',
+    // RET-TRANS-01: estrutura {pt/en} aplicada a 5 chaves que eram strings simples (orphaned)
+    'OPERADOR_TVDE_DEF': {
+        'pt': 'Operador TVDE: Entidade (singular ou coletiva) registada no IMT, titular da licença, frota e contratos ativos. Responsável legal, fiscal e laboral (IVA/IRS/IRC).',
+        'en': 'TVDE Operator: Entity (individual or corporate) registered with IMT, holder of the license, fleet, and active contracts. Legally, fiscally, and labor-liable (VAT/IRS/IRC).'
+    },
+    'PLATFORM_MONOPOLY_NOTE': {
+        'pt': 'Nos termos do Art. 36.º n.º 11 do CIVA, a centralização da emissão documental pela plataforma cria um monopólio de facto, resultando em penalização indevida do sujeito passivo por omissões de terceiros.',
+        'en': 'Under Art. 36(11) CIVA, the centralization of document issuance by the platform creates a de facto monopoly, resulting in undue penalization of the taxpayer for third-party omissions.'
+    },
+    'COMPLIANCE_BADGE': {
+        'pt': 'CERTIFICAÇÕES & CONFORMIDADE',
+        'en': 'CERTIFICATIONS & COMPLIANCE'
+    },
+    'COMPLIANCE_ITEMS': {
+        'pt': ['ISO 27001', 'ISO 27035', 'ISO 27037', 'Privacy by Design', 'Processamento 100% local (browser)'],
+        'en': ['ISO 27001', 'ISO 27035', 'ISO 27037', 'Privacy by Design', '100% local processing (browser)']
+    },
+    'SANDBOX_LABEL': {
+        'pt': 'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA',
+        'en': 'STATUS: DEMONSTRATION ENVIRONMENT (SANDBOX) | TIMESTAMP: INTEGRITY VALIDATION REPORT PENDING (RFC 3161) | INTEGRITY: DETERMINISTIC'
+    },
     // RETIFICAÇÃO R24-3: novas chaves jurídicas
     'smoking_gun_1':    { 'pt': '🔫 PROVA RAINHA I: Retenção Ilícita de Comissões', 'en': '🔫 SMOKING GUN I: Illegal Commission Withholding' },
     'smoking_gun_2':    { 'pt': '🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)', 'en': '🔫 SMOKING GUN II: Invoicing Omission (Underreporting)' },
