@@ -1769,3 +1769,48 @@ body.presentation-mode [class*="pulse"] {
     will-change: opacity;
     transform: translateZ(0);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   R24-TABLE — ESPECIFICIDADE MÁXIMA: tabela de materialidade
+   Anula display:flex de qualquer ancestral, incluindo .pure-card-alert
+   ═══════════════════════════════════════════════════════════════════════════ */
+#pureDashboard #smoking-gun-table,
+#pureDashboard .pure-sg-container #smoking-gun-table,
+#pureDiscCard #smoking-gun-table {
+    display: none; /* estado base — JS define display:table via cssText */
+    flex-direction: unset !important;
+    flex-wrap: unset !important;
+    align-items: unset !important;
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+/* <tr> com is-visible: forçar table-row mesmo dentro de flex container */
+#pureDashboard #smoking-gun-1,
+#pureDashboard #smoking-gun-2,
+#pureDiscCard #smoking-gun-1,
+#pureDiscCard #smoking-gun-2 {
+    display: none !important; /* estado base */
+}
+#pureDashboard #smoking-gun-1.is-visible,
+#pureDashboard #smoking-gun-2.is-visible,
+#pureDiscCard #smoking-gun-1.is-visible,
+#pureDiscCard #smoking-gun-2.is-visible {
+    display: table-row !important;
+    flex-direction: unset !important;
+    align-items: unset !important;
+}
+/* Células: anular herança flex dos ancestrais */
+#smoking-gun-table td {
+    display: table-cell !important;
+    vertical-align: middle !important;
+    align-self: unset !important;
+    flex: unset !important;
+    box-sizing: border-box;
+}
+/* Contentor: permitir overflow para scroll horizontal em ecrãs pequenos */
+#pureDiscCard .pure-sg-container {
+    display: block !important;
+    flex-direction: unset !important;
+    overflow-x: auto;
+}

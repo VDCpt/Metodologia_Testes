@@ -8953,19 +8953,26 @@ window._syncPureDashboard = (function() {
             const sg1El = document.getElementById('smoking-gun-1');
             const sg2El = document.getElementById('smoking-gun-2');
             const sgTable = document.getElementById('smoking-gun-table');
+            // R24-TABLE: cssText com !important vence qualquer display:flex herdado
             if (sg1El && sg1Delta > 0.01) {
-                sg1El.removeAttribute('style');
-                sg1El.style.display = 'table-row'; // tr element — table-row é o display correcto
+                sg1El.style.cssText = 'display:table-row !important;';
                 sg1El.classList.add('is-visible');
             }
             if (sg2El && sg2Delta > 0.01) {
-                sg2El.removeAttribute('style');
-                sg2El.style.display = 'table-row'; // tr element — table-row é o display correcto
+                sg2El.style.cssText = 'display:table-row !important;';
                 sg2El.classList.add('is-visible');
             }
-            // Revelar a tabela pai quando pelo menos uma linha estiver visível
+            // Revelar a tabela pai: cssText garante display:table !important
             if (sgTable && ((sg1El && sg1Delta > 0.01) || (sg2El && sg2Delta > 0.01))) {
-                sgTable.style.display = 'table';
+                sgTable.style.cssText = [
+                    'display:table !important',
+                    'width:100%',
+                    'border-collapse:collapse',
+                    'table-layout:fixed',
+                    'margin-top:4px',
+                    'border:1px solid rgba(0,229,255,0.18)',
+                    'overflow:hidden'
+                ].join(';') + ';';
             }
             // Colarinho branco: activar se qualquer smoking gun > limiar
             const wcCard = document.getElementById('colarinho-branco');

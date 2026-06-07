@@ -841,54 +841,100 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       <span id="pure-sg-title" class="pure-sg-section-label" data-pt="🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA" data-en="🔫 SMOKING GUNS · CRITICAL DIVERGENCE" style="display: inline-block; background: #0f172a; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; letter-spacing: 1px; border-left: 3px solid #ef4444;">🔫 PROVAS RAINHA · DIVERGÊNCIA CRÍTICA</span>
     </div>
 
-    <div class="pure-sg-container">
-
-      <!-- PROVA RAINHA II — SMOKING GUN 2 -->
-      <div class="pure-sg pure-sg-critical" id="smoking-gun-2" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg2-label"
-             data-pt="🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)"
-             data-en="🔫 SMOKING GUN II: Invoicing Omission (Underreporting)">🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)</div>
-        <div class="pure-sg-row">
-          <span class="pure-sg-key" id="pure-sg2-btor-label" data-pt="BTOR (Extrato):" data-en="BTOR (Statement):">BTOR (Extrato):</span>
-          <span class="pure-sg-val" id="pure-sg2-btor-val" data-i18n-ignore>€ 0,00</span>
-        </div>
-        <div class="pure-sg-row">
-          <span class="pure-sg-key" id="pure-sg2-btf-label" data-pt="BTF (Fatura):" data-en="BTF (Invoice):">BTF (Fatura):</span>
-          <span class="pure-sg-val" id="pure-sg2-btf-val" data-i18n-ignore>€ 0,00</span>
-        </div>
-        <div class="pure-sg-value-wrapper">
-          <span id="pure-sg2-delta-label" data-pt="OMISSÃO DE FATURAÇÃO:" data-en="INVOICE OMISSION:">OMISSÃO DE FATURAÇÃO:</span>
-          <span class="pure-sg-value has-blink pure-delta-value" id="pure-sg2-delta" data-i18n-ignore>€ 0,00</span>
-          <span class="pure-sg-pct pure-delta-pct" id="pure-sg2-pct" data-i18n-ignore>(0%)</span>
-        </div>
-        <div class="pure-sg-legal" id="pure-sg2-legal"
-             data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)"
-             data-en="Violation: Art. 103 (Reporting Obligation) · Art. 78 CIVA (Invoicing) · Art. 125 CPP (Expert Evidence)">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)</div>
-      </div>
-
-      <!-- PROVA RAINHA I — SMOKING GUN 1 -->
-      <div class="pure-sg pure-sg-secondary" id="smoking-gun-1" style="display:none;">
-        <div class="pure-sg-label" id="pure-sg1-label"
-             data-pt="🔫 PROVA RAINHA I: Retenção Ilícita de Comissões"
-             data-en="🔫 SMOKING GUN I: Illegal Commission Withholding">🔫 PROVA RAINHA I: Retenção Ilícita de Comissões</div>
-        <div class="pure-sg-row">
-          <span class="pure-sg-key" id="pure-sg1-saft-label" data-pt="SAF-T (Bruto):" data-en="SAF-T (Gross):">SAF-T (Bruto):</span>
-          <span class="pure-sg-val" id="pure-sg1-saft-val" data-i18n-ignore>€ 0,00</span>
-        </div>
-        <div class="pure-sg-row">
-          <span class="pure-sg-key" id="pure-sg1-dac7-label" data-pt="DAC7 (AT):" data-en="DAC7 (TA):">DAC7 (AT):</span>
-          <span class="pure-sg-val" id="pure-sg1-dac7-val" data-i18n-ignore>€ 0,00</span>
-        </div>
-        <div class="pure-sg-value-wrapper">
-          <span id="pure-sg1-delta-label" data-pt="DISCREPÂNCIA:" data-en="DISCREPANCY:">DISCREPÂNCIA:</span>
-          <span class="pure-sg-value has-blink pure-delta-value" id="pure-sg1-delta" data-i18n-ignore>€ 0,00</span>
-          <span class="pure-sg-pct pure-delta-pct" id="pure-sg1-pct" data-i18n-ignore>(0%)</span>
-        </div>
-        <div class="pure-sg-legal" id="pure-sg1-legal"
-             data-pt="Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP"
-             data-en="Violation: Art. 406 CC (SAF-T Declaration) · Law 8/2012 (DAC7) · Art. 125 CPP">Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP</div>
-      </div>
-
+    <!-- R24-TABLE: substituição dos div.pure-sg por tabela real de 5 colunas -->
+    <div class="pure-sg-container" style="overflow-x:auto;">
+      <table id="smoking-gun-table" style="width:100%; border-collapse:collapse; table-layout:fixed; display:none; margin-top:4px; border:1px solid rgba(0,229,255,0.18); border-radius:6px; overflow:hidden;">
+        <colgroup>
+          <col style="width:20%;">
+          <col style="width:16%;">
+          <col style="width:16%;">
+          <col style="width:22%;">
+          <col style="width:26%;">
+        </colgroup>
+        <thead>
+          <tr style="background:#080f1e;">
+            <th style="padding:8px 12px; font-size:0.65rem; font-weight:700; color:#64748b; text-align:left; letter-spacing:0.08em; border-bottom:1px solid rgba(0,229,255,0.12);">PROVA RAINHA</th>
+            <th style="padding:8px 12px; font-size:0.65rem; font-weight:700; color:#64748b; text-align:center; letter-spacing:0.08em; border-bottom:1px solid rgba(0,229,255,0.12);">VALOR BASE</th>
+            <th style="padding:8px 12px; font-size:0.65rem; font-weight:700; color:#64748b; text-align:center; letter-spacing:0.08em; border-bottom:1px solid rgba(0,229,255,0.12);">VALOR DECLARADO</th>
+            <th style="padding:8px 12px; font-size:0.65rem; font-weight:700; color:#64748b; text-align:center; letter-spacing:0.08em; border-bottom:1px solid rgba(0,229,255,0.12);">DELTA / %</th>
+            <th style="padding:8px 12px; font-size:0.65rem; font-weight:700; color:#64748b; text-align:left;  letter-spacing:0.08em; border-bottom:1px solid rgba(0,229,255,0.12);">VIOLAÇÃO LEGAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- PROVA RAINHA II — OMISSÃO DE FATURAÇÃO -->
+          <tr id="smoking-gun-2" style="display:none;">
+            <td style="padding:14px 12px; vertical-align:middle; border-right:1px solid rgba(239,68,68,0.15); border-bottom:1px solid rgba(239,68,68,0.1); background:rgba(239,68,68,0.04); border-left:3px solid #ef4444;">
+              <div style="font-size:0.7rem; font-weight:800; color:#ef4444; margin-bottom:4px;" id="pure-sg2-label"
+                   data-pt="🔫 PROVA RAINHA II" data-en="🔫 SMOKING GUN II">🔫 PROVA RAINHA II</div>
+              <div style="font-size:0.72rem; color:#cbd5e1; line-height:1.4;">Omissão de Faturação<br>(Subdeclaração)</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(239,68,68,0.1); border-bottom:1px solid rgba(239,68,68,0.1); background:#0a1628;">
+              <div style="font-size:0.62rem; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"
+                   id="pure-sg2-btor-label" data-pt="BTOR (Extrato)" data-en="BTOR (Statement)">BTOR (Extrato)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#f8fafc; font-family:'JetBrains Mono',monospace;"
+                   id="pure-sg2-btor-val" data-i18n-ignore>€ 0,00</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(239,68,68,0.1); border-bottom:1px solid rgba(239,68,68,0.1); background:#0a1628;">
+              <div style="font-size:0.62rem; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"
+                   id="pure-sg2-btf-label" data-pt="BTF (Fatura)" data-en="BTF (Invoice)">BTF (Fatura)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#f8fafc; font-family:'JetBrains Mono',monospace;"
+                   id="pure-sg2-btf-val" data-i18n-ignore>€ 0,00</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(239,68,68,0.15); border-bottom:1px solid rgba(239,68,68,0.1); background:rgba(239,68,68,0.07);">
+              <div style="font-size:0.65rem; font-weight:800; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;"
+                   id="pure-sg2-delta-label" data-pt="OMISSÃO DE FATURAÇÃO" data-en="INVOICE OMISSION">OMISSÃO DE FATURAÇÃO</div>
+              <div style="font-size:1.3rem; font-weight:900; color:#ef4444; font-family:'JetBrains Mono',monospace; line-height:1.1;"
+                   id="pure-sg2-delta" data-i18n-ignore>€ 0,00</div>
+              <div style="font-size:0.82rem; font-weight:600; color:#f87171; margin-top:4px;"
+                   id="pure-sg2-pct" data-i18n-ignore>(0%)</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; border-bottom:1px solid rgba(239,68,68,0.1); background:#080f1e;">
+              <div style="font-size:0.64rem; color:#94a3b8; line-height:1.6;"
+                   id="pure-sg2-legal"
+                   data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)"
+                   data-en="Violation: Art. 103 (Reporting Obligation) · Art. 78 CIVA (Invoicing) · Art. 125 CPP (Expert Evidence)">
+                Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)
+              </div>
+            </td>
+          </tr>
+          <!-- PROVA RAINHA I — RETENÇÃO ILÍCITA DE COMISSÕES -->
+          <tr id="smoking-gun-1" style="display:none;">
+            <td style="padding:14px 12px; vertical-align:middle; border-right:1px solid rgba(245,158,11,0.15); background:rgba(245,158,11,0.04); border-left:3px solid #f59e0b;">
+              <div style="font-size:0.7rem; font-weight:800; color:#f59e0b; margin-bottom:4px;" id="pure-sg1-label"
+                   data-pt="🔫 PROVA RAINHA I" data-en="🔫 SMOKING GUN I">🔫 PROVA RAINHA I</div>
+              <div style="font-size:0.72rem; color:#cbd5e1; line-height:1.4;">Retenção Ilícita<br>de Comissões</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(245,158,11,0.1); background:#0a1628;">
+              <div style="font-size:0.62rem; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"
+                   id="pure-sg1-saft-label" data-pt="SAF-T (Bruto)" data-en="SAF-T (Gross)">SAF-T (Bruto)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#f8fafc; font-family:'JetBrains Mono',monospace;"
+                   id="pure-sg1-saft-val" data-i18n-ignore>€ 0,00</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(245,158,11,0.1); background:#0a1628;">
+              <div style="font-size:0.62rem; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"
+                   id="pure-sg1-dac7-label" data-pt="DAC7 (AT)" data-en="DAC7 (TA)">DAC7 (AT)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#f8fafc; font-family:'JetBrains Mono',monospace;"
+                   id="pure-sg1-dac7-val" data-i18n-ignore>€ 0,00</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; text-align:center; border-right:1px solid rgba(245,158,11,0.15); background:rgba(245,158,11,0.06);">
+              <div style="font-size:0.65rem; font-weight:800; color:#f59e0b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;"
+                   id="pure-sg1-delta-label" data-pt="DISCREPÂNCIA" data-en="DISCREPANCY">DISCREPÂNCIA</div>
+              <div style="font-size:1.3rem; font-weight:900; color:#f59e0b; font-family:'JetBrains Mono',monospace; line-height:1.1;"
+                   id="pure-sg1-delta" data-i18n-ignore>€ 0,00</div>
+              <div style="font-size:0.82rem; font-weight:600; color:#fbbf24; margin-top:4px;"
+                   id="pure-sg1-pct" data-i18n-ignore>(0%)</div>
+            </td>
+            <td style="padding:14px 12px; vertical-align:middle; background:#080f1e;">
+              <div style="font-size:0.64rem; color:#94a3b8; line-height:1.6;"
+                   id="pure-sg1-legal"
+                   data-pt="Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP"
+                   data-en="Violation: Art. 406 CC (SAF-T Declaration) · Law 8/2012 (DAC7) · Art. 125 CPP">
+                Violação: Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
