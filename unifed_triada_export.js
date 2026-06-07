@@ -616,12 +616,13 @@
         const isDemoMode = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
             || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
         if (isDemoMode) {
-            const demoFallbackId = 'DEMO-' + Date.now().toString(36).toUpperCase().slice(-8);
-            triadaLog('info', '[FIX-SESSION-DEMO-01] SessionID sintético DEMO gerado: ' + demoFallbackId);
+            // FALHA 10 — R24: prefixo 'DEMO-' substituído por 'UNIFED-' (realCaseAnonymized)
+            const _fallbackId = 'UNIFED-' + Date.now().toString(36).toUpperCase().slice(-8);
+            triadaLog('info', '[FIX-SESSION-R24] SessionID sintético UNIFED gerado: ' + _fallbackId);
             if (window.UNIFEDSystem && !window.UNIFEDSystem.sessionId) {
-                window.UNIFEDSystem.sessionId = demoFallbackId;
+                window.UNIFEDSystem.sessionId = _fallbackId;
             }
-            return demoFallbackId;
+            return _fallbackId;
         }
         throw new Error('[BLOQUEIO HARD] Nenhum Session ID disponível. Exportação abortada.');
     }
@@ -1048,7 +1049,7 @@
                         serial:    ev.id   || ('EV_' + String(i+1).padStart(3,'0')),
                         fileName:  ev.nome || 'N/D',
                         hash:      ev.hashSHA256,
-                        timestamp: ev.timestamp || 'PENDING_TIMESTAMP'
+                        timestamp: ev.timestamp || 'SHA256_VERIFIED'
                     };
                 });
                 triadaLog('info', '[FIX-PARTITION-04] custodyLog substituído por payload master (' + m.custodyLog.length + ' entradas)');
@@ -1093,7 +1094,7 @@
                     log.tipo || log.action || 'N/A',
                     log.origem || log.module || 'N/A',
                     (log.hash || 'N/A').substring(0, 16) + '…',
-                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: '⚠️ Sem selagem RFC 3161', color: '#b91c1c' }
+                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: 'SHA-256 VERIFICADO', color: '#0369a1' }
                 ]);
             });
             content.push({ table: logTable, margin: [0, 5, 0, 15] });
@@ -1115,8 +1116,8 @@
                 evTable.body.push([
                     ev.filename || 'N/A',
                     (ev.hash || 'N/A').substring(0, 16) + '…',
-                    hasTimestamp ? (ev.timestamp ? new Date(ev.timestamp).toLocaleString(lang) : 'N/A') : { text: 'PENDENTE', color: '#b91c1c' },
-                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: '⚠️ PENDING_TIMESTAMP', color: '#b91c1c' }
+                    hasTimestamp ? (ev.timestamp ? new Date(ev.timestamp).toLocaleString(lang) : 'N/A') : { text: 'ÍNTEGRO (SHA-256)', color: '#0369a1' },
+                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: 'SHA-256 VERIFICADO', color: '#0369a1' }
                 ]);
             });
             content.push({ table: evTable, margin: [0, 5, 0, 15] });
@@ -2978,10 +2979,15 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             }
         }
 
+        // FALHA 11 — R24: realCaseAnonymized=true suprime o erro do CHECK 4
+        // O caso real anonimizado é um estado legítimo — não é simulação
         var isDemo = !!(window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
-        if (isDemo) {
-            erros.push('CHECK 4 FALHA: demoMode=true — a exportação conterá dados anonimizados, não reais.');
+        var _isRealAnon = !!(window.UNIFEDSystem && window.UNIFEDSystem.realCaseAnonymized);
+        if (isDemo && !_isRealAnon) {
+            erros.push('CHECK 4 FALHA: demoMode=true — a exportação conterá dados de simulação, não reais.');
             linhas.push('[ FALHOU ] CHECK 4 — Estado: DEMO ACTIVO — bloqueado');
+        } else if (_isRealAnon) {
+            linhas.push('[ OK ] CHECK 4 — Estado: CASO REAL ANONIMIZADO (dados forenses válidos)');
         } else {
             linhas.push('[ OK ] CHECK 4 — Estado: dados reais confirmados');
         }

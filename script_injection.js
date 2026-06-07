@@ -727,7 +727,10 @@ window._syncPureDashboard = (function() {
         if (sg1Delta > 0.01 && document.getElementById('smoking-gun-1')) document.getElementById('smoking-gun-1').style.display = 'flex';
         if (sg2Delta > 0.01 && document.getElementById('smoking-gun-2')) document.getElementById('smoking-gun-2').style.display = 'flex';
 
-        const _totalNaoSujeitos = 451.15;
+        // FALHA 2 — R24: leitura dinâmica de auxiliaryData (não constante hardcoded)
+        const _totalNaoSujeitos = (system.auxiliaryData && system.auxiliaryData.totalNaoSujeitos != null)
+            ? system.auxiliaryData.totalNaoSujeitos
+            : 451.15; // fallback apenas se auxiliaryData não disponível
         const _btor = totals.despesas || 0;
         const _btf = totals.faturaPlataforma || 0;
         const _ganhos = totals.ganhos || 0;

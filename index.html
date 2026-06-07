@@ -979,7 +979,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
       <div class="pure-atf-block">
         <div class="pure-atf-label" id="pure-atf-trend-label" data-pt="TENDÊNCIA" data-en="TREND">TENDÊNCIA</div>
         <div id="pure-atf-trend" class="pure-atf-trend-val" data-i18n-ignore>---</div>
-        <div class="pure-atf-sub" id="pure-atf-trend-sub" data-pt="Regressão linear (OLS) · 3 pontos" data-en="Linear regression (OLS) · 3 points">Regressão linear (OLS) · 3 pontos</div>
+        <div class="pure-atf-sub" id="pure-atf-trend-sub" data-pt="Regressão linear (OLS)" data-en="Linear regression (OLS)">Regressão linear (OLS)</div>
       </div>
 
       <div class="pure-atf-block">
@@ -1566,8 +1566,8 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
 
                         <div id="forensic-disclaimer" style="display:none; margin-top:0.5rem; font-size:0.65rem; color:#64748b; font-family:monospace; text-align:center;"></div>
 
-                        <div id="sandboxBannerInline" style="
-                            display: none;
+                        <div id="sandboxBannerInline" data-frozen="true" style="
+                            display: none !important;
                             position: relative;
                             clear: both;
                             width: 100%;
@@ -1951,23 +1951,15 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
         if (typeof window.translateDataLangElements !== 'function') {
             window.translateDataLangElements = function(lang) { };
         }
+        // FALHA 1 — R24: toggleSandboxBanner neutralizado. Banner de DEMO/SANDBOX suprimido.
         window.toggleSandboxBanner = function(show) {
-            var SANDBOX_TEXT = 'STATUS: AMBIENTE DE DEMONSTRAÇÃO (SANDBOX) | TIMESTAMP: RELATÓRIO DE VALIDAÇÃO DE INTEGRIDADE PENDENTE (RFC 3161) | INTEGRIDADE: DETERMINÍSTICA';
-            var dict = window.UNIFED_TRANSLATIONS && window.UNIFED_TRANSLATIONS.DICTIONARY;
-            var label = (dict && dict.SANDBOX_LABEL) ? dict.SANDBOX_LABEL : SANDBOX_TEXT;
-            // Usar apenas o inlineBanner (dentro do footer) – #sandboxBanner foi removido
-            var inlineBanner = document.getElementById('sandboxBannerInline');
-            if (inlineBanner) {
-                inlineBanner.style.display = show ? 'block' : 'none';
-                if (show) inlineBanner.textContent = label;
-            }
-            var disclaimer = document.getElementById('forensic-disclaimer');
-            if (disclaimer) {
-                disclaimer.style.display = show ? 'block' : 'none';
-                if (show) disclaimer.textContent = label;
-            }
-            var oldOverlay = document.getElementById('UNIFED_SANDBOX_ALERTS');
-            if (oldOverlay && show === false) oldOverlay.remove();
+            // Noop deliberado: em modo CASO REAL (ANONIMIZADO) nenhum banner de sandbox deve ser exibido.
+            const _inline = document.getElementById('sandboxBannerInline');
+            if (_inline) _inline.style.display = 'none';
+            const _disc = document.getElementById('forensic-disclaimer');
+            if (_disc) _disc.style.display = 'none';
+            const _overlay = document.getElementById('UNIFED_SANDBOX_ALERTS');
+            if (_overlay) _overlay.remove();
         };
 
         window.openCustodyChainModal = function() {

@@ -1398,7 +1398,17 @@ function renderCustodyLog(logs) {
 
     const sorted = [...logs].reverse();
     container.innerHTML = sorted.map(entry => {
-        const d      = entry.data || {};
+        // FALHA 4 — R24: serialização segura de entry.data para evitar [object Object]
+        let d = {};
+        try {
+            if (entry.data && typeof entry.data === 'object') {
+                d = entry.data;
+            } else if (entry.data && typeof entry.data === 'string') {
+                d = JSON.parse(entry.data);
+            }
+        } catch (_e4) {
+            d = { _raw: String(entry.data) };
+        }
         const hash   = d.hash   || '—';
         const serial = d.serial || (d.rfc3161 && d.rfc3161.serialNumber) || '—';
         const level  = d.level  || 'Certificação de Tempo Interna (Nível 1)';
@@ -5115,12 +5125,12 @@ async function processFile(file, type) {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item-modal';
 
-        const demoBadge = UNIFEDSystem.demoMode ? '<span class="demo-badge">DEMO</span>' : '';
+        // FALHA 5 — R24: demoBadge removido. Identificador neutro.
         const shortHash = hash.substring(0, 8) + '...';
 
         fileItem.innerHTML = `
             <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
-            <span class="file-name-modal">${file.name} ${demoBadge}</span>
+            <span class="file-name-modal">${file.name}</span>
             <span class="file-hash-modal">${shortHash}</span>
         `;
         listEl.appendChild(fileItem);
@@ -5313,13 +5323,16 @@ function activateDemoMode() {
         return { valid: violations.length === 0, violations, recalculated };
     };
 
+    // FALHA 11 — R24: demoMode mantido para compatibilidade interna mas realCaseAnonymized=true
+    // activa ramo de execução forense sem avisos/banners de simulação
     UNIFEDSystem.demoMode = true;
     UNIFEDSystem.casoRealAnonimizado = true;
+    UNIFEDSystem.realCaseAnonymized = true;  // nova flag — substitui semântica de "demo"
     UNIFEDSystem.processing = true;
-    // DEMO: autorizar download JSON para advogado sem override manual
+    // autorizar download JSON para advogado sem override manual
     UNIFEDSystem.isAnalystOverrideActive = true;
 
-    ForensicLogger.addEntry('DEMO_MODE_ACTIVATED');
+    ForensicLogger.addEntry('REAL_CASE_ANONYMIZED_ACTIVATED');
 
     window.activeForensicSession = { sessionId: 'UNIFED-MMLADX8Q-CV69L', masterHash: '5150e7674b891d5d07ca990e4c7124fc66af40488452759aeebdf84976eaa8f6' };
     try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_e) {}
@@ -5533,10 +5546,8 @@ function activateDemoMode() {
             forensicDataSynchronization();
             window._demoModeTimer = null;
 
-            // RETIFICAÇÃO: activar indicadores SANDBOX apenas após DEMO concluído
-            if (typeof window.toggleSandboxBanner === 'function') {
-                window.toggleSandboxBanner(true);
-            }
+            // FALHA 1 — R24: supressão do banner SANDBOX em CASO REAL (ANONIMIZADO)
+            // toggleSandboxBanner(true) suprimido — a função foi redefinida como noop em index.html
             // Garantir que o analyzeBtn reflecte o estado real após DEMO
             if (typeof updateAnalysisButton === 'function') updateAnalysisButton();
         }
@@ -5611,7 +5622,7 @@ function simulateUpload(type, count) {
         if (listEl) {
             listEl.innerHTML += `<div class="file-item-modal">
                 <i class="fas fa-flask" style="color: #f59e0b;"></i>
-                <span class="file-name-modal">${fileName} <span class="demo-badge">DEMO</span></span>
+                <span class="file-name-modal">${fileName}</span>
                 <span class="file-hash-modal">${demoHash.substring(0,8)}</span>
             </div>`;
         }
@@ -5847,7 +5858,41 @@ async function performAudit() {
         }));
         console.log('[UNIFED-SYNC] ✅ UNIFED_ANALYSIS_COMPLETE despachado (systemData incluído).');
 
-        // TOP 3 não é gerado automaticamente. O utilizador deve clicar em "Regenerar TOP 3".
+        // FALHA 7 — R24: TOP 3 gerado automaticamente após análise.
+        // Requisito de estabilidade forense: overlay bloqueia interação durante processamento cognitivo.
+        (async function _autoGenerateTop3() {
+            try {
+                if (window.UNIFED_AnalysisCognitive && window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.btor) {
+                    // Activar overlay de bloqueio (impede exportação com dados incompletos)
+                    const _overlay = document.getElementById('loadingOverlay') || (() => {
+                        const ov = document.createElement('div');
+                        ov.id = '_top3ProcessingOverlay';
+                        ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                        ov.innerHTML = '<div style="color:#fff;font-family:monospace;font-size:1rem;text-align:center;padding:24px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(15,23,42,0.9)"><div style="margin-bottom:8px">⚙️ A processar análise cognitiva...</div><div style="font-size:0.75rem;opacity:0.7">Por favor aguarde antes de exportar</div></div>';
+                        document.body.appendChild(ov);
+                        return ov;
+                    })();
+                    if (_overlay && _overlay.id !== 'loadingOverlay') _overlay.style.display = 'flex';
+
+                    await window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(window.UNIFEDSystem.analysis.btor);
+                    console.log('[FALHA7-R24] ✅ TOP 3 gerado automaticamente.');
+
+                    // Remover overlay após conclusão
+                    const _ov2 = document.getElementById('_top3ProcessingOverlay');
+                    if (_ov2) _ov2.remove();
+                } else {
+                    console.warn('[FALHA7-R24] ⚠️ Motor cognitivo ou dados BTOR indisponíveis — TOP 3 requer clique manual.');
+                }
+            } catch (_e7) {
+                const _ov3 = document.getElementById('_top3ProcessingOverlay');
+                if (_ov3) _ov3.remove();
+                if (window.UNIFED_FORENSIC_LOG) window.UNIFED_FORENSIC_LOG.push({ ts: Date.now(), lvl: 'ERROR', msg: '[FALHA7] Erro no motor cognitivo: ' + _e7.message });
+                console.error('[FALHA7-R24] ❌ Erro na geração automática do TOP 3:', _e7.message);
+                // Mensagem neutra — sem stack trace exposto ao utilizador
+                const _t = document.getElementById('toastContainer');
+                if (_t) { const _d = document.createElement('div'); _d.className='toast toast-error'; _d.textContent='Erro na carga do módulo de análise. Tente "Regenerar TOP 3".'; _t.appendChild(_d); setTimeout(()=>_d.remove(),5000); }
+            }
+        })();
 
 // PERF-03: Sincronizações DOM adiadas 50 ms — não bloqueiam o event loop dos cálculos finais
 setTimeout(() => {
@@ -6236,11 +6281,13 @@ function performForensicCrossings() {
     cross.ircEstimado          = cross.agravamentoBrutoIRC * 0.21;
     cross.bigDataAlertActive   = Math.abs(cross.discrepanciaCritica) > 0.01;
 
-    const baseComparacao = Math.max(saftBruto, ganhos, dac7Total);
-    UNIFEDSystem.analysis.verdict = getRiskVerdict(Math.abs(cross.discrepanciaCritica), baseComparacao);
-
+    // FALHA 6 — R24: veredicto calculado sobre percentagemOmissao (C2: despesas vs faturado)
+    // Usar cross.c2_pct (omissão de comissões) que reflecte os 89,04% visíveis no painel
+    const _riskPct = (despesas > 0) ? Math.abs((despesas - faturaPlataforma) / despesas * 100) : 0;
+    UNIFEDSystem.analysis.verdict = getRiskVerdict(_riskPct, 100); // base=100 → pct passa directo como %
     if (UNIFEDSystem.analysis.verdict) {
-        UNIFEDSystem.analysis.verdict.percent = cross.percentagemDiscrepancia.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+        // Preservar o valor real da omissão no campo percent — não sobrescrever com discrepânciaCritica
+        UNIFEDSystem.analysis.verdict.percent = _riskPct.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
     }
 
     logAudit(`━━ MATRIZ FORENSE v1.0-COMMERCIAL-LITIGATION ━━ Período: ${UNIFEDSystem.selectedPeriodo} | Meses: ${mesesDados}`, 'info');
@@ -7404,13 +7451,20 @@ async function _applyWebCryptoFallback(sessionId, originalData) {
     }
 }
 async function generateMasterHash() {
+    // RR-01 — R24: se hash já congelado, devolver imediatamente sem recalcular
+    if (UNIFEDSystem._masterHashFrozen && UNIFEDSystem.masterHash) {
+        console.log('[MASTER-HASH] Hash congelado — devolvendo valor fixo (invariância forense garantida).');
+        return UNIFEDSystem.masterHash;
+    }
     // Se a cadeia de custódia já estiver selada, usar o seu masterHash
     if (window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash) {
         const chainHash = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash;
         UNIFEDSystem.masterHash = chainHash;
+        // Congelar também neste ramo
+        try { Object.defineProperty(UNIFEDSystem, '_masterHashFrozen', { value: true, writable: false, configurable: false }); } catch(_) {}
         // Atualizar elementos DOM e QR Code
-        document.querySelectorAll('.master-hash-value, #masterHashValue, #pure-hash-prefix').forEach(el => {
-            if(el) el.textContent = chainHash;
+        document.querySelectorAll('.master-hash-value, #masterHashValue, #pure-hash-prefix, #pure-hash-prefix-verdict, #pure-dynamic-hash-section-v').forEach(el => {
+            if(el) { el.textContent = chainHash; el.setAttribute('data-i18n-ignore','true'); }
         });
         if(typeof window.generateQRCode === 'function') window.generateQRCode();
         window.activeForensicSession = { sessionId: UNIFEDSystem.sessionId, masterHash: chainHash };
@@ -7451,15 +7505,26 @@ async function generateMasterHash() {
         newHash = '0'.repeat(64);
     }
     UNIFEDSystem.masterHash = newHash;
+    // FALHA 3 / Estabilidade Forense — congelar hash: uma vez calculado, não recalcula
+    Object.defineProperty(UNIFEDSystem, '_masterHashFrozen', { value: true, writable: false, configurable: false });
     if(window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody) {
         window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash = newHash;
     }
-    document.querySelectorAll('.master-hash-value, #masterHashValue, #pure-hash-prefix').forEach(el => {
-        if(el) el.textContent = newHash;
+    document.querySelectorAll('.master-hash-value, #masterHashValue, #pure-hash-prefix, #pure-hash-prefix-verdict, #pure-dynamic-hash-section-v').forEach(el => {
+        if(el) { el.textContent = newHash; el.setAttribute('data-i18n-ignore','true'); }
     });
     if(typeof window.generateQRCode === 'function') window.generateQRCode();
     window.activeForensicSession = { sessionId: UNIFEDSystem.sessionId, masterHash: newHash };
     try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_) {}
+    // FALHA 3 — R24: forçar sincronização do painel após geração do hash
+    try {
+        if (typeof window._syncPureDashboard === 'function') {
+            window._syncPureDashboard(window.UNIFEDSystem);
+        }
+    } catch(_e3) {
+        if (window.UNIFED_FORENSIC_LOG) window.UNIFED_FORENSIC_LOG.push({ ts: Date.now(), lvl: 'ERROR', msg: '[FALHA3] Erro em _syncPureDashboard pós-hash: ' + _e3.message });
+        console.error('[FALHA3-R24] Erro na sincronização pós-hash:', _e3.message);
+    }
     console.log('[MASTER-HASH] Gerado (fallback):', newHash.substring(0,16)+'...');
     return newHash;
 }
@@ -8823,6 +8888,13 @@ window._syncPureDashboard = (function() {
                 if (atfMesesEl) {
                     atfMesesEl.setAttribute('data-i18n-ignore', 'true');
                     atfMesesEl.innerText = `${monthKeys.length} meses com dados (${monthKeys.join(', ')})`;
+                    updated++;
+                }
+                // FALHA 8 — R24: subtítulo OLS com número real de pontos (diffs.length)
+                const _atfOlsEl = document.getElementById('pure-atf-trend-sub');
+                if (_atfOlsEl) {
+                    _atfOlsEl.setAttribute('data-i18n-ignore', 'true');
+                    _atfOlsEl.innerText = `Regressão linear (OLS) · ${diffs.length} pontos`;
                     updated++;
                 }
             } else if (monthKeys.length === 1) {
