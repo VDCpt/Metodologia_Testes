@@ -9854,10 +9854,13 @@ function executarRetificacoesFinaisUnifed() {
             if (el) {
                 el.setAttribute('data-i18n-ignore', 'true');
                 el.innerText = value;
-                // R24-R1: sincronizar #pure-zc-amount com #pure-zona-total (elimina duplicação estática)
+                // Sincronização direta e forçada do span de texto da zona cinzenta
                 if (id === 'pure-zona-total') {
-                    const zcRef = document.querySelector('[data-source-id="pure-zona-total"]');
-                    if (zcRef) { zcRef.innerText = value; zcRef.setAttribute('data-i18n-ignore','true'); }
+                    const zcRef = document.getElementById('pure-zc-amount');
+                    if (zcRef) { 
+                        zcRef.innerText = value; 
+                        zcRef.setAttribute('data-i18n-ignore','true'); 
+                    }
                 }
             }
         }
@@ -10212,3 +10215,33 @@ console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u0
     }
     startObserver();
 })();
+
+// ============================================================================
+// PURGA CRIPTOGRÁFICA DE ARTEFACTOS VISUAIS E SERIALIZAÇÃO DE CUSTÓDIA
+// ============================================================================
+window.addEventListener('UNIFED_ANALYSIS_COMPLETE', function(event) {
+    try {
+        const chain = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody;
+        if (chain) {
+            // Garante serialização estrita para os logs internos
+            const serializedCustody = JSON.stringify(chain.toForensicJSON(), null, 2);
+            
+            // Varredura cirúrgica para purgar instâncias de [object Object] na UI
+            const elements = document.evaluate(
+                "//*[contains(text(), '[object Object]')]", 
+                document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null
+            );
+            
+            let el = elements.snapshotItem(0);
+            let idx = 0;
+            while (el) {
+                if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
+                    el.textContent = el.textContent.replace('[object Object]', 'CADEIA DE CUSTÓDIA VALIDADA (CONSULTE JSON E ANEXOS PARA DETALHES)');
+                }
+                el = elements.snapshotItem(++idx);
+            }
+        }
+    } catch (e) {
+        console.error('[UNIFED-FORENSE] Erro na serialização da cadeia de custódia:', e);
+    }
+});

@@ -754,6 +754,46 @@ window._syncPureDashboard = (function() {
         const _elIva6Val = document.getElementById('iva6Value');
         if (_elIva6Val) { _elIva6Val.innerText = fmt(_iva6Omitido); updated++; }
 
+        // ── RECTIFICAÇÃO R24-MACRO (RETIFICADO) ───────────────────────────────────
+        const cross = system.analysis?.crossings || {};
+        const macroMeses = (system.dataMonths && system.dataMonths.size > 0) ? system.dataMonths.size : 1;
+        const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
+        // Integração obrigatória da heurística de segurança forense (0.85)
+        const macroMensal   = (macroMedia * 38000) * 0.85;
+        const macroAnual    = macroMensal * 12;
+        const macro7Anos    = macroAnual * 7;
+        const fmtMacro = window.formatForensicCurrency || fmt;
+
+        const macroMediaEl  = document.getElementById('pure-macro-media');
+        const macroMensalEl = document.getElementById('pure-macro-mensal');
+        const macroAnualEl  = document.getElementById('pure-macro-anual');
+        const macro7AnosEl  = document.getElementById('pure-macro-7anos');
+        if (macroMediaEl)  { macroMediaEl.innerText  = fmtMacro(macroMedia);  updated++; }
+        if (macroMensalEl) { macroMensalEl.innerText = fmtMacro(macroMensal); updated++; }
+        if (macroAnualEl)  { macroAnualEl.innerText  = fmtMacro(macroAnual);  updated++; }
+        if (macro7AnosEl)  { macro7AnosEl.innerText  = fmtMacro(macro7Anos);  updated++; }
+        // ── FIM RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────
+
+        // ── CORREÇÃO DA ZONA CINZENTA ─────────────────────────────────────────────
+        const _zcAmountEl = document.getElementById('pure-zc-amount');
+        if (_zcAmountEl) {
+            _zcAmountEl.innerText = fmt(_totalNaoSujeitos);
+            _zcAmountEl.setAttribute('data-i18n-ignore', 'true');
+            updated++;
+        }
+        // ──────────────────────────────────────────────────────────────────────────
+
+        // Master hash consolidado e Desbloqueio da UI
+        const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';
+        // Injeção do seletor #pure-dynamic-hash-section-v para remover [A PROCESSAR ASSINATURA DIGITAL...]
+        document.querySelectorAll('.master-hash-value, .hash-value, #pure-hash-prefix, #pure-hash-prefix-verdict, #pure-dynamic-hash-section-v').forEach(el => {
+            if(el && el.textContent !== masterHash) {
+                el.setAttribute('data-i18n-ignore','true');
+                el.textContent = masterHash;
+            }
+        });
+        if(typeof window.generateQRCode === 'function') window.generateQRCode();
+
         console.log(`[UNIFED-PURE] ✅ Dashboard sincronizado — ${updated} elementos atualizados.`);
         retryCount = 0;
         syncPending = false;
