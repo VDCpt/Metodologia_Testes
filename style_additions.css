@@ -216,13 +216,24 @@
 .pure-sg-row {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;              /* espaço mínimo garantido entre label e valor */
   font-size: 0.75rem;
   color: rgba(255,255,255,0.7);
-  margin-bottom: 4px;
+  margin-bottom: 8px;     /* aumentado de 4px → 8px para separar as duas linhas */
 }
 
-.pure-sg-key { opacity: 0.7; }
-.pure-sg-val { font-weight: 600; }
+.pure-sg-key {
+  opacity: 0.7;
+  flex-shrink: 1;         /* pode encolher se necessário */
+  min-width: 0;
+}
+
+.pure-sg-val {
+  font-weight: 600;
+  white-space: nowrap;    /* valor nunca quebra linha — não colide com o label */
+  flex-shrink: 0;         /* valor não encolhe — label cede espaço primeiro */
+}
 
 .pure-sg-delta {
   display: flex;
