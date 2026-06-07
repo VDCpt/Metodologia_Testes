@@ -29,14 +29,14 @@
                 return BLOCKED_DOMAINS.some(domain => url.indexOf(domain) !== -1);
             }
             // Fetch seletivo
-            const originalFetch = window.fetch;
+            const originalFetch = window.fetch.bind(window); // Vinculação estrita ao escopo global
             window.fetch = function(...args) {
                 const url = args[0];
                 if (isBlocked(url)) {
                     console.warn(LOG_PREFIX + " Requisição bloqueada (domínio restrito):", url);
                     return Promise.reject(new Error("Network Isolation: domain blocked"));
                 }
-                return originalFetch.apply(window, args);
+                return originalFetch(...args); // Invocação direta segura
             };
             // XHR seletivo
             const originalOpen = XMLHttpRequest.prototype.open;
