@@ -8838,17 +8838,17 @@ window._syncPureDashboard = (function() {
             const sgTable = document.getElementById('smoking-gun-table');
             if (sg1El && sg1Delta > 0.01) {
                 sg1El.removeAttribute('style');
-                sg1El.style.display = 'table-row'; // tr element — table-row é o display correcto
+                sg1El.style.display = 'grid'; // div element — grid activa os 8 colunas
                 sg1El.classList.add('is-visible');
             }
             if (sg2El && sg2Delta > 0.01) {
                 sg2El.removeAttribute('style');
-                sg2El.style.display = 'table-row'; // tr element — table-row é o display correcto
+                sg2El.style.display = 'grid'; // div element — grid activa os 8 colunas
                 sg2El.classList.add('is-visible');
             }
             // Revelar a tabela pai quando pelo menos uma linha estiver visível
             if (sgTable && ((sg1El && sg1Delta > 0.01) || (sg2El && sg2Delta > 0.01))) {
-                sgTable.style.display = 'table';
+                sgTable.style.display = 'block';
             }
             // Colarinho branco: activar se qualquer smoking gun > limiar
             const wcCard = document.getElementById('colarinho-branco');
