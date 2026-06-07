@@ -1529,6 +1529,16 @@
         // =========================================================================
         const omissaoReceita = m.saftGross - m.dac7Total;               // 472,81 €
         const omissaoCustos  = m.btorLedger - m.btfInvoice;            // 2184,95 €
+
+        // ── Quesito de Exclusão Fiscal (ISENCAO_BASE_TRIBUTAVEL = 451,15 €) ──────
+        // Subtrai o valor não sujeito a comissão da base de cálculo antes dos
+        // cálculos fiscais finais. Mantém omissaoCustos original para os valores
+        // brutos do dashboard (BTOR, BTF) sem alteração.
+        // Aplica-se apenas se omissaoCustos > ISENCAO_BASE_TRIBUTAVEL (evita negativos).
+        const baseTributavelAjustada   = Math.max(0, omissaoCustos - ISENCAO_BASE_TRIBUTAVEL);
+        const omissaoCustosAjustada    = baseTributavelAjustada;        // base fiscal líquida
+        const iva23Ajustado            = omissaoCustosAjustada * 0.23;  // IVA 23% sobre base ajustada
+        // ────────────────────────────────────────────────────────────────────────
         const percOmissaoCustos = m.omissionPct;                       // 89.26%
         const gapEntreFaturadoETransferido = m.saftGross - m.ganhos;    // pode ser negativo
         const liquidoDeclarado = (m.saftGross - m.btfInvoice);          // aproximado

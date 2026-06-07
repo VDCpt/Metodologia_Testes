@@ -521,6 +521,21 @@ window.UNIFED_AnalysisCognitive = {
 };
 
 // ============================================================================
+// _nexusFullDisclose — Purga Ativa do #top3Container (R3 Evolução · script.js)
+// Complementar à implementação em nexus.js. Garante purga atómica mesmo quando
+// nexus.js ainda não carregou ou o evento é disparado antes do módulo NEXUS·M5.
+// ============================================================================
+window._nexusFullDisclose = window._nexusFullDisclose || function() {
+    const wrapper = document.getElementById('lawyerContradictoryPanel');
+    const container = document.getElementById('top3Container');
+    if (wrapper) wrapper.style.display = 'block';
+    if (container) {
+        container.innerHTML = ''; // Purga coerciva — dados ausentes até regeneração explícita
+        console.log('[SECURITY] DOM Purged: #top3Container');
+    }
+};
+
+// ============================================================================
 // UI RENDERING — TOP 3 QUESTIONS
 // ============================================================================
 
