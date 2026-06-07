@@ -1115,7 +1115,6 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
   <script>
   // RETIFICAÇÃO R24: sincronizar visibilidade do badge com o card colarinho-branco
   (function() {
-    const orig = window.HTMLElement.prototype.style;
     const observer = new MutationObserver(function(muts) {
       const card = document.getElementById('colarinho-branco');
       const badge = document.getElementById('pure-badge-crime');
