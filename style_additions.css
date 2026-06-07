@@ -1682,9 +1682,11 @@
 }
 
 /* ============================================================
-   LAYOUT HORIZONTAL DEFINITIVO — EVIDÊNCIA DE MATERIALIDADE
+   LAYOUT HORIZONTAL — ESPECIFICIDADE MÁXIMA (IDs + classes)
+   Seletor: #pureDashboard .pure-sg-container .pure-sg-row
+   Prevalece sobre qualquer regra de classe simples.
    ============================================================ */
-.pure-sg-row {
+#pureDashboard .pure-sg-container .pure-sg-row {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
     gap: 48px !important;
@@ -1693,7 +1695,7 @@
     width: 100% !important;
 }
 
-.pure-sg-key {
+#pureDashboard .pure-sg-container .pure-sg-key {
     text-align: left !important;
     font-weight: 600 !important;
     color: #94a3b8 !important;
@@ -1701,7 +1703,7 @@
     word-break: keep-all !important;
 }
 
-.pure-sg-val {
+#pureDashboard .pure-sg-container .pure-sg-val {
     text-align: right !important;
     white-space: nowrap !important;
     font-weight: 800 !important;

@@ -385,50 +385,45 @@
   })();
   </script>
 <script>
-(function fixSmokingGunLayoutPermanent() {
-    function applyGridLayout(row) {
-        if (!row) return;
-        row.style.display = 'grid';
-        row.style.gridTemplateColumns = '1fr auto';
-        row.style.gap = '48px';
-        row.style.marginBottom = '24px';
-        row.style.alignItems = 'baseline';
-        const key = row.querySelector('.pure-sg-key');
-        const val = row.querySelector('.pure-sg-val');
-        if (key) key.style.textAlign = 'left';
-        if (val) {
-            val.style.textAlign = 'right';
-            val.style.whiteSpace = 'nowrap';
-        }
-    }
+(function enforceHorizontalLayoutPermanent() {
+    var _applying = false; // flag anti-loop: impede que setProperty dispare nova mutação
 
-    function applyToAllRows() {
-        document.querySelectorAll('.pure-sg-row').forEach(applyGridLayout);
-    }
-
-    applyToAllRows();
-
-    const observer = new MutationObserver(function(mutations) {
-        let needUpdate = false;
-        mutations.forEach(mut => {
-            if (mut.type === 'childList' && mut.addedNodes.length) needUpdate = true;
-            if (mut.type === 'attributes' && mut.attributeName === 'style') {
-                if (mut.target.classList && mut.target.classList.contains('pure-sg-row')) needUpdate = true;
+    function applyGridToAllRows() {
+        if (_applying) return;
+        _applying = true;
+        document.querySelectorAll('.pure-sg-row').forEach(function(row) {
+            row.style.setProperty('display',               'grid',     'important');
+            row.style.setProperty('grid-template-columns', '1fr auto', 'important');
+            row.style.setProperty('gap',                   '48px',     'important');
+            row.style.setProperty('margin-bottom',         '24px',     'important');
+            row.style.setProperty('align-items',           'baseline', 'important');
+            var key = row.querySelector('.pure-sg-key');
+            var val = row.querySelector('.pure-sg-val');
+            if (key) key.style.setProperty('text-align', 'left',   'important');
+            if (val) {
+                val.style.setProperty('text-align',   'right',  'important');
+                val.style.setProperty('white-space',  'nowrap', 'important');
             }
         });
-        if (needUpdate) setTimeout(applyToAllRows, 50);
-    });
+        console.log('[LAYOUT] Grid aplicado a', document.querySelectorAll('.pure-sg-row').length, 'linhas');
+        _applying = false;
+    }
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
+    applyGridToAllRows();
 
-    document.addEventListener('DOMContentLoaded', applyToAllRows);
-    document.addEventListener('UNIFED_ANALYSIS_COMPLETE', function() { setTimeout(applyToAllRows, 100); });
-    document.addEventListener('UNIFED_DEMO_COMPLETE',     function() { setTimeout(applyToAllRows, 100); });
+    // Observer apenas para childList (novos nós) — NÃO observa attributes
+    // para evitar loop infinito causado pelo próprio setProperty
+    var observer = new MutationObserver(function(mutations) {
+        var hasNewNodes = mutations.some(function(m) {
+            return m.type === 'childList' && m.addedNodes.length > 0;
+        });
+        if (hasNewNodes) setTimeout(applyGridToAllRows, 50);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    document.addEventListener('DOMContentLoaded', applyGridToAllRows);
+    document.addEventListener('UNIFED_ANALYSIS_COMPLETE', function() { setTimeout(applyGridToAllRows, 100); });
+    document.addEventListener('UNIFED_DEMO_COMPLETE',     function() { setTimeout(applyGridToAllRows, 100); });
 })();
 </script>
 </section>
