@@ -36,7 +36,7 @@
                     console.warn(LOG_PREFIX + " Requisição bloqueada (domínio restrito):", url);
                     return Promise.reject(new Error("Network Isolation: domain blocked"));
                 }
-                return originalFetch.apply(this, args);
+                return originalFetch.apply(window, args);
             };
             // XHR seletivo
             const originalOpen = XMLHttpRequest.prototype.open;
@@ -1987,32 +1987,30 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 if (masterHash && masterHash.length === 64) {
                     qrTarget.innerHTML = '';
                     try {
-                        // Criar um elemento canvas directamente e usar QRCode
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 84;
-                        canvas.height = 84;
+                        // Isolar a criação num elemento temporário fora do DOM visível
+                        // para evitar o erro "Illegal invocation" em alguns contextos de canvas
                         const tempDiv = document.createElement('div');
                         tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
                         document.body.appendChild(tempDiv);
                         new QRCode(tempDiv, {
                             text: 'UNIFED-PROBATUM|SESSAO:' + sessionId + '|SHA256:' + masterHash,
-                            width: 84,
-                            height: 84,
-                            colorDark: '#000000',
-                            colorLight: '#ffffff',
+                            width: 84, height: 84,
+                            colorDark: '#000000', colorLight: '#ffffff',
                             correctLevel: QRCode.CorrectLevel.L
                         });
-                        // Aguardar renderização
+                        // Aguardar renderização assíncrona do canvas antes de mover para o target
                         setTimeout(function() {
-                            const canvasFromTemp = tempDiv.querySelector('canvas');
-                            if (canvasFromTemp) {
+                            const canvas = tempDiv.querySelector('canvas');
+                            if (canvas) {
                                 qrTarget.innerHTML = '';
-                                qrTarget.appendChild(canvasFromTemp);
+                                qrTarget.appendChild(canvas);
                             } else {
                                 qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">QR indisponível</span>';
                             }
-                            if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
-                        }, 100);
+                            if (document.body.contains(tempDiv)) {
+                                document.body.removeChild(tempDiv);
+                            }
+                        }, 50);
                     } catch(e) {
                         console.warn('[QRCode] Erro ao gerar QR:', e);
                         qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">QR indisponível</span>';

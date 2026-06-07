@@ -346,7 +346,7 @@
             // Permite apenas requisições para recursos locais (relativas ou data:)
             var isLocal = (url.indexOf('http') !== 0) || url.indexOf(window.location.origin) === 0 || url.indexOf('data:') === 0;
             if (isLocal) {
-                return _origFetch.apply(this, arguments);
+                return _origFetch.apply(window, arguments);
             }
 
             // Qualquer outro pedido externo não explicitamente listado também é bloqueado
@@ -1496,7 +1496,7 @@ function _injectForecastIntoChart(forecast, historicLen) {
         if (window._fullDisclosureApplied) return;
 
         try {
-            var cards = document.querySelectorAll('.pure-card, .pure-card-alert, .pure-card-verdict');
+            var cards = document.querySelectorAll('.pure-card:not(#lawyerContradictoryPanel), .pure-card-alert, .pure-card-verdict');
             cards.forEach(function(el) {
                 if (el.style.display === 'none') el.style.display = '';
                 if (el.style.opacity  === '0')   el.style.opacity  = '1';
