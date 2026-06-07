@@ -5540,7 +5540,7 @@ function activateDemoMode() {
             // Garantir que o analyzeBtn reflecte o estado real após DEMO
             if (typeof updateAnalysisButton === 'function') updateAnalysisButton();
         }
-    }, 1500);
+    }, 300); // PERF-01: Reduzido de 1500 → 300 ms (timeout artificial eliminado)
 }
 
 function simulateUpload(type, count) {
@@ -5655,7 +5655,10 @@ async function performAudit() {
         analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A EXECUTAR PERÍCIA BIG DATA...';
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // PERF-02: Em modo DEMO suprime espera artificial (interface já tem spinner)
+    if (!UNIFEDSystem.demoMode) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     try {
 
@@ -5846,6 +5849,8 @@ async function performAudit() {
 
         // TOP 3 não é gerado automaticamente. O utilizador deve clicar em "Regenerar TOP 3".
 
+// PERF-03: Sincronizações DOM adiadas 50 ms — não bloqueiam o event loop dos cálculos finais
+setTimeout(() => {
 if (typeof window._syncPureDashboard === 'function') {
     // ── RECTIFICAÇÃO D-03 ────────────────────────────────────────────────────
     // Argumento `system` era omitido → performSync() recebia undefined →
@@ -5887,6 +5892,11 @@ else {
         if (typeof window._activatePurePanel === 'function') {
             window._activatePurePanel();
         }
+
+        if (typeof generateQRCode === 'function') {
+            generateQRCode();
+        }
+}, 50); // fim PERF-03
 
 if (!UNIFEDSystem.demoMode && !UNIFEDSystem.casoRealAnonimizado) {
     if (typeof deepFreeze === 'function' && UNIFEDSystem.analysis && !Object.isFrozen(UNIFEDSystem.analysis)) {
@@ -8838,17 +8848,17 @@ window._syncPureDashboard = (function() {
             const sgTable = document.getElementById('smoking-gun-table');
             if (sg1El && sg1Delta > 0.01) {
                 sg1El.removeAttribute('style');
-                sg1El.style.display = 'grid'; // div element — grid activa os 8 colunas
+                sg1El.style.display = 'table-row'; // tr element — table-row é o display correcto
                 sg1El.classList.add('is-visible');
             }
             if (sg2El && sg2Delta > 0.01) {
                 sg2El.removeAttribute('style');
-                sg2El.style.display = 'grid'; // div element — grid activa os 8 colunas
+                sg2El.style.display = 'table-row'; // tr element — table-row é o display correcto
                 sg2El.classList.add('is-visible');
             }
             // Revelar a tabela pai quando pelo menos uma linha estiver visível
             if (sgTable && ((sg1El && sg1Delta > 0.01) || (sg2El && sg2Delta > 0.01))) {
-                sgTable.style.display = 'block';
+                sgTable.style.display = 'table';
             }
             // Colarinho branco: activar se qualquer smoking gun > limiar
             const wcCard = document.getElementById('colarinho-branco');
