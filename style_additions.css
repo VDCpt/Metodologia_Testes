@@ -1713,29 +1713,34 @@
 }
 
 /* ============================================================
-   FORÇA BRUTA: LAYOUT HORIZONTAL NO PAINEL II
+   LAYOUT CSS GRID — EVIDÊNCIA DE MATERIALIDADE (resolve colagem)
+   grid-template-columns: 1fr auto — label expande, valor alinha à direita
    ============================================================ */
 .pure-sg-row {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: baseline !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 24px !important;
     margin-bottom: 20px !important;
-    gap: 40px !important;
+    align-items: baseline !important;
     width: 100% !important;
 }
 
 .pure-sg-key {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 100px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
     white-space: normal !important;
 }
 
 .pure-sg-val {
-    flex: 0 0 auto !important;
+    text-align: right !important;
     white-space: nowrap !important;
     font-weight: 800 !important;
     font-size: 1.1rem !important;
-    text-align: right !important;
+    color: #f8fafc !important;
+}
+
+/* Garantir que o container dos smoking guns não constrange a largura */
+.pure-sg {
+    width: 100% !important;
 }

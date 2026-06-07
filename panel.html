@@ -385,22 +385,23 @@
   })();
   </script>
 <script>
-(function fixSmokingGunLayout() {
+(function fixSmokingGunLayoutFinal() {
     function applyLayout() {
         const rows = document.querySelectorAll('.pure-sg-row');
         rows.forEach(row => {
-            row.style.display        = 'flex';
-            row.style.flexDirection  = 'row';
-            row.style.justifyContent = 'space-between';
-            row.style.alignItems     = 'baseline';
-            row.style.marginBottom   = '20px';
-            row.style.gap            = '40px';
+            row.style.display              = 'grid';
+            row.style.gridTemplateColumns  = '1fr auto';
+            row.style.gap                  = '32px';
+            row.style.marginBottom         = '20px';
+            row.style.alignItems           = 'baseline';
+            const key = row.querySelector('.pure-sg-key');
+            const val = row.querySelector('.pure-sg-val');
+            if (key) key.style.textAlign = 'left';
+            if (val) { val.style.textAlign = 'right'; val.style.whiteSpace = 'nowrap'; }
         });
     }
-    // Executa imediatamente (elementos já no DOM) e após DOMContentLoaded (garante cobertura)
     applyLayout();
-    document.addEventListener('DOMContentLoaded', applyLayout);
-    // Reaplica após eventos que possam reinjetar os cards (análise forense, DEMO)
+    document.addEventListener('DOMContentLoaded',        applyLayout);
     document.addEventListener('UNIFED_ANALYSIS_COMPLETE', applyLayout);
     document.addEventListener('UNIFED_DEMO_COMPLETE',     applyLayout);
 })();
