@@ -1623,13 +1623,22 @@
    Regras específicas para .card-title e .card-value dos novos cards #card-omissao
    e #card-saft. Complementam as regras gerais de .pure-card e .pure-card-grid.
    ============================================================================ */
-.pure-card-grid {
+.pure-card-grid,
+#materialidade-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr 1fr;       /* duas colunas iguais lado a lado */
     gap: 15px;
     margin-top: 20px;
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Em ecrãs pequenos (≤ 640px) volta a uma coluna */
+@media (max-width: 640px) {
+    .pure-card-grid,
+    #materialidade-cards {
+        grid-template-columns: 1fr;
+    }
 }
 
 .pure-card {
@@ -1645,6 +1654,7 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;
+    white-space: nowrap;        /* evita quebra de título em duas linhas */
 }
 
 .pure-card .card-value {
