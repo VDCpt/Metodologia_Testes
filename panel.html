@@ -385,25 +385,50 @@
   })();
   </script>
 <script>
-(function fixSmokingGunLayoutFinal() {
-    function applyLayout() {
-        const rows = document.querySelectorAll('.pure-sg-row');
-        rows.forEach(row => {
-            row.style.display              = 'grid';
-            row.style.gridTemplateColumns  = '1fr auto';
-            row.style.gap                  = '32px';
-            row.style.marginBottom         = '20px';
-            row.style.alignItems           = 'baseline';
-            const key = row.querySelector('.pure-sg-key');
-            const val = row.querySelector('.pure-sg-val');
-            if (key) key.style.textAlign = 'left';
-            if (val) { val.style.textAlign = 'right'; val.style.whiteSpace = 'nowrap'; }
-        });
+(function fixSmokingGunLayoutPermanent() {
+    function applyGridLayout(row) {
+        if (!row) return;
+        row.style.display = 'grid';
+        row.style.gridTemplateColumns = '1fr auto';
+        row.style.gap = '48px';
+        row.style.marginBottom = '24px';
+        row.style.alignItems = 'baseline';
+        const key = row.querySelector('.pure-sg-key');
+        const val = row.querySelector('.pure-sg-val');
+        if (key) key.style.textAlign = 'left';
+        if (val) {
+            val.style.textAlign = 'right';
+            val.style.whiteSpace = 'nowrap';
+        }
     }
-    applyLayout();
-    document.addEventListener('DOMContentLoaded',        applyLayout);
-    document.addEventListener('UNIFED_ANALYSIS_COMPLETE', applyLayout);
-    document.addEventListener('UNIFED_DEMO_COMPLETE',     applyLayout);
+
+    function applyToAllRows() {
+        document.querySelectorAll('.pure-sg-row').forEach(applyGridLayout);
+    }
+
+    applyToAllRows();
+
+    const observer = new MutationObserver(function(mutations) {
+        let needUpdate = false;
+        mutations.forEach(mut => {
+            if (mut.type === 'childList' && mut.addedNodes.length) needUpdate = true;
+            if (mut.type === 'attributes' && mut.attributeName === 'style') {
+                if (mut.target.classList && mut.target.classList.contains('pure-sg-row')) needUpdate = true;
+            }
+        });
+        if (needUpdate) setTimeout(applyToAllRows, 50);
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+    });
+
+    document.addEventListener('DOMContentLoaded', applyToAllRows);
+    document.addEventListener('UNIFED_ANALYSIS_COMPLETE', function() { setTimeout(applyToAllRows, 100); });
+    document.addEventListener('UNIFED_DEMO_COMPLETE',     function() { setTimeout(applyToAllRows, 100); });
 })();
 </script>
 </section>
