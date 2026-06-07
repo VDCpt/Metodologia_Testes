@@ -483,7 +483,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 </div>
                 <div class="control-group">
                     <button id="closeMethodologyBtn" style="height:38px; font-size:11px; background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#ef4444; cursor:pointer; border-radius:6px; transition:all 0.3s; padding:0 16px; font-weight:bold; white-space:nowrap; margin-right:8px;" data-pt="🛑 Encerrar Sessão Pericial" data-en="🛑 Terminate Forensic Session">🛑 Encerrar Sessão Pericial</button>
-                    <button id="demoModeBtn" class="btn-demo-nav"><i class="fas fa-flask"></i><span id="demoBtnText">CASO SIMULADO</span></button>
+                    <button id="demoModeBtn" class="btn-demo-nav"><i class="fas fa-flask"></i><span id="demoBtnText">CASO REAL (ANONIMIZADO)</span></button>
                     <button id="langToggleBtn" class="btn-lang-toggle"><i class="fas fa-globe"></i><span id="currentLangLabel">PT</span></button>
                     <button id="viewLogsHeaderBtn" class="btn-tool" title="Ver Registo de Atividades (Art. 30 RGPD)"><i class="fas fa-history"></i></button>
                 </div>
@@ -1555,7 +1555,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                             <button id="otsSealBtn" style="display:none; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.3);
                                        color:#4ade80; padding:8px 20px; border-radius:4px; cursor:pointer;
                                        font-family:'JetBrains Mono',monospace; font-size:0.75rem; letter-spacing:1px;">
-                                <i class="fas fa-stamp"></i> SELAR OTS (RFC 3161)
+                                <i class="fas fa-stamp"></i> SELAR OTS (RFC 3161) <span style="font-size:0.6rem;opacity:0.65;display:block;margin-top:2px;">Selagem RFC 3161 simulada localmente em demonstração</span>
                             </button>
                             <button id="nivel2SealBtn" style="display:none; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3);
                                        color:#f59e0b; padding:8px 20px; border-radius:4px; cursor:pointer;
@@ -1566,7 +1566,10 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
 
                         <div id="forensic-disclaimer" style="display:none; margin-top:0.5rem; font-size:0.65rem; color:#64748b; font-family:monospace; text-align:center;"></div>
 
-                        <div id="sandboxBannerInline" data-frozen="true" style="
+                        <div id="demoDisclaimer" style="display:none; margin-top: 8px; font-size: 0.7rem; color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; padding: 4px 12px; text-align:center; letter-spacing:0.8px; font-family:'JetBrains Mono',monospace;">
+                        ⚠️ DEMONSTRAÇÃO BASEADA EM DADOS REAIS ANONIMIZADOS · NÃO CONSTITUI PROVA EM TRIBUNAL
+                    </div>
+                    <div id="sandboxBannerInline" data-frozen="true" style="
                             display: none !important;
                             position: relative;
                             clear: both;

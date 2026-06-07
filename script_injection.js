@@ -625,7 +625,7 @@ document.addEventListener('click', function(e) {
 window._syncPureDashboard = (function() {
     let retryCount = 0;
     const MAX_RETRIES = 5;
-    const RETRY_DELAY_MS = 100;
+    const RETRY_DELAY_MS = 50; // FALHA 14 — R24: reduzido de 100 → 50ms
     let syncPending = false;
 
     function performSync(system, isRetry = false) {

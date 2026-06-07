@@ -1921,9 +1921,73 @@
                 { text: "3. VEREDICTO DE RISCO / RISK VERDICT (RGIT - Art. 103.º)", style: 'h2' },
                 { text: `[I] RISCO CRÍTICO\nExpense Omission / Omissão Custos: ${percOmissaoCustos.toFixed(2)}% | Gross Earnings: ${formatForensicCurrency(m.ganhos)}\nRevenue Gap (DAC7): ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%)\n\nIndícios de desconformidade fiscal significativa.`, style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 9. SMOKING GUN DUPLA ==========
-                { text: "4. PROVA RAINHA / CRITICAL DIVERGENCE (SMOKING GUN)", style: 'h2' },
-                { text: `[X] SMOKING GUN — DUPLA DIVERGÊNCIA CRÍTICA\n\nSMOKING GUN 1 — SAF-T Valor Bruto Total vs DAC7 / Omissão de Receita:\nGanhos Brutos (Auditado): ${formatForensicCurrency(m.ganhos)}\nGanhos Reportados (DAC7): ${formatForensicCurrency(m.dac7Total)}\n[I] DIFERENÇA OMITIDA (AT): ${formatForensicCurrency(omissaoReceita)}\n\nSMOKING GUN 2 — Diferencial de Base em Análise (Despesas/Comissões vs Fatura):\nComissões Retidas (Extrato): ${formatForensicCurrency(m.btorLedger)}\nComissões Faturadas (BTF): ${formatForensicCurrency(m.btfInvoice)}\n[I] DIFERENÇA OMITIDA (AT): ${formatForensicCurrency(omissaoCustos)} (${percOmissaoCustos.toFixed(2)}%)`, style: 'normal', margin: [0, 0, 0, 15] },
+                // ========== 9. PROVA RAINHA — TABELA 5 COLUNAS (FALHA 6 — R24) ==========
+                { text: isPT ? '4. EVIDÊNCIA DE MATERIALIDADE — PROVAS RAINHA' : '4. MATERIALITY EVIDENCE — QUEEN\u2019S PROOF', style: 'h2' },
+                {
+                    margin: [0, 4, 0, 15],
+                    table: {
+                        widths: ['18%', '18%', '18%', '22%', '24%'],
+                        headerRows: 0,
+                        body: [
+                            // LINHA CABEÇALHO
+                            [
+                                { text: isPT ? 'PROVA RAINHA' : 'QUEEN’S PROOF', style: 'tableHeader', fillColor: '#0f172a' },
+                                { text: isPT ? 'VALOR BASE' : 'BASE VALUE', style: 'tableHeader', fillColor: '#0f172a' },
+                                { text: isPT ? 'VALOR DECLARADO' : 'DECLARED VALUE', style: 'tableHeader', fillColor: '#0f172a' },
+                                { text: 'DELTA / %', style: 'tableHeader', fillColor: '#0f172a' },
+                                { text: isPT ? 'VIOLAÇÃO LEGAL' : 'LEGAL VIOLATION', style: 'tableHeader', fillColor: '#0f172a' }
+                            ],
+                            // PROVA RAINHA II — OMISSÃO DE FATURAÇÃO
+                            [
+                                { stack: [
+                                    { text: '🔫 ' + (isPT ? 'PROVA RAINHA II' : 'QUEEN’S PROOF II'), bold: true, color: '#ef4444', fontSize: 8 },
+                                    { text: isPT ? 'Omissão de Faturação (Subdeclaração)' : 'Invoice Omission (Under-declaration)', fontSize: 7, color: '#94a3b8' }
+                                ], fillColor: '#1e0a0a', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: 'BTOR (' + (isPT ? 'Extrato' : 'Statement') + ')', fontSize: 6.5, color: '#94a3b8' },
+                                    { text: formatForensicCurrency(m.btorLedger), bold: true, fontSize: 10, color: '#f8fafc' }
+                                ], alignment: 'center', fillColor: '#0f172a', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: 'BTF (' + (isPT ? 'Fatura' : 'Invoice') + ')', fontSize: 6.5, color: '#94a3b8' },
+                                    { text: formatForensicCurrency(m.btfInvoice), bold: true, fontSize: 10, color: '#f8fafc' }
+                                ], alignment: 'center', fillColor: '#0f172a', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: isPT ? 'OMISSÃO DE FATURAÇÃO' : 'INVOICE OMISSION', bold: true, fontSize: 7, color: '#ef4444' },
+                                    { text: formatForensicCurrency(omissaoCustos), bold: true, fontSize: 12, color: '#ef4444' },
+                                    { text: '(' + percOmissaoCustos.toFixed(2) + '%)', fontSize: 8, color: '#f87171' }
+                                ], alignment: 'center', fillColor: '#1a0808', margin: [4,6,4,6] },
+                                { text: 'Art. 103.º RGIT (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
+                            ],
+                            // PROVA RAINHA I — RETENÇÃO ILÍCITA
+                            [
+                                { stack: [
+                                    { text: '🔫 ' + (isPT ? 'PROVA RAINHA I' : 'QUEEN’S PROOF I'), bold: true, color: '#f59e0b', fontSize: 8 },
+                                    { text: isPT ? 'Retenção Ilícita de Comissões' : 'Unlawful Retention of Commissions', fontSize: 7, color: '#94a3b8' }
+                                ], fillColor: '#1a1200', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: 'SAF-T (' + (isPT ? 'Bruto' : 'Gross') + ')', fontSize: 6.5, color: '#94a3b8' },
+                                    { text: formatForensicCurrency(m.ganhos), bold: true, fontSize: 10, color: '#f8fafc' }
+                                ], alignment: 'center', fillColor: '#0f172a', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: 'DAC7 (AT)', fontSize: 6.5, color: '#94a3b8' },
+                                    { text: formatForensicCurrency(m.dac7Total), bold: true, fontSize: 10, color: '#f8fafc' }
+                                ], alignment: 'center', fillColor: '#0f172a', margin: [4,6,4,6] },
+                                { stack: [
+                                    { text: isPT ? 'DISCREPÂNCIA' : 'DISCREPANCY', bold: true, fontSize: 7, color: '#f59e0b' },
+                                    { text: formatForensicCurrency(omissaoReceita), bold: true, fontSize: 12, color: '#f59e0b' },
+                                    { text: '(' + m.discrepancyPct.toFixed(2) + '%)', fontSize: 8, color: '#fbbf24' }
+                                ], alignment: 'center', fillColor: '#1a1400', margin: [4,6,4,6] },
+                                { text: 'Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
+                            ]
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: () => 0.5,
+                        vLineWidth: () => 0.5,
+                        hLineColor: () => '#334155',
+                        vLineColor: () => '#334155'
+                    }
+                },
 
                 // ========== 10. ENQUADRAMENTO LEGAL ==========
                 { text: "5. ENQUADRAMENTO LEGAL", style: 'h2' },
@@ -2255,9 +2319,10 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' }
             },
             watermark: {
+                // FALHA 16 — R24: opacidade reduzida de 0.04 → 0.02 para não obstruir leitura
                 text: 'PROVA DIGITAL MATERIAL',
                 color: '#0ea5e9',
-                opacity: 0.04,
+                opacity: 0.02,
                 angle: 45,
                 bold: false,
                 italics: true

@@ -1433,14 +1433,18 @@
     width: 100% !important;
     box-sizing: border-box !important;
 }
+/* FALHA 1 — R24: tabela de materialidade — não herdar flex dos cards pai */
+#smoking-gun-table {
+    display: none; /* JS define display:table quando activo */
+    flex-direction: unset !important;
+    align-items: unset !important;
+}
 
 /* UNIFED-STYLE-RET-09: Substituição de !important por classe de estado .is-visible
    para controlo de visibilidade via JavaScript, sem conflitos de especificidade.
    A regra base .bigdata-alert (style.css) já tem display: none.
    Quando o elemento tiver a classe .is-visible, exibe-se. */
 .bigdata-alert.is-visible,
-#smoking-gun-1.is-visible,
-#smoking-gun-2.is-visible,
 .smoking-gun-card.is-visible,
 .evidencia-materialidade.is-visible {
     display: flex;
@@ -1448,6 +1452,13 @@
     visibility: visible;
     pointer-events: auto;
     z-index: 20;
+}
+/* FALHA 1 — R24: <tr> visíveis como table-row, não flex */
+#smoking-gun-1.is-visible,
+#smoking-gun-2.is-visible {
+    display: table-row !important;
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Removidos todos os !important que forçavam display:flex nas smoking guns
@@ -1460,6 +1471,14 @@
 .evidencia-materialidade * {
     text-align: left !important;
     align-self: flex-start !important;
+}
+/* FALHA 1 — R24: células da tabela não herdam align-self flex */
+#smoking-gun-table td {
+    align-self: unset !important;
+    text-align: inherit;
+}
+#smoking-gun-table td[style*="center"] {
+    text-align: center !important;
 }
 
 
@@ -1714,4 +1733,39 @@
 .pure-sg-value-wrapper {
     margin-top: 20px !important;
     padding-top: 16px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FALHA 1 — R24: TABELA PROFISSIONAL DE MATERIALIDADE (5 colunas)
+   Alinha com Imagem Sugerida: borda perimetral, célula com vertical-align
+   ═══════════════════════════════════════════════════════════════════════════ */
+.pure-sg-table {
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+.pure-sg-table td {
+    border: 1px solid rgba(0, 229, 255, 0.1);
+    vertical-align: middle;
+}
+.pure-sg-table tr:hover td {
+    background-color: rgba(0, 229, 255, 0.02) !important;
+}
+/* Modo apresentação — desactivar animações laser/blink/pulse */
+body.presentation-mode .laser-h,
+body.presentation-mode .laser-v,
+body.presentation-mode [class*="blink"],
+body.presentation-mode [class*="pulse"] {
+    animation: none !important;
+    opacity: 0 !important;
+}
+/* Optimização LED — reduzir CPU */
+[class*="led-"],
+[class*="blink"] {
+    will-change: opacity;
+    transform: translateZ(0);
 }

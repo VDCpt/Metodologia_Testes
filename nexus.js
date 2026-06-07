@@ -301,11 +301,21 @@
         };
     }
 
+    // FALHA 9 — R24: flag NEXUS_AIRGAP — quando false, permite api.anthropic.com
+    // Definir window.NEXUS_AIRGAP = false em consola para activar narrativa IA em produção
+    if (typeof window.NEXUS_AIRGAP === 'undefined') { window.NEXUS_AIRGAP = true; }
+
     // Interceptor global fetch — substitui completamente o comportamento para URLs externas
     var _origFetch = window.fetch.bind(window); // Vinculação estrita ao escopo global
     if (typeof _origFetch === 'function') {
         window.fetch = function() {
             var url = (arguments[0] || '').toString();
+
+            // FALHA 9 — R24: bypass do airgap para api.anthropic.com quando NEXUS_AIRGAP=false
+            if (!window.NEXUS_AIRGAP && url.indexOf('api.anthropic.com') !== -1) {
+                console.info('[NEXUS·AIRGAP] ✅ Passagem permitida (NEXUS_AIRGAP=false): ' + url);
+                return _origFetch(...arguments);
+            }
 
             if (_isExternalUrl(url)) {
                 // Log silencioso (apenas para debug interno)

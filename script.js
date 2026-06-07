@@ -5333,6 +5333,11 @@ function activateDemoMode() {
     UNIFEDSystem.isAnalystOverrideActive = true;
 
     ForensicLogger.addEntry('REAL_CASE_ANONYMIZED_ACTIVATED');
+    // FALHA 2 — R24: activar badge discreto de demonstração
+    (function() {
+        const _disc = document.getElementById('demoDisclaimer');
+        if (_disc) { _disc.style.display = 'inline-block'; }
+    })();
 
     window.activeForensicSession = { sessionId: 'UNIFED-MMLADX8Q-CV69L', masterHash: '5150e7674b891d5d07ca990e4c7124fc66af40488452759aeebdf84976eaa8f6' };
     try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_e) {}
@@ -5497,6 +5502,20 @@ function activateDemoMode() {
                 window._demoAuditInProgress = true;
                 return performAudit();
             })();
+
+            // FALHA 7 — R24: forçar seal() da cadeia de custódia após análise
+            // Garante que a exportação não falha por cadeia não selada
+            try {
+                if (window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody &&
+                    typeof window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.seal === 'function' &&
+                    !window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.isSealed) {
+                    await window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.seal();
+                    console.log('[FALHA7-R24] ✅ Cadeia de custódia selada após análise.');
+                }
+            } catch (_sealErr) {
+                if (window.UNIFED_FORENSIC_LOG) window.UNIFED_FORENSIC_LOG.push({ ts: Date.now(), lvl: 'WARN', msg: '[FALHA7] Seal falhou: ' + _sealErr.message });
+                console.warn('[FALHA7-R24] ⚠️ Seal não executado:', _sealErr.message);
+            }
 
             // RETIFICAÇÃO R-DEMO-3: forçar regeneração do QR Code com o hash
             // recém-calculado por performAudit() → generateMasterHash().
@@ -7690,12 +7709,28 @@ function resetAllValues() {
         'iva6Value', 'iva23Value', 'quantumValue',
         'saftIliquidoValue', 'saftIvaValue', 'saftBrutoValue',
         'stmtGanhosValue', 'stmtDespesasValue', 'stmtGanhosLiquidosValue',
-        'dac7Q1Value', 'dac7Q2Value', 'dac7Q3Value', 'dac7Q4Value'
+        'dac7Q1Value', 'dac7Q2Value', 'dac7Q3Value', 'dac7Q4Value',
+        // FALHA 8 — R24: limpeza da tabela de materialidade (Provas Rainha)
+        'pure-sg1-saft-val', 'pure-sg1-dac7-val', 'pure-sg1-delta', 'pure-sg1-pct',
+        'pure-sg2-btor-val', 'pure-sg2-btf-val', 'pure-sg2-delta', 'pure-sg2-pct',
+        'pure-zc-amount', 'pure-zona-campanhas', 'pure-zona-gorjetas',
+        'pure-zona-portagens', 'pure-zona-total', 'pure-nc-cancelamentos'
     ];
     elementsToClear.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '0,00 €';
     });
+    // FALHA 8 — R24: ocultar linhas e tabela de materialidade no reset
+    ['smoking-gun-1', 'smoking-gun-2'].forEach(id => {
+        const row = document.getElementById(id);
+        if (row) { row.style.display = 'none'; row.classList.remove('is-visible'); }
+    });
+    const _sgTableReset = document.getElementById('smoking-gun-table');
+    if (_sgTableReset) _sgTableReset.style.display = 'none';
+    // Repor flag realCaseAnonymized
+    UNIFEDSystem.realCaseAnonymized = false;
+    const _disc = document.getElementById('demoDisclaimer');
+    if (_disc) _disc.style.display = 'none';
 
     const fileListIds = ['controlFileListModal', 'saftFileListModal', 'invoicesFileListModal', 'statementsFileListModal', 'dac7FileListModal'];
     fileListIds.forEach(id => {
@@ -9539,8 +9574,9 @@ window.setupDashboardMutationObserver = function() {
     
     const debouncedSync = debounce(() => {
         console.log('[UNIFED-MUTATION-OBSERVER] 🔄 Sincronizando painel (debounce 150ms)...');
-        if (typeof window._syncPureDashboard === 'function') {
-            window._syncPureDashboard();
+        // FALHA 5 — R24: passar UNIFEDSystem para garantir leitura de auxiliaryData actualizado
+        if (typeof window._syncPureDashboard === 'function' && window.UNIFEDSystem) {
+            window._syncPureDashboard(window.UNIFEDSystem);
         }
     }, 150);
     
@@ -10244,9 +10280,26 @@ console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u0
                       "Ao confirmar, o sistema executará uma purga criptográfica imediata e irreversível: todas as análises efetuadas, dados voláteis em cache e o repositório seguro IndexedDB serão permanentemente eliminados do browser para novas análises.\n\n" +
                       "Deseja mesmo concluir e higienizar a sessão?";
 
-                if (confirm(confirmMessage)) {
-                    await performForensicPurgeAndReload();
-                }
+                // FALHA 17 — R24: confirm() substituído por modal personalizado
+                // Evita diálogo nativo do browser em sala de reuniões
+                (function _showPurgeModal(msg, onConfirm) {
+                    const _existing = document.getElementById('_purgeConfirmModal');
+                    if (_existing) _existing.remove();
+                    const _modal = document.createElement('div');
+                    _modal.id = '_purgeConfirmModal';
+                    _modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:JetBrains Mono,monospace;';
+                    _modal.innerHTML = `<div style="max-width:520px;width:90%;background:#0f172a;border:1px solid rgba(239,68,68,0.4);border-radius:8px;padding:28px;color:#e2e8f0;">
+                        <div style="font-size:0.8rem;font-weight:800;color:#ef4444;margin-bottom:16px;letter-spacing:1px;">⚠ ALERTA DE HIGIENIZAÇÃO FORENSE</div>
+                        <div style="font-size:0.72rem;line-height:1.6;color:#94a3b8;margin-bottom:24px;white-space:pre-line;">${msg.split('\n\n').slice(1).join('\n\n')}</div>
+                        <div style="display:flex;gap:12px;justify-content:flex-end;">
+                            <button id="_purgeCancel" style="padding:8px 20px;background:transparent;border:1px solid #475569;color:#94a3b8;border-radius:4px;cursor:pointer;font-size:0.75rem;">Cancelar</button>
+                            <button id="_purgeConfirm" style="padding:8px 20px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:700;">Confirmar Purga</button>
+                        </div>
+                    </div>`;
+                    document.body.appendChild(_modal);
+                    document.getElementById('_purgeCancel').onclick = () => _modal.remove();
+                    document.getElementById('_purgeConfirm').onclick = () => { _modal.remove(); onConfirm(); };
+                })(confirmMessage, async () => { await performForensicPurgeAndReload(); });
             });
             console.log('[UNIFED-PURGE] ✅ Listener do botão de encerramento anexado com sucesso.');
         } else if (!closeBtn) {
