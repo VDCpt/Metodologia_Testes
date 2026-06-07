@@ -1680,3 +1680,34 @@
     color: var(--text-primary, #f1f5f9);
     word-break: break-word;
 }
+
+/* ============================================================
+   Ajuste de espaçamento — EVIDÊNCIA DE MATERIALIDADE (Opção B)
+   Layout horizontal restaurado com gap e margin adequados.
+   Estas regras prevalecem sobre quaisquer anteriores via !important.
+   ============================================================ */
+
+.pure-sg-row {
+    flex-direction: row !important;   /* horizontal — label à esquerda, valor à direita */
+    align-items: baseline !important;
+    margin-bottom: 18px !important;   /* separação vertical entre BTOR/BTF e SAF-T/DAC7 */
+    gap: 32px !important;             /* folga horizontal entre label e valor */
+}
+
+.pure-sg-key {
+    flex-shrink: 1;
+    white-space: normal;
+    min-width: 100px;
+}
+
+.pure-sg-val {
+    white-space: nowrap;    /* valor monetário nunca parte para linha de baixo */
+    flex-shrink: 0;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.pure-sg-value-wrapper {
+    margin-top: 18px !important;
+    padding-top: 14px !important;
+}
