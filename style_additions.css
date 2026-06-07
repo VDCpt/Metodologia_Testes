@@ -188,8 +188,11 @@
 }
 
 .pure-sg {
+  display: block;
+  width: 100%;
   border-radius: 6px;
   padding: 14px 16px;
+  box-sizing: border-box;
 }
 
 .pure-sg-critical {
@@ -1634,7 +1637,10 @@
    Regras específicas para .card-title e .card-value dos novos cards #card-omissao
    e #card-saft. Complementam as regras gerais de .pure-card e .pure-card-grid.
    ============================================================================ */
-/* Apenas os cards de materialidade ficam em duas colunas lado a lado */
+/* contain:content apenas nos cards de materialidade — não afecta os Smoking Guns */
+#materialidade-cards .pure-card {
+    contain: content;
+}
 #materialidade-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1652,9 +1658,9 @@
 }
 
 .pure-card {
-    contain: content;         /* Isola layout — evita repaints em cascata */
     overflow: hidden;
     transition: all 0.2s ease;
+    /* contain: content removido — causava colapso de layout nos Smoking Guns */
 }
 
 .pure-card .card-title {
