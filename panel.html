@@ -384,6 +384,27 @@
     });
   })();
   </script>
+<script>
+(function fixSmokingGunLayout() {
+    function applyLayout() {
+        const rows = document.querySelectorAll('.pure-sg-row');
+        rows.forEach(row => {
+            row.style.display        = 'flex';
+            row.style.flexDirection  = 'row';
+            row.style.justifyContent = 'space-between';
+            row.style.alignItems     = 'baseline';
+            row.style.marginBottom   = '20px';
+            row.style.gap            = '40px';
+        });
+    }
+    // Executa imediatamente (elementos já no DOM) e após DOMContentLoaded (garante cobertura)
+    applyLayout();
+    document.addEventListener('DOMContentLoaded', applyLayout);
+    // Reaplica após eventos que possam reinjetar os cards (análise forense, DEMO)
+    document.addEventListener('UNIFED_ANALYSIS_COMPLETE', applyLayout);
+    document.addEventListener('UNIFED_DEMO_COMPLETE',     applyLayout);
+})();
+</script>
 </section>
 
 <script>

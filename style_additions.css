@@ -1711,3 +1711,31 @@
     margin-top: 18px !important;
     padding-top: 14px !important;
 }
+
+/* ============================================================
+   FORÇA BRUTA: LAYOUT HORIZONTAL NO PAINEL II
+   ============================================================ */
+.pure-sg-row {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    margin-bottom: 20px !important;
+    gap: 40px !important;
+    width: 100% !important;
+}
+
+.pure-sg-key {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 100px !important;
+    white-space: normal !important;
+}
+
+.pure-sg-val {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    text-align: right !important;
+}
