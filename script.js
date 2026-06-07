@@ -8835,15 +8835,20 @@ window._syncPureDashboard = (function() {
             const sg2Delta = mapping['pure-sg2-delta'];
             const sg1El = document.getElementById('smoking-gun-1');
             const sg2El = document.getElementById('smoking-gun-2');
+            const sgTable = document.getElementById('smoking-gun-table');
             if (sg1El && sg1Delta > 0.01) {
                 sg1El.removeAttribute('style');
-                sg1El.style.display = 'flex'; // R24: flex alinhado com CSS .is-visible
+                sg1El.style.display = 'table-row'; // tr element — table-row é o display correcto
                 sg1El.classList.add('is-visible');
             }
             if (sg2El && sg2Delta > 0.01) {
                 sg2El.removeAttribute('style');
-                sg2El.style.display = 'flex'; // R24: flex alinhado com CSS .is-visible
+                sg2El.style.display = 'table-row'; // tr element — table-row é o display correcto
                 sg2El.classList.add('is-visible');
+            }
+            // Revelar a tabela pai quando pelo menos uma linha estiver visível
+            if (sgTable && ((sg1El && sg1Delta > 0.01) || (sg2El && sg2Delta > 0.01))) {
+                sgTable.style.display = 'table';
             }
             // Colarinho branco: activar se qualquer smoking gun > limiar
             const wcCard = document.getElementById('colarinho-branco');
