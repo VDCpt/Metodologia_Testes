@@ -1476,6 +1476,13 @@
     // -------------------------------------------------------------------------
     async function _gerarBlobParecerTecnicoForense(fullPayload) {
         triadaLog('info', '📄 Gerando blob do Parecer Técnico Forense (Analista) com todas as secções do Modelo 03-B');
+
+        // ── Constante de Exclusão Fiscal (Quesito de Exclusão) ────────────────
+        // Valor segregado por não ser sujeito a comissão conforme FAQ da Plataforma.
+        // Campanhas: 405,00 € + Gorjetas (Tips): 46,00 € + Portagens: 0,15 €
+        // Este valor é subtraído da base de cálculo antes da geração do relatório final.
+        const ISENCAO_BASE_TRIBUTAVEL = 451.15;
+        // ─────────────────────────────────────────────────────────────────────
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
 
@@ -2187,6 +2194,8 @@ VALIDAÇÃO TÉCNICA DE CONSULTORIA: O presente relatório é selado com o Maste
 • Portagens (Tolls / 2024): 0,15 € [reembolso operacional]
 • Taxas de Cancelamento: 58,10 € [já incluído em Despesas — Sujeito a Comissão]
 TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): 451,15 €
+
+Nota de Perito: Valor de €${ISENCAO_BASE_TRIBUTAVEL.toFixed(2).replace('.', ',')} segregado por não ser sujeito a comissão (conforme FAQ da Plataforma). Este montante foi subtraído da base de cálculo antes da geração do presente relatório forense, em conformidade com os Termos e Condições da Plataforma para TVDE e com o princípio da tributação apenas de rendimentos efectivamente sujeitos a comissão.
 
 Impacto DAC7: Os 451,15 € de fluxos não sujeitos a comissão não justificam a totalidade da discrepância entre o extrato da plataforma (${formatForensicCurrency(m.ganhos)}) e o valor DAC7 reportado à AT (${formatForensicCurrency(m.dac7Total)}), porquanto a divergência apurada é materialmente superior. Se incluídos indevidamente no rendimento bruto DAC7, o contribuinte terá sido prejudicado na determinação da sua base tributável.
 

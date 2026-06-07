@@ -1504,12 +1504,18 @@ function _injectForecastIntoChart(forecast, historicLen) {
             });
 
             // Evolução de Protocolo: Transição de Bloqueio Passivo para Purga Ativa
-            // O wrapper #lawyerContradictoryPanel é revelado (botão REGENERAR visível),
-            // mas o contentor de carga útil #top3Container é purgado atomicamente
-            // para impedir exposição de dados antes de validação manual pelo Mandatário.
+            // Fase 1 — Revelação explícita do wrapper (botão REGENERAR TOP 3 fica visível ao Mandatário)
+            var lawyerWrapper = document.getElementById('lawyerContradictoryPanel');
+            if (lawyerWrapper) {
+                lawyerWrapper.style.display = 'block';
+            }
+            // Fase 2 — Purga atómica da carga útil (dados TOP 3 ausentes até validação manual)
+            // Garante que a revelação do wrapper e a purga do conteúdo ocorrem na mesma task JS
+            // impedindo race conditions que exponham os dados antes da ordem do Mandatário.
             var top3Container = document.getElementById('top3Container');
             if (top3Container) {
                 top3Container.innerHTML = ''; // Purga coerciva — dados ausentes até regeneração explícita
+                console.log('[SECURITY] DOM Purged: #top3Container');
             }
 
             var sg2 = document.getElementById('smoking-gun-2');
