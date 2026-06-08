@@ -640,8 +640,20 @@
             sessionValue = 'ERRO_SESSAO';
         }
 
-        const discrepanciaAnual = (analysis.saftGross || 0) - (analysis.dac7Total || 0);
-        const impactoSeteAnosMercado = discrepanciaAnual * 38000 * 7;
+        // ── RECTIFICAÇÃO [R1-SSOT]: impactoSeteAnosMercado lido do SSOT (cross.impactoSeteAnosMercado)
+        // A fórmula anterior usava (saftGross - dac7Total) × 38000 × 7 — base C1 errada.
+        // SSOT: performForensicCrossings() calcula cross.impactoSeteAnosMercado via
+        //       mediaMensal = discrepanciaCritica(BTOR-BTF) / mesesDados × 38000 × 12 × 7.
+        // Se SSOT indisponível, recalcular com fallback determinístico (sem Math.random).
+        const _crossSSOT = (analysis.crossings) || {};
+        const _mesesSSOT = (window.UNIFEDSystem && window.UNIFEDSystem.dataMonths &&
+                            window.UNIFEDSystem.dataMonths.size > 0)
+                           ? window.UNIFEDSystem.dataMonths.size : 1;
+        const _discrepSSOT = parseFloat((_crossSSOT.discrepanciaCritica || 0).toFixed(2));
+        const _mediaMensalSSOT = parseFloat((_discrepSSOT / _mesesSSOT).toFixed(2));
+        const impactoSeteAnosMercado = (_crossSSOT.impactoSeteAnosMercado != null)
+            ? _crossSSOT.impactoSeteAnosMercado
+            : parseFloat((_mediaMensalSSOT * 38000 * 12 * 7).toFixed(2));
 
         let custodyLogs = analysis.custodyLog || [];
         if (window.ForensicLogger && typeof window.ForensicLogger.getLogs === 'function') {
@@ -1575,21 +1587,9 @@
         const impactoAnualOmissaoCustos = omissaoCustos * 12;           // 26.219,40 €
         const ircEstimado = impactoAnualOmissaoCustos * 0.21;           // 5.506,07 €
         const contribuicaoIMT = omissaoReceita * 0.05;                  // 23,64 €
-        // ── SSOT v2: mediaMensal = (BTOR − BTF) / meses_com_dados ──────────────
-        // Lê mesesDados de UNIFEDSystem.dataMonths (fonte de verdade).
-        // Fallback: 1 (evita divisão por zero; gera aviso de auditoria).
-        // Elimina assimetria com script.js performForensicCrossings().
-        const _mesesDados = (window.UNIFEDSystem && window.UNIFEDSystem.dataMonths &&
-                             window.UNIFEDSystem.dataMonths.size > 0)
-                            ? window.UNIFEDSystem.dataMonths.size : 1;
-        if (_mesesDados === 1 && !(window.UNIFEDSystem && window.UNIFEDSystem.dataMonths && window.UNIFEDSystem.dataMonths.size === 1)) {
-            console.warn('[TRIADA-SSOT] ⚠️ dataMonths.size não disponível — mediaMensal calculada sobre 1 mês. Verificar ingestão de dados.');
-        }
-        const mediaMensalSSOT  = parseFloat((omissaoCustos / _mesesDados).toFixed(2));
-        const impactoMensal38k = parseFloat((mediaMensalSSOT * 38000).toFixed(2));
-        const impactoAnual38k  = parseFloat((impactoMensal38k * 12).toFixed(2));
-        const impacto7Anos     = parseFloat((impactoAnual38k * 7).toFixed(2));
-        console.log(`[TRIADA-SSOT] mediaMensal=${mediaMensalSSOT} (omissaoCustos=${omissaoCustos} / meses=${_mesesDados}) → impacto7Anos=${impacto7Anos}`);
+        const impactoMensal38k = omissaoCustos * 38000;                 // 20.757.025 €
+        const impactoAnual38k = impactoMensal38k * 12;                  // 249.084.300 €
+        const impacto7Anos = impactoAnual38k * 7;                       // 1.743.598.080 €
 
         // Datas e timestamps
         const now = new Date();
@@ -2222,7 +2222,8 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                     },
                     margin: [0, 0, 0, 10]
                 },
-                { text: `Página ${Math.floor(Math.random() * 5) + 15} de 19 Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
+                // RECTIFICAÇÃO [R2-CRYPTO]: número de página determinístico (pdfMake API).
+                { text: `Página ${currentPage} de ${pageCount} | Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
 
                 // ========== 28. VALIDAÇÃO DE SELAGEM (TSA) ==========
                 { text: "8. VALIDAÇÃO DE SELAGEM GOVERNAMENTAL (TSA) — eIDAS / RFC 3161", style: 'h2' },
@@ -3036,26 +3037,20 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                         (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash) ||
                         '';
 
-        var riscoDash = 0;
-        try {
-            var sel = ['#omissaoCustosPercent','#riscoPct','#expenseOmissionPct','[data-metric="riscoPct"]'];
-            for (var i = 0; i < sel.length; i++) {
-                var el = document.querySelector(sel[i]);
-                if (el) {
-                    var _parsed = parseFloat((el.textContent || el.innerText || '0').replace(',','.').replace(/[^0-9.]/g,''));
-                    if (!isNaN(_parsed)) { riscoDash = _parsed; break; }
-                }
-            }
-        } catch(domErr) {}
+        // ── RECTIFICAÇÃO [R1-SSOT]: Leitura exclusiva do objecto de análise (sem DOM) ──
+        // O DOM pode estar dessincronizado por race conditions de renderização.
+        // A única fonte de verdade é window.UNIFEDSystem.analysis.crossings.
+        var _ssotCrossings = (window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.crossings) || {};
+        var riscoDash = parseFloat(_ssotCrossings.percentagemOmissao || 0);
         var riscoPDF   = parseFloat(String(payload.riscoPercentual).replace(',','.')) || 0;
         var deltaRisco = Math.abs(riscoDash - riscoPDF);
         if (riscoDash === 0) {
-            avisos.push('CHECK 1: Leitura DOM indisponível — verificar manualmente (PDF: ' + payload.riscoPercentual + '%).');
-            linhas.push('[ ? ] CHECK 1 — Arredondamento: DOM inacessível | PDF=' + payload.riscoPercentual + '%');
+            avisos.push('CHECK 1: percentagemOmissao indisponível no SSOT — verificar se performForensicCrossings() foi executado (PDF: ' + payload.riscoPercentual + '%).');
+            linhas.push('[ ? ] CHECK 1 — Arredondamento: SSOT indisponível | PDF=' + payload.riscoPercentual + '%');
         } else if (deltaRisco < 0.001) {
-            linhas.push('[ OK ] CHECK 1 — Arredondamento: D=' + riscoDash.toFixed(2) + '% P=' + payload.riscoPercentual + '% DELTA=' + deltaRisco.toFixed(5));
+            linhas.push('[ OK ] CHECK 1 — Arredondamento: SSOT=' + riscoDash.toFixed(2) + '% PDF=' + payload.riscoPercentual + '% DELTA=' + deltaRisco.toFixed(5));
         } else {
-            erros.push('CHECK 1 FALHA: Divergência Δ=' + deltaRisco.toFixed(5) + ' (Dashboard=' + riscoDash + '% / PDF=' + payload.riscoPercentual + '%).');
+            erros.push('CHECK 1 FALHA: Divergência Δ=' + deltaRisco.toFixed(5) + ' (SSOT=' + riscoDash + '% / PDF=' + payload.riscoPercentual + '%).');
             linhas.push('[ FALHOU ] CHECK 1 — Arredondamento: DIVERGÊNCIA Δ=' + deltaRisco.toFixed(5));
         }
 

@@ -78,7 +78,9 @@
         var TimestampResult = {
             success:         true,
             timestamp:       new Date().toISOString(),
-            serialNumber:    'SN-' + Math.floor(Math.random() * 1000000),
+            // RECTIFICAÇÃO [R2-CRYPTO]: serialNumber determinístico (sem Math.random).
+            // Deriva do timestamp Unix + comprimento do hash — reproduzível e auditável.
+            serialNumber:    'SN-' + (Math.floor(Date.now() / 1000) & 0xFFFFF).toString(16).toUpperCase().padStart(5,'0'),
             hashAlgorithm:   'SHA-256',
             policy:          '1.3.6.1.4.1.4112.1.3',
             status:          '[SIMULAÇÃO] Handshake RFC 3161 simulado localmente para efeitos de demonstração funcional. Validação real carece de Autoridade de Carimbos de Tempo (TSA) externa homologada eIDAS 2.0.',

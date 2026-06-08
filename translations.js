@@ -40,6 +40,12 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     },
     'btn_export_architecture': { 'pt': 'Exportar Relatório de Arquitectura (HTML)', 'en': 'Export Architecture Report (HTML)' },
     'btn_clear_console': { 'pt': 'Limpar Consola', 'en': 'Clear Console' },
+    // ── RECTIFICAÇÃO [R3-I18N]: Terminologia PT-PT estrita (Acordo Ortográfico vigente) ──
+    'ui_console':          { 'pt': 'Consola de Sistema',           'en': 'System Console' },
+    'ui_invoice_cancel':   { 'pt': 'Cancelamento de Faturas',      'en': 'Invoice Cancellation' },
+    'ui_tax_calc':         { 'pt': 'Cálculo Tributário Forense',   'en': 'Forensic Tax Calculation' },
+    'ui_export_lawyer':    { 'pt': 'Exportar Pacote Advogado',     'en': 'Export Lawyer Package' },
+    'ui_export_analyst':   { 'pt': 'Exportar Pacote Analista',     'en': 'Export Analyst Package' },
     'btn_regenerate_top3': { 'pt': '🔄 Regenerar TOP 3 (Automático)', 'en': '🔄 Regenerate TOP 3 (Automatic)' },
     'btn_accept_top3': { 'pt': '✓ Aceitar & Prosseguir', 'en': '✓ Accept & Proceed' },
 

@@ -202,7 +202,7 @@ window.UNIFED_QUESTIONNAIRE = {
             id: 'B010',
             axis: 'B',
             title: 'Triangulação DAC7 vs SAF-T',
-            text: 'Foram identificadas reversões (créditos) anormais que poderiam servir para cancele de facturas declaradas?',
+            text: 'Foram identificadas reversões (créditos) anormais que poderiam servir para cancelamento de faturas declaradas?',
             norma: 'Art. 80º CIVA (Notas de Crédito)',
             implicacao: 'Reversões em massa sugerem tentativa de dissimular omissões anteriores.',
             defesa: 'Análise de padrões de reversão: frequência, valores, NIFs afetados.'

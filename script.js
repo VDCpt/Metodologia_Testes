@@ -1286,7 +1286,9 @@ function mockRFC3161Timestamp(hashHex) {
         status: 'PROBATUM_INTERNAL_SEAL',
         tsaSource: 'PROBATUM INTERNAL SEAL (PENDING EXTERNAL TSA)',
         tsaLevel: 'Certificação de Tempo Interna (Nível 1)',
-        serialNumber: 'PROBATUM-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+        // SIMULAÇÃO RFC 3161: serialNumber determinístico baseado em timestamp.
+        // Math.random eliminado — número de série deriva do timestamp da sessão.
+        serialNumber: 'PROBATUM-' + Math.floor(now.getTime() / 1000).toString(36).toUpperCase() + '-SIM',
         genTime: now.toISOString(),
         genTimeUnix: Math.floor(now.getTime() / 1000),
         messageImprint: {
@@ -1294,7 +1296,8 @@ function mockRFC3161Timestamp(hashHex) {
             hashedMessage: hashHex
         },
         policy: 'UNIFED-INTERNAL-OID-1.0',
-        nonce: Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
+        // Nonce determinístico: XOR de timestamp e comprimento do hash (sem Math.random).
+        nonce: ((Math.floor(now.getTime() / 1000) ^ (hashHex ? hashHex.length : 0)) & 0xFFFF).toString(16).toUpperCase().padStart(4, '0'),
         ordering: false,
         _note: 'O hash SHA-256 é definitivo e matematicamente verificável. Nível 2 (RFC 3161 externo) activo após configuração da API de produção TSA.'
     };
@@ -2236,9 +2239,12 @@ async function _doOnlineSeal(masterHash) {
             note:    'Proxy indisponível. Activar Nível 1 (hash interno SHA-256).'
         });
 
-        // Fallback: Nível 1 — hash SHA-256 interno imutável
-        const tokenSim = 'UNIFED-NIVEL1-' + Date.now().toString(36).toUpperCase() + '-' +
-                         Math.random().toString(36).substr(2, 8).toUpperCase();
+        // Fallback: Nível 1 — token determinístico baseado em masterHash + timestamp
+        // Math.random eliminado: token deriva de dados forenses imutáveis já existentes.
+        const _tokenBase = (window.UNIFEDSystem && window.UNIFEDSystem.masterHash)
+            ? window.UNIFEDSystem.masterHash.substring(0, 8).toUpperCase()
+            : Date.now().toString(16).toUpperCase().padStart(8, '0');
+        const tokenSim = 'UNIFED-NIVEL1-' + Date.now().toString(36).toUpperCase() + '-' + _tokenBase;
 
         console.info('[SEAL] ⚙ Proxy indisponível. Selagem Nível 1 activa (hash SHA-256 interno).');
         _nivel2SealSuccess(masterHash, _tsaDate, 'ANCORADO VIA PROXY SEGURO', tokenSim);
@@ -6076,19 +6082,22 @@ function performForensicCrossings() {
     cross.btor = despesas;
     cross.btf  = faturaPlataforma;
 
-    // RETIFICAÇÃO R24-CONSERVADOR: usar calcularDanoConservador() com factor 0.85
+    // ── RECTIFICAÇÃO [R4-SSOT]: Pipeline determinístico unificado ────────────
+    // VALOR PRIMÁRIO (SSOT): mediaMensal × 38000 × 12 × 7 — sem factor de margem.
+    // Garante simetria exacta entre DOM (script_injection.js) e PDF (triada_export.js).
+    // VALOR CONSERVADOR: calculado via calcularDanoConservador() (×0.85) e guardado
+    // separadamente em cross.impactoSeteAnosMercadoConservador para uso opcional
+    // em notas de rodapé ou tabelas de sensibilidade — nunca como valor primário.
+    cross.impactoMensalMercado   = parseFloat((discrepanciaMensalMedia * 38000).toFixed(2));
+    cross.impactoAnualMercado    = parseFloat((cross.impactoMensalMercado * 12).toFixed(2));
+    cross.impactoSeteAnosMercado = parseFloat((cross.impactoAnualMercado * 7).toFixed(2));
     if (window.calcularDanoConservador && typeof window.calcularDanoConservador === 'function') {
-        const impactoAnualConservador = window.calcularDanoConservador(discrepanciaMensalMedia, 38000);
-        cross.impactoMensalMercado   = impactoAnualConservador / 12;
-        cross.impactoAnualMercado    = impactoAnualConservador;
-        cross.impactoSeteAnosMercado = impactoAnualConservador * 7;
-        console.log('[UNIFED-CONSERVADOR] 📊 Impacto calculado via calcularDanoConservador() (factor 0.85):', impactoAnualConservador.toFixed(2));
+        const _impactoConservadorAnual = window.calcularDanoConservador(discrepanciaMensalMedia, 38000);
+        cross.impactoSeteAnosMercadoConservador = parseFloat((_impactoConservadorAnual * 7).toFixed(2));
+        console.log('[UNIFED-SSOT] 📊 Determinístico:', cross.impactoSeteAnosMercado.toFixed(2), '| Conservador (×0.85):', cross.impactoSeteAnosMercadoConservador.toFixed(2));
     } else {
-        // Fallback: cálculo directo sem factor conservador (sem calcularDanoConservador disponível)
-        cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
-        cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
-        cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
-        console.warn('[UNIFED-CONSERVADOR] ⚠️ calcularDanoConservador() não disponível — usando cálculo directo.');
+        cross.impactoSeteAnosMercadoConservador = cross.impactoSeteAnosMercado;
+        console.warn('[UNIFED-SSOT] ⚠️ calcularDanoConservador() indisponível — conservador=determinístico.');
     }
 
     cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;
@@ -7281,7 +7290,14 @@ async function generateMasterHash() {
         }
     } catch(e) {
         console.error('[HASH] Erro ao gerar hash:', e);
-        newHash = '0'.repeat(64);
+        // ── RECTIFICAÇÃO [R2-CRYPTO]: Hash nulo '0'×64 eliminado ────────────────
+        // Um hash composto apenas por zeros é matematicamente inválido para fins
+        // forenses — constitui prova viciada. Bloquear execução.
+        throw new Error(
+            'CRYPTO_FAILURE: CryptoJS indisponível e crypto.subtle falhou. ' +
+            'Hash forense não pode ser gerado. Exportação abortada. ' +
+            'Conformidade: ISO/IEC 27037:2012 §8.2.'
+        );
     }
     UNIFEDSystem.masterHash = newHash;
     // FALHA 3 / Estabilidade Forense — congelar hash: uma vez calculado, não recalcula
@@ -9062,18 +9078,17 @@ window.generateMasterBatchHash = async function() {
 };
 
 function _generateFallbackHash() {
-    console.log('[UNIFED-BATCH-HASH] 📌 Usando fallback: hash simplificado');
-    
-    const timestamp = Date.now().toString();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const simpleHash = 'A'.repeat(56) + randomSuffix.toUpperCase();
-    
-    const hashElement = document.getElementById('pure-hash-prefix');
-    if (hashElement) {
-        hashElement.textContent = simpleHash;
-    }
-    
-    return simpleHash;
+    // ── RECTIFICAÇÃO [R2-CRYPTO]: Fallback pseudo-aleatório eliminado ────────
+    // Um hash forense NÃO pode conter dados aleatórios (Math.random / A.repeat).
+    // A presença de A.repeat(56) + sufixo pseudo-aleatório invalida a prova por
+    // ausência de determinismo verificável (ISO/IEC 27037:2012 §8.2).
+    // Se crypto.subtle e CryptoJS estiverem indisponíveis, a execução BLOQUEIA.
+    throw new Error(
+        'CRYPTO_FAILURE: Motor criptográfico indisponível. ' +
+        'A geração de prova forense foi abortada para evitar contaminação da cadeia de custódia. ' +
+        'Requisito: crypto.subtle (WebCrypto API) ou CryptoJS devem estar acessíveis. ' +
+        'Conformidade: ISO/IEC 27037:2012 §8.2 — NIST SP 800-86 §4.3.'
+    );
 }
 
 window.setupDashboardMutationObserver = function() {
