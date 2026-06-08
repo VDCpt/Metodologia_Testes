@@ -109,6 +109,7 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     // CADUCIDADE (LGT Art. 45º)
     // ════════════════════════════════════════════════════════════════════════
     'lgt_cadducity_title': { 'pt': 'Conformidade com o art. 45.º da LGT (Caducidade)', 'en': 'LGT Art. 45 Compliance (Statute of Limitations)' },
+    'onus_inversion': { 'pt': 'Inversão do Ónus da Prova', 'en': 'Burden of Proof Reversal' },
     'lgt_years_elapsed': { 'pt': 'Anos Decorridos', 'en': 'Years Elapsed' },
     'lgt_cadducity_valid': { 'pt': 'Válido para Auditoria', 'en': 'Valid for Audit' },
     'lgt_cadducity_expiring': { 'pt': 'Caducidade Iminente', 'en': 'Imminent Expiry' },
@@ -339,145 +340,8 @@ window.deepTreeWalkSanitizePlatforms = function(payload, targetPath, inPlace = f
 window.deepTreeWalkSanitizeBolt = window.deepTreeWalkSanitizePlatforms;
 
 // ============================================================================
-// COMUTAÇÃO BIDIRECIONAL PT/EN (padrão = 'pt')
+// COMUTAÇÃO BIDIRECIONAL PT/EN — REMOVIDO (R5)
+// toggleLanguage e initLanguageSwitcher centralizados em script.js
+// switchLanguage, aplicarTraducaoDinamicaUI, translateAll geridos em script.js
+// A inicialização ocorre via switchLanguage('pt') no DOMContentLoaded de script.js
 // ============================================================================
-window.initLanguageSwitcher = function() {
-    // Define idioma padrão como português (nacionalização)
-    if (!window.currentLang) {
-        window.currentLang = 'pt';
-    }
-
-    // Referência para a função updateUI (será usada pelo forceTranslateUI)
-    let _updateUI = function() {
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            if (el.hasAttribute('data-i18n-ignore')) return;
-            const key = el.getAttribute('data-i18n');
-            const translation = window.getTranslation(key, window.currentLang);
-            if (translation && el.textContent !== translation) {
-                el.textContent = translation;
-            }
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            if (el.hasAttribute('data-i18n-ignore')) return;
-            const key = el.getAttribute('data-i18n-placeholder');
-            const translation = window.getTranslation(key, window.currentLang);
-            if (translation && el.placeholder !== translation) {
-                el.placeholder = translation;
-            }
-        });
-        document.querySelectorAll('[data-i18n-title]').forEach(el => {
-            if (el.hasAttribute('data-i18n-ignore')) return;
-            const key = el.getAttribute('data-i18n-title');
-            const translation = window.getTranslation(key, window.currentLang);
-            if (translation && el.title !== translation) {
-                el.title = translation;
-            }
-        });
-        document.querySelectorAll('[data-i18n-value]').forEach(el => {
-            if (el.hasAttribute('data-i18n-ignore')) return;
-            const key = el.getAttribute('data-i18n-value');
-            const translation = window.getTranslation(key, window.currentLang);
-            if (translation && el.value !== translation) {
-                el.value = translation;
-            }
-        });
-        console.log(`[I18N] Interface actualizada para: ${window.currentLang.toUpperCase()} (elementos com data-i18n-ignore foram excluídos)`);
-    };
-
-    window.toggleLanguage = function(lang) {
-        if (lang && (lang === 'pt' || lang === 'en')) {
-            window.currentLang = lang;
-        } else {
-            // alternância padrão: se veio sem argumento, muda para o outro
-            window.currentLang = window.currentLang === 'pt' ? 'en' : 'pt';
-        }
-        if (window.localStorage) {
-            localStorage.setItem('unifed_language', window.currentLang);
-        }
-        _updateUI();
-        document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: window.currentLang } }));
-    };
-
-    // Recupera idioma salvo, mas mantém 'pt' como padrão (não forçar inglês)
-    if (window.localStorage && localStorage.getItem('unifed_language')) {
-        const savedLang = localStorage.getItem('unifed_language');
-        if (savedLang === 'pt' || savedLang === 'en') {
-            window.currentLang = savedLang;
-        }
-    }
-
-    // Executa a actualização inicial
-    _updateUI();
-
-    // MutationObserver com throttle ajustado para 150ms (RETIFICAÇÃO R24: reduz re-renders)
-    let _updateUITimer = null;
-    const observer = new MutationObserver(() => {
-        if(window._isTranslating) return;
-        window._isTranslating = true;
-        setTimeout(() => {
-            if(window.currentLang) window.translateAll();
-            window._isTranslating = false;
-        }, 150); // R24: 50ms → 150ms
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    console.log('[I18N] MutationObserver activo com flag _isTranslating.');
-
-
-    // Expor função de tradução síncrona para uso externo (ex: após _syncPureDashboard)
-    window.forceTranslateUI = function() {
-        console.log('[I18N] Tradução forçada síncrona executada.');
-        _updateUI();
-    };
-
-    console.log('[I18N] Language switcher inicializado. Use window.toggleLanguage("pt") ou "en" para mudar. Padrão: PT.');
-};
-
-// ============================================================================
-// INICIALIZAÇÃO AUTOMÁTICA
-// ============================================================================
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.initLanguageSwitcher();
-    });
-} else {
-    window.initLanguageSwitcher();
-}
-
-console.log('[UNIFED-TRANSLATIONS] ✅ Módulo v1.0-NACIONALIZADO carregado (190+ chaves · Jurisprudência PT-PT · Deep Tree Walk optimizada com inPlace · Throttle 50ms)');
-
-// ============================================================================
-// RETIFICAÇÃO CIRÚRGICA 4 — Guarda de Runtime contra erro tipográfico
-// "INVIO LABILIDADE" → "INVIOLABILIDADE"
-// Aplica-se sobre qualquer string que passe pelos motores de geração de texto.
-// ============================================================================
-(function _fixInviolabilidade() {
-    const _origStringify = JSON.stringify;
-    // Intercepção não é necessária — aplicar directamente nos dicionários
-    // de tradução se a chave existir
-    ['pt', 'en'].forEach(function(lang) {
-        if (window.UNIFED_TRANSLATIONS && window.UNIFED_TRANSLATIONS[lang]) {
-            Object.keys(window.UNIFED_TRANSLATIONS[lang]).forEach(function(key) {
-                const val = window.UNIFED_TRANSLATIONS[lang][key];
-                if (typeof val === 'string' && val.includes('INVIO LABILIDADE')) {
-                    window.UNIFED_TRANSLATIONS[lang][key] = val.replace(/INVIO LABILIDADE/g, 'INVIOLABILIDADE');
-                    console.log('[RET-04] Corrigido: ' + key);
-                }
-            });
-        }
-    });
-    // Correcção de emergência sobre qualquer textContent activo no DOM
-    if (typeof document !== 'undefined') {
-        document.addEventListener('DOMContentLoaded', function() {
-            // R24: seletor restrito — evita varrimento global DOM
-            document.querySelectorAll('.pure-section-title, span, h1, h2, h3, p').forEach(function(el) {
-                if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
-                    if (el.textContent.includes('INVIO LABILIDADE')) {
-                        el.textContent = el.textContent.replace(/INVIO LABILIDADE/g, 'INVIOLABILIDADE');
-                    }
-                }
-            });
-        });
-    }
-})();
-// ============================================================================
-

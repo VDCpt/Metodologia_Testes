@@ -215,8 +215,16 @@ window.UNIFED_MerkleEngine = (function() {
         },
 
         /**
-         * Gera prova criptográfica de que uma questão específica foi usada
-         * Sem revelar outras questões
+         * Gera prova criptográfica de que uma questão específica foi usada.
+         * Sem revelar outras questões.
+         *
+         * RET-FOR-06: O leafHash DEVE usar o mesmo sessionSalt utilizado em
+         * buildMerkleTree. Na implementação anterior, o hash era calculado como
+         * SHA-256(questionId + "|" + text) sem salt, produzindo um valor
+         * diferente do nó folha armazenado na árvore (que usa o formato
+         * SHA-256(salt + "|" + id + "|" + text)). Resultado: validateProof
+         * retornaria false em 100% dos casos — erro forense crítico detectável
+         * pela contra-perícia (ISO/IEC 27037:2012 §8.3).
          */
         generateProofForQuestion: async function(tree, questionId, allQuestions) {
             const index = allQuestions.findIndex(q => q.id === questionId);
@@ -224,14 +232,26 @@ window.UNIFED_MerkleEngine = (function() {
                 throw new Error(`Questão ${questionId} não encontrada`);
             }
 
-            const proof = generateProof(tree, index);
-            const leafHash = await sha256Hash(questionId + '|' + (allQuestions[index].text || ''));
+            // RET-FOR-06: derivar sessionSalt idêntico ao usado em buildMerkleTree
+            var sys = window.UNIFEDSystem || {};
+            var sessionSalt =
+                (sys.config && sys.config.timestamp ? String(sys.config.timestamp) : null) ||
+                (typeof sys.sessionId === 'string' && sys.sessionId.length >= 8 ? sys.sessionId : null) ||
+                new Date().toISOString();
+
+            var leafId   = allQuestions[index].id   || '';
+            var leafText = allQuestions[index].text || '';
+            // Formato idêntico ao de buildMerkleTree: SHA-256(salt + "|" + id + "|" + text)
+            var leafHash = await sha256Hash(sessionSalt + '|' + leafId + '|' + leafText);
+
+            var proof = generateProof(tree, index);
 
             return {
-                questionId: questionId,
-                leafHash: leafHash,
-                proof: proof,
-                proofValidation: `Pode ser validado contra a Raiz Merkle sem revelar outras questões`
+                questionId:      questionId,
+                leafHash:        leafHash,
+                proof:           proof,
+                saltUsed:        sessionSalt.substring(0, 16) + '...[truncado]',
+                proofValidation: 'Pode ser validado contra a Raiz Merkle sem revelar outras questões'
             };
         },
 

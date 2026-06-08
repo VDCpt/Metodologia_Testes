@@ -682,9 +682,13 @@ window._syncPureDashboard = (function() {
         }
 
         const lang = window.currentLang || 'pt';
-        const fmt = (val) => new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'pt-PT', {
-            style: 'currency', currency: 'EUR'
-        }).format(val || 0);
+        const fmt = (val) => {
+            if (typeof window.formatForensicCurrency === 'function')
+                return window.formatForensicCurrency(val);
+            return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'pt-PT', {
+                style: 'currency', currency: 'EUR'
+            }).format(val || 0);
+        };
 
         const mapping = {
             'pure-ganhos-reais': totals.ganhos,
@@ -796,6 +800,60 @@ window._syncPureDashboard = (function() {
             updated++;
         }
         // ──────────────────────────────────────────────────────────────────────────
+
+        // ── RECTIFICAÇÃO R24-WC-INDICATORS (R15 — Sincronização Textual Dinâmica) ──
+        const wcInd1 = document.getElementById('pure-wc-ind1-val');
+        if (wcInd1) {
+            wcInd1.setAttribute('data-i18n-ignore', 'true');
+            wcInd1.innerText = (cross.percentagemOmissao || 0).toFixed(2) + '%';
+            updated++;
+        }
+        const wcInd2 = document.getElementById('pure-wc-ind2-val');
+        if (wcInd2) {
+            wcInd2.setAttribute('data-i18n-ignore', 'true');
+            wcInd2.innerText = (cross.percentagemSaftVsDac7 || 0).toFixed(2) + '%';
+            updated++;
+        }
+        const wcInd3 = document.getElementById('pure-wc-ind3-val');
+        if (wcInd3) {
+            wcInd3.setAttribute('data-i18n-ignore', 'true');
+            wcInd3.innerText = window.formatForensicCurrency
+                ? window.formatForensicCurrency(cross.ircEstimado || 0)
+                : fmt(cross.ircEstimado || 0);
+            updated++;
+        }
+
+        // R15: Actualização dos textos de conclusão White Collar
+        const _iva23ForFindings = cross.ivaFalta || 0;
+        const _iva6ForFindings  = cross.ivaFalta6 || 0;
+        const wcFinding1 = document.getElementById('pure-wc-finding-1');
+        if (wcFinding1) {
+            const pctStr = (cross.percentagemOmissao || 0).toFixed(2) + '%';
+            wcFinding1.setAttribute('data-i18n-ignore', 'true');
+            wcFinding1.innerText = lang === 'en'
+                ? `The omission of ${pctStr} of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.`
+                : `A omissão de ${pctStr} do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.`;
+            updated++;
+        }
+        const wcFinding3 = document.getElementById('pure-wc-finding-3');
+        if (wcFinding3) {
+            wcFinding3.setAttribute('data-i18n-ignore', 'true');
+            wcFinding3.innerText = lang === 'en'
+                ? `Scenario A: ${fmt(_iva23ForFindings)} in VAT 23% (BTOR-BTF × 23%). Alternative Scenario B: ${fmt(_iva6ForFindings)} in VAT 6% (Earnings-SAF-T × 6%). ⚠️ Mutually exclusive scenarios.`
+                : `Cenário A: ${fmt(_iva23ForFindings)} em IVA 23% (BTOR−BTF × 23% · Art. 18.º al. c) CIVA). Cenário B Alt.: ${fmt(_iva6ForFindings)} em IVA 6% (Ganhos−SAF-T × 6% · Art. 18.º al. a) CIVA). ⚠️ Mutuamente exclusivos.`;
+            updated++;
+        }
+        const wcFinding4 = document.getElementById('pure-wc-finding-4');
+        if (wcFinding4) {
+            const pctStr4 = (cross.percentagemOmissao || 0).toFixed(2) + '%';
+            const danoMensal4 = (cross.impactoMensalMercado || 0) / 38000;
+            wcFinding4.setAttribute('data-i18n-ignore', 'true');
+            wcFinding4.innerText = lang === 'en'
+                ? `The sustained omission pattern (${pctStr4}) + estimated fiscal damage (${fmt(danoMensal4)}/month) supports qualified tax fraud analysis (Art. 405 CC).`
+                : `O padrão de omissão sustentado (${pctStr4}) + dano fiscal estimado (${fmt(danoMensal4)}/mês) sustenta análise de irregularidade comercial agravada (Art. 405.º CC).`;
+            updated++;
+        }
+        // ── FIM R15-WC ────────────────────────────────────────────────────────────
 
         // Master hash consolidado e Desbloqueio da UI
         const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';

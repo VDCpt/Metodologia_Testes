@@ -596,19 +596,13 @@ window.exportPeticaoInicial = function(metricsOverride) {
             return parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
         };
         
-        // RET 10 — garantir pdfMake.vfs inicializado antes de criar docDefinition
+        // RET 10 — vfs_fonts carregado estaticamente no HTML (ordem corrigida: vfs_fonts → pdfmake)
+        // A injeção dinâmica foi removida: se pdfMake.vfs estiver vazio, a ordem do HTML é a causa.
         if (typeof pdfMake !== 'undefined' && pdfMake.vfs && Object.keys(pdfMake.vfs).length === 0) {
-            forensicLog('warn', 'ENRICHMENT', 'pdfMake.vfs está vazio — a tentar carregar vfs_fonts manualmente');
+            forensicLog('warn', 'ENRICHMENT', 'pdfMake.vfs está vazio — verificar ordem de carregamento em index.html (vfs_fonts deve preceder pdfmake.min.js)');
             if (typeof pdfMake.vfs_fonts !== 'undefined') {
                 pdfMake.vfs = pdfMake.vfs_fonts;
                 forensicLog('info', 'ENRICHMENT', 'pdfMake.vfs restaurado de pdfMake.vfs_fonts');
-            } else {
-                // Fallback: carregar vfs_fonts.js local
-                const _vfsScript = document.createElement('script');
-                _vfsScript.src = 'libs/vfs_fonts.js';
-                _vfsScript.onload = () => { forensicLog('info', 'ENRICHMENT', 'libs/vfs_fonts.js carregado'); };
-                _vfsScript.onerror = () => { forensicLog('warn', 'ENRICHMENT', 'libs/vfs_fonts.js não encontrado — PDF pode usar fonte fallback'); };
-                document.head.appendChild(_vfsScript);
             }
         }
 
@@ -645,13 +639,21 @@ window.exportPeticaoInicial = function(metricsOverride) {
             },
             
             footer: function(currentPage, pageCount) {
-                return {
-                    stack: [
-                        { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }] },
-                        { text: lockForensicString, style: 'footerSmall', margin: [0, 6, 0, 0] }
-                    ],
-                    margin: [40, 0, 40, 15]
-                };
+                const _pendingIds = (typeof window.UNIFED_TRIADA_EXPORT === 'object' &&
+                    typeof window.UNIFED_TRIADA_EXPORT.getPendingTimestampEvidences === 'function')
+                    ? window.UNIFED_TRIADA_EXPORT.getPendingTimestampEvidences()
+                    : [];
+                const footerStack = [
+                    { canvas: [{ type: 'line', x1: 40, y1: 0, x2: 555, y2: 0, lineWidth: 0.5, lineColor: '#94a3b8' }] },
+                    { text: lockForensicString, style: 'footerSmall', margin: [0, 6, 0, 0] }
+                ];
+                if (_pendingIds.length > 0) {
+                    footerStack.push({
+                        text: `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${_pendingIds.join(', ')}] não compromete o hash SHA-256, conforme Art. 125.º CPP`,
+                        style: 'footerWarning', alignment: 'center', margin: [0, 4, 0, 0]
+                    });
+                }
+                return { stack: footerStack, margin: [40, 0, 40, 15] };
             },
             
             content: [
@@ -689,6 +691,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
                 page1Subheader: { fontSize: 10, bold: true, alignment: 'center', color: '#475569', lineHeight: 1.3 },
                 headerSmall: { fontSize: 8, bold: true, alignment: 'center', color: '#1e3a8a' },
                 footerSmall: { fontSize: 7, bold: true, alignment: 'center', color: '#0f172a', background: '#f1f5f9' },
+                footerWarning: { fontSize: 6.5, bold: false, alignment: 'center', color: '#b45309', italics: true },
                 titleHeader: { fontSize: 14, bold: true, alignment: 'center', color: '#0ea5e9', lineHeight: 1.5 },
                 sectionHeader: { fontSize: 12, bold: true, alignment: 'left', lineHeight: 1.5, color: '#1e3a8a' },
                 bodyText: { fontSize: 11, alignment: 'justify', lineHeight: 1.5, firstLineIndent: 40 },
@@ -739,29 +742,8 @@ window.exportPeticaoInicial = function(metricsOverride) {
                 }
             });
         } else {
-            forensicLog('warn', 'ENRICHMENT', 'pdfMake não disponível; tentando carregar via CDN...');
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'libs/pdfmake.min.js'; // RET10: local em vez de CDN
-                script.onload = () => {
-                    const vfsScript = document.createElement('script');
-                    vfsScript.src = 'libs/vfs_fonts.js'; // RET10: local
-                    vfsScript.onload = () => {
-                        forensicLog('info', 'ENRICHMENT', 'pdfMake carregado dinamicamente, a gerar PDF...');
-                        resolve(window.exportPeticaoInicial(metricsOverride));
-                    };
-                    vfsScript.onerror = () => {
-                        forensicLog('error', 'ENRICHMENT', 'Falha ao carregar vfs_fonts, usando fallback binário');
-                        resolve(_fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash));
-                    };
-                    document.head.appendChild(vfsScript);
-                };
-                script.onerror = () => {
-                    forensicLog('error', 'ENRICHMENT', 'Falha ao carregar pdfMake, usando fallback binário');
-                    resolve(_fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash));
-                };
-                document.head.appendChild(script);
-            });
+            forensicLog('warn', 'ENRICHMENT', 'pdfMake não disponível — verificar se pdfmake.min.js está carregado em index.html');
+            return Promise.resolve(_fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash));
         }
     } catch (error) {
         forensicLog('error', 'ENRICHMENT', '❌ Falha crítica em exportPeticaoInicial (PDF)', { message: error.message, stack: error.stack });

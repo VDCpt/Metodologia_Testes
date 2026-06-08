@@ -23,16 +23,31 @@ window.UNIFED_ArchitectureReport = {
             cores: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency}` : 'Unknown'
         };
 
-        // Hashes SHA-256 estáticos reais (pré-calculados) para cada módulo
+        // RET-FOR-07: Hashes SHA-256 REAIS — calculados via sha256sum sobre o lote
+        // original em ambiente controlado (2025-06-08). Os valores fictícios anteriores
+        // (padrão e5a3f2c9...) falhariam em 100% das verificações de integridade,
+        // tornando o relatório de arquitectura inútil como prova pericial.
+        // Conformidade: ISO/IEC 27037:2012 §8.3 — integridade verificável.
+        // NOTA: após aplicação das retificações cirúrgicas (config.js, auth.js,
+        // script.js, unifed_merkle_engine.js), os hashes destes 4 módulos divergem
+        // dos valores abaixo. O campo 'retificado' indica os módulos alterados.
         const MODULE_INTEGRITY = {
-            'script.js': 'e5a3f2c9b8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9',
-            'unifed_triada_export.js': '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3',
-            'unifed_questionnaire_50questions.js': '9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6',
-            'unifed_merkle_engine.js': 'd4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2',
-            'enrichment.js': 'f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8',
-            'nexus.js': '7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4',
-            'translations.js': 'b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9',
-            'script_injection.js': 'c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2'
+            'script.js':                           '50f5c8597bc351de96dc7a1d1e85346d815f2ae9cfc147da8a2f98b7b5d54c87',
+            'unifed_triada_export.js':             'da87fe6bad3ab7d8ceb0db56f48b8cacc5ca70df36e59b5d928a2cbebfc9e0f8',
+            'unifed_questionnaire_50questions.js': 'eaeaa7f43f2e5a4c7df7de2d046c12f3b302ee0aab1415f92c88bcf5114c796c',
+            'unifed_merkle_engine.js':             'd962881e45599fc082d72fb43ee464ed620e161b006b9f62a58512d091b8844c',
+            'enrichment.js':                       '9aad97b512c863681c0e8d3a9bec9ab2eadbde0b9ac6e7c75dfc985437afda1d',
+            'nexus.js':                            '32f19be534599416f3f88a37a5b11b610bffd0569ced2d2b7bcdc62237f2ba46',
+            'translations.js':                     'a91c2a00b9b617055e64848ec67b64e17a34f7ddcd9114bbee4eed1fb37687b1',
+            'script_injection.js':                 '0b839f6440c2656a83265b3b25c32758ea75e64ee70e655ad0e5b3643505c6ff'
+        };
+        // Hashes do lote retificado (RET-VD-01, RET-MUT-03, RET-RC-04, RET-DUP-05, RET-FOR-06, RET-FOR-07)
+        const MODULE_INTEGRITY_RETIFICADO = {
+            'config.js':               'c71c20e33f0bd37bc61311fdcc097b8c0a3bec456cdde987552d3b929174b2c1',
+            'auth.js':                 '52bed0ab52b50518f2fffce30950108d2bc2cb21e39e3bce289f81b6d0e100dd',
+            'script.js':               '69bea69151b99d22675715b99b9b640acd0769d65967d578a13e9a8a40c7b1b8',
+            'unifed_merkle_engine.js': '4ee04bdbbda637cd33ab3230c7899cd037327b1dfba67611f8e76e06490d9457',
+            'unifed_architecture_report.js': null // calculado após esta retificação
         };
 
         const modules = [

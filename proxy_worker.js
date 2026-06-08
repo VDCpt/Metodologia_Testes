@@ -360,6 +360,25 @@ export default {
 
         // ── 2. VALIDAÇÃO DO MÉTODO ─────────────────────────────────────────────
         if (request.method !== 'POST') {
+
+    // ── R7: Endpoint /tsa — Selagem temporal RFC 3161 via freetsa.org ──────────────
+    if (url.pathname === '/tsa' && request.method === 'POST') {
+        const tsaResponse = await fetch('https://freetsa.org/tsa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/timestamp-query' },
+            body: request.body
+        });
+        return new Response(tsaResponse.body, {
+            status: tsaResponse.status,
+            headers: {
+                'Content-Type': 'application/timestamp-reply',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+        });
+    }
+
             return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
                 status: 405,
                 headers: { 

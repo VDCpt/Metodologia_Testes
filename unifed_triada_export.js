@@ -795,12 +795,12 @@
     async function gerarImagemSankey() {
         try {
             if (typeof window.renderSankeyToImage === 'function') {
-                const imgData = await window.renderSankeyToImage(window.UNIFEDSystem.analysis);
-                if (imgData && imgData.startsWith('data:image')) return imgData;
+                return await window.renderSankeyToImage(window.UNIFEDSystem.analysis);
             }
         } catch (e) {
-            triadaLog('warn', 'Falha ao gerar imagem Sankey', e);
+            triadaLog('warn', 'Falha ao gerar Sankey', e);
         }
+        console.warn('[SANKEY] renderSankeyToImage não disponível – imagem omitida do PDF');
         return null;
     }
 
@@ -1493,13 +1493,21 @@
     // estruturais (R14-R21) e adicionando as secções avançadas do segundo ficheiro.
     // -------------------------------------------------------------------------
     async function _gerarBlobParecerTecnicoForense(fullPayload) {
+        // ── R16: Constantes Dinâmicas de Exclusão Fiscal (substituição de hardcodes) ──
+        const auxData = (window.UNIFEDSystem && window.UNIFEDSystem.auxiliaryData) || {};
+        const ISENCAO_BASE_TRIBUTAVEL = auxData.totalNaoSujeitos || 0;
+        const valCampanhas    = auxData.campanhas    || 0;
+        const valGorjetas     = auxData.gorjetas     || 0;
+        const valPortagens    = auxData.portagens    || 0;
+        const valCancelamentos= auxData.cancelamentos|| 0;
+        // ─────────────────────────────────────────────────────────────────────────────
         triadaLog('info', '📄 Gerando blob do Parecer Técnico Forense (Analista) com todas as secções do Modelo 03-B');
 
         // ── Constante de Exclusão Fiscal (Quesito de Exclusão) ────────────────
         // Valor segregado por não ser sujeito a comissão conforme FAQ da Plataforma.
         // Campanhas: 405,00 € + Gorjetas (Tips): 46,00 € + Portagens: 0,15 €
         // Este valor é subtraído da base de cálculo antes da geração do relatório final.
-        const ISENCAO_BASE_TRIBUTAVEL = 451.15;
+        // R16: ISENCAO_BASE_TRIBUTAVEL definida dinamicamente no topo da função (auxData.totalNaoSujeitos)
         // ─────────────────────────────────────────────────────────────────────
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
@@ -2118,7 +2126,7 @@ As plataformas procedem ao pagamento dos prestadores por transferência bancári
 
                 // ========== 23. INVERSÃO DO ÓNUS DA PROVA ==========
                 { text: "QUALIFICAÇÃO JURÍDICA — CRIMINALIDADE DE COLARINHO BRANCO (WHITE-COLLAR CRIME)", style: 'h2' },
-                { text: `A engenharia algorítmica da plataforma cria uma 'zona cinzenta' premeditada entre o ganho real retido na fonte e o valor reportado em SAF-T/DAC7. Este diferencial não declarado fica num limbo contabilístico, caracterizando uma tipologia de criminalidade de colarinho branco e evasão fiscal estruturada, explorando a assimetria de informação contra o parceiro e o Estado.\n\nObjeto: Impossibilidade de Contraprova pelo Sujeito Passivo face à Assimetria Informativa.\nAnálise Técnica: A UNIFED-PROBATUM identificou uma divergência estrutural entre o Fluxo de Caixa Real (Ledger) e o Reporte Fiscal (SAF-T/DAC7). Dado que a plataforma detém o Monopólio da Emissão Documental (Art. 36.º, n.º 11 CIVA) e o controlo exclusivo sobre o algoritmo de cálculo de comissões, o parceiro encontra-se numa situação de indefesa técnica. A plataforma atua como "Black Box" fiscal — o sujeito passivo não tem acesso ao código-fonte nem aos logs brutos de transação que geram a faturação delegada.\n\nConclusão Pericial: Por força do Princípio da Proximidade da Prova (Acórdão STJ 11/07/2013) e do Art. 344.º n.º 2 do CC, opera-se a Inversão do Ônus da Prova: incumbe à plataforma demonstrar a integridade dos valores retidos (${formatForensicCurrency(omissaoCustos)}), sob pena de confissão implícita da apropriação indevida e da fraude fiscal aqui evidenciada. Cabe à Plataforma — e não ao sujeito passivo — provar a inexistência de dolo na retenção apurada.`, style: 'normal', margin: [0, 0, 0, 15] },
+                { text: `A engenharia algorítmica da plataforma cria uma 'zona cinzenta' premeditada entre o ganho real retido na fonte e o valor reportado em SAF-T/DAC7. Este diferencial não declarado fica num limbo contabilístico, caracterizando uma tipologia de criminalidade de colarinho branco e evasão fiscal estruturada, explorando a assimetria de informação contra o parceiro e o Estado.\n\nObjeto: Impossibilidade de Contraprova pelo Sujeito Passivo face à Assimetria Informativa.\nAnálise Técnica: A UNIFED-PROBATUM identificou uma divergência estrutural entre o Fluxo de Caixa Real (Ledger) e o Reporte Fiscal (SAF-T/DAC7). Dado que a plataforma detém o Monopólio da Emissão Documental (Art. 36.º, n.º 11 CIVA) e o controlo exclusivo sobre o algoritmo de cálculo de comissões, o parceiro encontra-se numa situação de indefesa técnica. A plataforma atua como "Black Box" fiscal — o sujeito passivo não tem acesso ao código-fonte nem aos logs brutos de transação que geram a faturação delegada.\n\nConclusão Pericial: Por força do Princípio da Proximidade da Prova (Acórdão STJ 11/07/2013) e do Art. 344.º n.º 2 do CC, opera-se a Inversão do Ónus da Prova: incumbe à plataforma demonstrar a integridade dos valores retidos (${formatForensicCurrency(omissaoCustos)}), sob pena de confissão implícita da apropriação indevida e da fraude fiscal aqui evidenciada. Cabe à Plataforma — e não ao sujeito passivo — provar a inexistência de dolo na retenção apurada.`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 24. DIAGRAMA DE FLUXO FINANCEIRO ==========
                 ...(sankeyImg ? [
@@ -2281,18 +2289,18 @@ VALIDAÇÃO TÉCNICA DE CONSULTORIA: O presente relatório é selado com o Maste
                 { text: `A diferença entre os Ganhos Brutos reportados pelo extrato da plataforma e o valor comunicado à AT via DAC7 inclui fluxos que não estão sujeitos a comissão pela plataforma (Termos e Condições). Estes valores — gorjetas dos passageiros, ganhos de campanha e portagens — são transferências diretas ou reembolsos operacionais que não integram a base de cálculo da comissão, mas podem ter sido indevidamente incluídos no reporte DAC7, inflacionando o rendimento bruto declarado à Autoridade Tributária (AT).
 
 ## FLUXOS NÃO SUJEITOS A COMISSÃO (Termos e Condições da Plataforma — 0%)
-• Ganhos da campanha (Campanhas): 405,00 € [0% comissão - incentivo plataforma]
-• Gorjetas dos passageiros (Tips): 46,00 € [0% comissão - transferência P2P]
-• Portagens (Tolls / 2024): 0,15 € [reembolso operacional]
-• Taxas de Cancelamento: 58,10 € [já incluído em Despesas — Sujeito a Comissão]
-TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): 451,15 €
+• Ganhos da campanha (Campanhas): ${formatForensicCurrency(valCampanhas)} [0% comissão - incentivo plataforma]
+• Gorjetas dos passageiros (Tips): ${formatForensicCurrency(valGorjetas)} [0% comissão - transferência P2P]
+• Portagens (Tolls / 2024+): ${formatForensicCurrency(valPortagens)} [reembolso operacional]
+• Taxas de Cancelamento: ${formatForensicCurrency(valCancelamentos)} [já incluído em Despesas — Sujeito a Comissão]
+TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): ${formatForensicCurrency(ISENCAO_BASE_TRIBUTAVEL)}
 
-Nota de Perito: Valor de €${ISENCAO_BASE_TRIBUTAVEL.toFixed(2).replace('.', ',')} segregado por não ser sujeito a comissão (conforme FAQ da Plataforma). Este montante foi subtraído da base de cálculo antes da geração do presente relatório forense, em conformidade com os Termos e Condições da Plataforma para TVDE e com o princípio da tributação apenas de rendimentos efectivamente sujeitos a comissão.
+Nota de Perito: Valor de ${formatForensicCurrency(ISENCAO_BASE_TRIBUTAVEL)} segregado por não ser sujeito a comissão (conforme FAQ da Plataforma). Este montante foi subtraído da base de cálculo antes da geração do presente relatório forense, em conformidade com os Termos e Condições da Plataforma para TVDE e com o princípio da tributação apenas de rendimentos efectivamente sujeitos a comissão.
 
-Impacto DAC7: Os 451,15 € de fluxos não sujeitos a comissão não justificam a totalidade da discrepância entre o extrato da plataforma (${formatForensicCurrency(m.ganhos)}) e o valor DAC7 reportado à AT (${formatForensicCurrency(m.dac7Total)}), porquanto a divergência apurada é materialmente superior. Se incluídos indevidamente no rendimento bruto DAC7, o contribuinte terá sido prejudicado na determinação da sua base tributável.
+Impacto DAC7: Os fluxos não sujeitos a comissão não justificam a totalidade da discrepância entre o extrato da plataforma (${formatForensicCurrency(m.ganhos)}) e o valor DAC7 reportado à AT (${formatForensicCurrency(m.dac7Total)}), porquanto a divergência apurada é materialmente superior. Se incluídos indevidamente no rendimento bruto DAC7, o contribuinte terá sido prejudicado na determinação da sua base tributável.
 
 ## QUESTIONÁRIO ESTRATÉGICO AO ADVOGADO — CONTRADITÓRIO FORENSE
-Os valores isentos de comissão (Campanhas + Gorjetas + Portagens = 451,15 €) foram indevidamente incluídos no cálculo do rendimento bruto para efeitos de reporte SAF-T / DAC7? Se sim, porque é que foi aplicada uma presunção de rendimento sobre valores que, pelos Termos e Condições da plataforma para TVDE, não sofrem retenção nem comissão por parte da mesma?
+Os valores isentos de comissão (Campanhas + Gorjetas + Portagens = ${formatForensicCurrency(ISENCAO_BASE_TRIBUTAVEL)}) foram indevidamente incluídos no cálculo do rendimento bruto para efeitos de reporte SAF-T / DAC7? Se sim, porque é que foi aplicada uma presunção de rendimento sobre valores que, pelos Termos e Condições da plataforma para TVDE, não sofrem retenção nem comissão por parte da mesma?
 [Fundamentação Legal] Termos e Condições da Plataforma - Comissões 0% sobre gorjetas e campanhas - Art. 125.º CPP (admissibilidade da prova) - Art. 103.º RGIT (Fraude Fiscal) - DAC7 / Diretiva (UE) 2021/514 - AT — Autoridade Tributária e Aduaneira`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 32. QUESTÕES PARA CONTRADITÓRIO (Q1) ==========
@@ -2734,6 +2742,8 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     // VINCULAÇÃO ÚNICA DOS BOTÕES (evita duplicação de listeners)
     // =========================================================================
     async function bindExportButtonsOnce() {
+        if (window._exportButtonsBound) return;
+        window._exportButtonsBound = true;
         const btnAnalyst = document.getElementById('exportAnalystBtn');
         const btnLawyer  = document.getElementById('exportLawyerBtn');
         if (btnAnalyst && !btnAnalyst._triadaBound) {

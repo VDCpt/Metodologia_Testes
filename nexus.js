@@ -121,9 +121,8 @@
     // Recursos de CDN (unpkg, cdnjs, etc.) NÃO são bloqueados.
     // ──────────────────────────────────────────────────────────────────────────
     var _EXTERNAL_PATTERNS = [
-        'api.anthropic.com',
-        'api.unifed.com',
-        'claude-proxy',
+        // 'api.anthropic.com' — removido: permitido quando demoMode inactivo (LLM real)
+        // 'api.unifed.com'    — removido: permitido quando demoMode inactivo (proxy Cloudflare)
         'freetsa.org',
         'opentimestamps',
         'calendar.opentimestamps',
@@ -179,6 +178,12 @@
 
     function _isExternalUrl(url) {
         if (!url) return false;
+        // Se NÃO estivermos em demoMode, permitir APIs LLM e TSA reais
+        if (!window.UNIFEDSystem?.demoMode &&
+            (url.includes('api.anthropic.com') || url.includes('api.unifed.com') ||
+             url.includes('freetsa.org')        || url.includes('opentimestamps'))) {
+            return false;
+        }
         return _EXTERNAL_PATTERNS.some(function(p) { return url.indexOf(p) !== -1; });
     }
 
@@ -1414,7 +1419,21 @@ function _injectForecastIntoChart(forecast, historicLen) {
     }
 
     function _escapeHTML(str) {
-        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        // RET-SEC-08: adicionado escape de aspas simples e duplas.
+        // A ausência de escaping de aspas em contexto de atributos HTML inline
+        // (ex: style="..." onclick="...") permite que um filename com ' ou "
+        // quebre o atributo e injete HTML arbitrário. Risco classificado MÉDIO
+        // dado que item.filename provém de f.name (File API do browser) — não
+        // de input de texto livre — mas ficheiros com nomes como:
+        //   documento" onmouseover="alert(1)
+        // são tecnicamente possíveis em sistemas de ficheiros FAT/NTFS.
+        // Conformidade: OWASP XSS Prevention Cheat Sheet Rule #2.
+        return String(str || '')
+            .replace(/&/g,  '&amp;')
+            .replace(/</g,  '&lt;')
+            .replace(/>/g,  '&gt;')
+            .replace(/"/g,  '&quot;')
+            .replace(/'/g,  '&#x27;');
     }
 
     function injectBlockchainExplorerUI() {
@@ -1576,6 +1595,14 @@ function _injectForecastIntoChart(forecast, historicLen) {
             window._fullDisclosureApplied = true;
 
             console.info('[NEXUS·M5] \u2705 Full-Disclosure activado — pure-cards visíveis · Zero-State removido.');
+
+            // R9: Forçar regeneração do TOP 3 após full disclosure
+            if (window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.top3Questions) {
+                if (typeof window.UNIFED_RenderTop3 === 'function') {
+                    window.UNIFED_RenderTop3();
+                    console.info('[NEXUS·M5] ✅ TOP 3 regenerado após Full-Disclosure.');
+                }
+            }
         } catch (discErr) {
             console.warn('[NEXUS·M5] \u26a0 Erro no Full-Disclosure:', discErr.message);
         }

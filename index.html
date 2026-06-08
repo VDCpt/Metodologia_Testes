@@ -19,7 +19,7 @@
             // Domínios que serão BLOQUEADOS (APIs externas, TSA, etc.)
             const BLOCKED_DOMAINS = [
                 'api.anthropic.com',
-                'api.unifed.com',
+                // 'api.unifed.com',   // ← desbloqueado para selagem TSA opcional (R2)
                 'freetsa.org',
                 'opentimestamps.org',
                 'calendar.opentimestamps.org'
@@ -61,9 +61,9 @@
     <script src="auth.js"></script>
     <script src="libs/crypto-js.min.js"></script>
 
-    <!-- pdfMake (geração de PDF) -->
-    <script src="libs/pdfmake.min.js"></script>
+    <!-- pdfMake (geração de PDF) — vfs_fonts DEVE preceder pdfmake.min.js -->
     <script src="libs/vfs_fonts.js"></script>
+    <script src="libs/pdfmake.min.js"></script>
 
     <!-- Chart.js (gráficos ATF) -->
     <script src="libs/chart.umd.min.js"></script>
@@ -197,151 +197,6 @@
     </style>
 
     <!-- Módulos internos (ordem de carga corrigida) -->
-    <script>
-/**
- * ============================================================================
- * UNIFED-PROBATUM | CONFIGURAÇÃO DE OPERADOR (Single-User) - TOKEN DINÂMICO
- * ============================================================================
- * Conformidade: RGPD Art. 25 · ISO/IEC 27037:2012 · D.L. n.º 28/2019
- * ============================================================================
- */
-window.UNIFED_CONFIG = Object.freeze({
-    isSingleUser:         true,
-    sistema:              'UNIFED-PROBATUM',
-    versao:               'v1.0-COMMERCIAL-LITIGATION',
-    modo:                 'DEMO',
-    dataConfig:           new Date().toISOString(),
-    aviso:                'CONFIDENCIAL v1.0 — LITÍGIO COMERCIAL E CONTRATUAL — USO RESTRITO A MANDATO JURÍDICO AUTORIZADO'
-});
-delete window._tmp;
-console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por token dinâmico de sessão).');
-    </script>
-    <script>
-/**
- * ============================================================================
- * UNIFED-PROBATUM | MIDDLEWARE DE AUTENTICAÇÃO (TOKEN DINÂMICO + MODAL ASSÍNCRONO)
- * ============================================================================
- * Conformidade: RGPD Art. 25 · ISO/IEC 27037:2012 · D.L. n.º 28/2019
- * ============================================================================
- */
-(function _unifedAuthMiddleware() {
-    'use strict';
-
-    if (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO') {
-        sessionStorage.setItem('unifed_authenticated', 'true');
-        sessionStorage.setItem('unifed_authenticated_ts', String(Date.now()));
-        console.log('[SECURITY] ℹ️  Modo DEMO activo — autenticação dispensada (dados anonimizados).');
-        return;
-    }
-
-    var SESSION_KEY = 'unifed_authenticated';
-    var TIMEOUT_MS  = 30 * 60 * 1000;
-
-    async function deriveSessionToken(salt) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode('UNIFED-PROBATUM-AUTH' + salt);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    function getOrCreateSessionSalt() {
-        let salt = sessionStorage.getItem(SESSION_KEY + '_salt');
-        if (!salt) {
-            salt = crypto.getRandomValues(new Uint8Array(16)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
-            sessionStorage.setItem(SESSION_KEY + '_salt', salt);
-        }
-        return salt;
-    }
-
-    var authTimestamp = sessionStorage.getItem(SESSION_KEY + '_ts');
-    var isSessionValid = sessionStorage.getItem(SESSION_KEY) === 'true' &&
-                         authTimestamp &&
-                         (Date.now() - parseInt(authTimestamp, 10)) < TIMEOUT_MS;
-
-    if (isSessionValid) {
-        console.log('[SECURITY] ✅ Sessão autenticada activa — acesso concedido.');
-        return;
-    }
-
-    const salt = getOrCreateSessionSalt();
-
-    function showAuthModal() {
-        return new Promise((resolve) => {
-            const overlay = document.createElement('div');
-            overlay.id = 'unifed-auth-overlay';
-            overlay.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(10,15,30,0.98); z-index: 10000;
-                display: flex; align-items: center; justify-content: center;
-                font-family: 'JetBrains Mono', monospace;
-            `;
-            overlay.innerHTML = `
-                <div style="background:#0f172a; border:1px solid #00e5ff; border-radius:8px; padding:2rem; max-width:400px; text-align:center;">
-                    <h3 style="color:#00e5ff; margin-bottom:1rem;">🔐 UNIFED-PROBATUM</h3>
-                    <p style="color:#94a3b8; margin-bottom:1.5rem;">Autenticação necessária para aceder ao sistema forense.</p>
-                    <input type="password" id="unifed-auth-password" placeholder="Password de acesso" style="width:100%; padding:8px; background:#1e293b; border:1px solid #334155; color:white; border-radius:4px; margin-bottom:1rem;">
-                    <button id="unifed-auth-submit" style="background:#00e5ff; color:#000; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:bold;">Aceder</button>
-                    <p id="unifed-auth-error" style="color:#ef4444; font-size:0.75rem; margin-top:1rem; display:none;">Password incorreta. Tente novamente.</p>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-            document.documentElement.style.overflow = 'hidden';
-
-            const input = overlay.querySelector('#unifed-auth-password');
-            const button = overlay.querySelector('#unifed-auth-submit');
-            const errorSpan = overlay.querySelector('#unifed-auth-error');
-
-            const attempt = async () => {
-                const pass = input.value;
-                if (!pass) return;
-                input.disabled = true;
-                button.disabled = true;
-                const hash = await deriveSessionToken(salt + pass);
-                input.value = '';
-                const operatorPass = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.operatorToken) || 'UNIFED-DEMO-ACCESS';
-                const expected = await deriveSessionToken(salt + operatorPass);
-                if (hash === expected) {
-                    sessionStorage.setItem(SESSION_KEY, 'true');
-                    sessionStorage.setItem(SESSION_KEY + '_ts', String(Date.now()));
-                    overlay.remove();
-                    document.documentElement.style.overflow = '';
-                    resolve(true);
-                } else {
-                    errorSpan.style.display = 'block';
-                    input.disabled = false;
-                    button.disabled = false;
-                    resolve(false);
-                }
-            };
-
-            button.onclick = attempt;
-            input.onkeypress = (e) => { if (e.key === 'Enter') attempt(); };
-        });
-    }
-
-    (async function authenticate() {
-        let attempts = 0;
-        let success = false;
-        while (!success && attempts < 3) {
-            attempts++;
-            success = await showAuthModal();
-        }
-        if (!success) {
-            document.body.innerHTML = `
-                <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0f1e;">
-                    <div style="text-align:center;border:1px solid #ef4444;padding:48px;border-radius:8px;">
-                        <h1 style="color:#ef4444;">ACESSO NEGADO</h1>
-                        <p style="color:#94a3b8;">UNIFED-PROBATUM · Autenticação falhada após 3 tentativas.</p>
-                        <p style="color:#64748b;">Recarregue a página para tentar novamente.</p>
-                    </div>
-                </div>
-            `;
-            throw new Error('[SECURITY] ⛔ Falha de Autenticação. Sistema Bloqueado.');
-        }
-    })().catch(err => console.error(err));
-})();
-    </script>
 
 <script src="translations.js"></script>
 <script src="unifed_questionnaire_50questions.js"></script>
@@ -617,6 +472,9 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                     <button id="resetBtn" class="pure-btn-led led-silver l1-btn" data-pt="REINICIAR" data-en="RESET">REINICIAR</button>
                     <button id="clearConsoleBtn" class="pure-btn-led led-silver l1-btn" data-pt="LIMPAR CONSOLE" data-en="CLEAR CONSOLE">
                         <span id="clearConsoleBtnText">LIMPAR CONSOLE</span>
+                    </button>
+                    <button id="exportInspectionBtn" class="pure-btn-led led-silver l1-btn" data-pt="EXPORTAR INSPECÇÃO" data-en="EXPORT INSPECTION">
+                        <i class="fas fa-search"></i> <span data-pt="EXPORTAR INSPECÇÃO" data-en="EXPORT INSPECTION">EXPORTAR INSPECÇÃO</span>
                     </button>
                     <div id="triadaContainer" class="triada-row">
                         <button id="exportLawyerBtn" class="pure-btn-led" style="height:65px;">
