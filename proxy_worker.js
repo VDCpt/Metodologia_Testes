@@ -362,7 +362,9 @@ export default {
         if (request.method !== 'POST') {
 
     // ── R7: Endpoint /tsa — Selagem temporal RFC 3161 via freetsa.org ──────────────
-    if (url.pathname === '/tsa' && request.method === 'POST') {
+    // [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 2: instanciação explícita de URL para evitar ReferenceError em url
+    const requestUrl = new URL(request.url);
+    if (requestUrl.pathname === '/tsa' && request.method === 'POST') {
         const tsaResponse = await fetch('https://freetsa.org/tsa', {
             method: 'POST',
             headers: { 'Content-Type': 'application/timestamp-query' },

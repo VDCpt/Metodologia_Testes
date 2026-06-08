@@ -743,7 +743,7 @@ window.exportPeticaoInicial = function(metricsOverride) {
             });
         } else {
             forensicLog('warn', 'ENRICHMENT', 'pdfMake não disponível — verificar se pdfmake.min.js está carregado em index.html');
-            return Promise.resolve(_fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash));
+            return Promise.resolve(_fallbackPdfHtml(lockForensicString, fileName, sessionId, masterHash));
         }
     } catch (error) {
         forensicLog('error', 'ENRICHMENT', '❌ Falha crítica em exportPeticaoInicial (PDF)', { message: error.message, stack: error.stack });
@@ -752,49 +752,30 @@ window.exportPeticaoInicial = function(metricsOverride) {
     }
 };
 
-function _fallbackPdfBinary(lockForensicString, fileName, sessionId, masterHash) {
-    const pdfDummy = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
-endobj
-4 0 obj
-<< /Length 200 >>
-stream
-BT /F1 12 Tf 100 700 Td (${lockForensicString}) Tj ET
-endstream
-endobj
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-xref
-0 6
-0000000000 65535 f 
-0000000009 00000 n 
-0000000056 00000 n 
-0000000103 00000 n 
-0000000193 00000 n 
-0000000272 00000 n 
-trailer
-<< /Size 6 /Root 1 0 R >>
-startxref
-320
-%%EOF`;
-    const blob = new Blob([pdfDummy], { type: 'application/pdf' });
+// [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 4: _fallbackPdfBinary substituída por _fallbackPdfHtml
+// Gera HTML renderizável em vez de pseudo-PDF malformado; utilizador instrui a imprimir como PDF.
+function _fallbackPdfHtml(lockForensicString, fileName, sessionId, masterHash) {
+    const html = `<!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>Petição Inicial</title>
+    <style>body{font-family:Times New Roman;margin:2cm;} .hash{word-break:break-all;}</style>
+    </head><body>
+    <h1>Minuta de Petição Inicial</h1>
+    <p><strong>Nota:</strong> O gerador de PDF não está disponível neste ambiente. Utilize a opção <em>"Imprimir → Guardar como PDF"</em> do seu navegador.</p>
+    <hr>
+    <p>${lockForensicString.replace(/\n/g, '<br>')}</p>
+    <p><strong>Master Hash SHA-256:</strong> <span class="hash">${masterHash}</span></p>
+    <p>Gerado em: ${new Date().toLocaleString()}</p>
+    </body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName;
+    a.download = fileName.replace('.pdf', '.html');
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    forensicLog('warn', 'ENRICHMENT', 'Fallback binário PDF utilizado (pdfMake indisponível)', { fileName });
+    forensicLog('warn', 'ENRICHMENT', 'Fallback HTML gerado em vez de PDF', { fileName });
     return fileName;
 }
 

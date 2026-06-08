@@ -4993,6 +4993,10 @@ function updateCounters() {
 }
 
 function activateDemoMode() {
+    // [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 7: guard anti-reentrada
+    if (window._demoActivating) return;
+    window._demoActivating = true;
+    try {
     if (UNIFEDSystem.demoMode && !UNIFEDSystem.processing) {
         console.warn('[DEMO] Caso Real já ativo e renderizado. Abortando loop do Nexus.');
         return;
@@ -5369,6 +5373,9 @@ function activateDemoMode() {
             if (typeof updateAnalysisButton === 'function') updateAnalysisButton();
         }
     }, 300); // PERF-01: Reduzido de 1500 → 300 ms (timeout artificial eliminado)
+    } finally {
+        window._demoActivating = false;
+    }
 }
 
 function simulateUpload(type, count) {

@@ -57,8 +57,8 @@
          ──────────────────────────────────────────────────────────────────────────── -->
     <!-- CryptoJS (hash SHA‑256) -->
     <!-- R24-AUTH: config e autenticação carregados primeiro — obrigatório -->
-     <!--<script src="config.js"></script>-->
-     <!--<script src="auth.js"></script>-->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
     <script src="libs/crypto-js.min.js"></script>
 
     <!-- pdfMake (geração de PDF) — vfs_fonts DEVE preceder pdfmake.min.js -->
@@ -238,6 +238,8 @@
          VERIFICAÇÃO DE DEPENDÊNCIAS (ANTES DO DOMContentLoaded)
          Garante que todas as bibliotecas forenses essenciais foram carregadas.
          ============================================================================ -->
+    <!-- [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 1: checkDependencies comentada para evitar bloqueio por CDN -->
+    <!--
     <script>
         (function checkDependencies() {
             const requiredLibs = [
@@ -246,7 +248,7 @@
                 { name: 'Chart', global: 'Chart' },
                 { name: 'QRCode', global: 'QRCode' },
                 { name: 'JSZip', global: 'JSZip' },
-                { name: 'jspdf', global: 'jspdf' }    // Alguns usam window.jspdf
+                { name: 'jspdf', global: 'jspdf' }
             ];
             const missing = [];
             for (const lib of requiredLibs) {
@@ -257,13 +259,14 @@
             }
             if (missing.length) {
                 console.error('[DEPENDENCIAS] ERRO CRÍTICO: Bibliotecas forenses não carregadas:', missing.join(', '));
-                alert('⚠️ ERRO CRÍTICO: O sistema não pode funcionar offline.\nFaltam: ' + missing.join(', ') + 
+                alert('⚠️ ERRO CRÍTICO: O sistema não pode funcionar offline.\nFaltam: ' + missing.join(', ') +
                       '\n\nVerifique a sua ligação à Internet (as bibliotecas são carregadas via CDN).');
                 throw new Error('Missing critical dependencies: ' + missing.join(', '));
             }
             console.log('[DEPENDENCIAS] ✅ Todas as bibliotecas forenses essenciais foram carregadas (CDN OK).');
         })();
     </script>
+    -->
 </head>
 <body>
 
@@ -1036,115 +1039,9 @@
   </script>
 </section>
 
-<script>
-  (function() {
-    // ========================================================================
-    // UNIFED PANEL TRANSLATION v1.1 (com suporte a data-i18n-ignore)
-    // ========================================================================
-    
-    function getCurrentLanguage() {
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('unifed_lang')) {
-        return localStorage.getItem('unifed_lang');
-      }
-      if (document.documentElement && document.documentElement.lang) {
-        const docLang = document.documentElement.lang.toLowerCase();
-        if (docLang === 'pt' || docLang === 'en') return docLang;
-      }
-      return 'pt';
-    }
-
-    function safeTranslate(lang) {
-      if (typeof window.translateDataLangElements === 'function') {
-        window.translateDataLangElements = function(lang) {
-          const elements = document.querySelectorAll('[data-pt][data-en]');
-          for (let el of elements) {
-            if (el.hasAttribute('data-i18n-ignore')) continue;
-            const ptText = el.getAttribute('data-pt');
-            const enText = el.getAttribute('data-en');
-            if (lang === 'pt' && ptText) {
-              if (el.isContentEditable) {
-                el.innerText = ptText;
-              } else {
-                el.innerText = ptText;
-              }
-            } else if (lang === 'en' && enText) {
-              if (el.isContentEditable) {
-                el.innerText = enText;
-              } else {
-                el.innerText = enText;
-              }
-            }
-          }
-          window.dispatchEvent(new CustomEvent('unifed:translationDone', { detail: { lang } }));
-        };
-        window.translateDataLangElements(lang);
-      } else {
-        window.translateDataLangElements = function(lang) {
-          const elements = document.querySelectorAll('[data-pt][data-en]');
-          for (let el of elements) {
-            if (el.hasAttribute('data-i18n-ignore')) continue;
-            const ptText = el.getAttribute('data-pt');
-            const enText = el.getAttribute('data-en');
-            if (lang === 'pt' && ptText) {
-              if (el.isContentEditable) {
-                el.innerText = ptText;
-              } else {
-                el.innerText = ptText;
-              }
-            } else if (lang === 'en' && enText) {
-              if (el.isContentEditable) {
-                el.innerText = enText;
-              } else {
-                el.innerText = enText;
-              }
-            }
-          }
-          window.dispatchEvent(new CustomEvent('unifed:translationDone', { detail: { lang } }));
-        };
-        window.translateDataLangElements(lang);
-      }
-    }
-
-    window.setUILanguage = function(lang) {
-      if (lang !== 'pt' && lang !== 'en') return;
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('unifed_lang', lang);
-      }
-      safeTranslate(lang);
-      window.dispatchEvent(new CustomEvent('unifed:languageChanged', { detail: { lang } }));
-    };
-
-    window._activatePurePanel = function() {
-      const currentLang = getCurrentLanguage();
-      safeTranslate(currentLang);
-      
-      window.addEventListener('unifed:languageChanged', function(e) {
-        if (e.detail && e.detail.lang) safeTranslate(e.detail.lang);
-      });
-      window.addEventListener('languageChanged', function(e) {
-        let lang = e.detail && e.detail.lang;
-        if (!lang && typeof e.detail === 'string') lang = e.detail;
-        if (lang && (lang === 'pt' || lang === 'en')) safeTranslate(lang);
-      });
-      
-      console.info('[UNIFED] _activatePurePanel executado. Tradução com blindagem ativa. Idioma atual:', currentLang);
-    };
-
-    function runActivation() {
-      if (typeof window._activatePurePanel === 'function') {
-        window._activatePurePanel();
-      } else {
-        console.warn('[UNIFED] _activatePurePanel não definido ao tentar inicializar.');
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runActivation);
-    } else {
-      runActivation();
-    }
-  })();
-</script>
+<!-- [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 3: bloco i18n duplicado removido.
+     As funções translateDataLangElements e setUILanguage são geridas exclusivamente por script.js.
+     O _activatePurePanel é gerido exclusivamente por panel.html. -->
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <!-- PAINEL DO ADVOGADO: CONTRADITÓRIO DINÂMICO RECOMENDADO (TOP 3)      -->

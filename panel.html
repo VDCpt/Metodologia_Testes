@@ -444,115 +444,11 @@
 </script>
 </section>
 
-<script>
-  (function() {
-    // ========================================================================
-    // UNIFED PANEL TRANSLATION v1.1 (com suporte a data-i18n-ignore)
-    // ========================================================================
-    
-    function getCurrentLanguage() {
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('unifed_lang')) {
-        return localStorage.getItem('unifed_lang');
-      }
-      if (document.documentElement && document.documentElement.lang) {
-        const docLang = document.documentElement.lang.toLowerCase();
-        if (docLang === 'pt' || docLang === 'en') return docLang;
-      }
-      return 'pt';
-    }
+<!-- [v1.0-COMMERCIAL-LITIGATION] CORREÇÃO 3: bloco safeTranslate e _activatePurePanel removido.
+     Delegação exclusiva a script.js (window.translateAll / window.setUILanguage).
+     enforceHorizontalLayoutPermanent mantido acima. -->
 
-    function safeTranslate(lang) {
-      if (typeof window.translateDataLangElements === 'function') {
-        window.translateDataLangElements = function(lang) {
-          const elements = document.querySelectorAll('[data-pt][data-en]');
-          for (let el of elements) {
-            if (el.hasAttribute('data-i18n-ignore')) continue;
-            const ptText = el.getAttribute('data-pt');
-            const enText = el.getAttribute('data-en');
-            if (lang === 'pt' && ptText) {
-              if (el.isContentEditable) {
-                el.innerText = ptText;
-              } else {
-                el.innerText = ptText;
-              }
-            } else if (lang === 'en' && enText) {
-              if (el.isContentEditable) {
-                el.innerText = enText;
-              } else {
-                el.innerText = enText;
-              }
-            }
-          }
-          window.dispatchEvent(new CustomEvent('unifed:translationDone', { detail: { lang } }));
-        };
-        window.translateDataLangElements(lang);
-      } else {
-        window.translateDataLangElements = function(lang) {
-          const elements = document.querySelectorAll('[data-pt][data-en]');
-          for (let el of elements) {
-            if (el.hasAttribute('data-i18n-ignore')) continue;
-            const ptText = el.getAttribute('data-pt');
-            const enText = el.getAttribute('data-en');
-            if (lang === 'pt' && ptText) {
-              if (el.isContentEditable) {
-                el.innerText = ptText;
-              } else {
-                el.innerText = ptText;
-              }
-            } else if (lang === 'en' && enText) {
-              if (el.isContentEditable) {
-                el.innerText = enText;
-              } else {
-                el.innerText = enText;
-              }
-            }
-          }
-          window.dispatchEvent(new CustomEvent('unifed:translationDone', { detail: { lang } }));
-        };
-        window.translateDataLangElements(lang);
-      }
-    }
 
-    window.setUILanguage = function(lang) {
-      if (lang !== 'pt' && lang !== 'en') return;
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('unifed_lang', lang);
-      }
-      safeTranslate(lang);
-      window.dispatchEvent(new CustomEvent('unifed:languageChanged', { detail: { lang } }));
-    };
-
-    window._activatePurePanel = function() {
-      const currentLang = getCurrentLanguage();
-      safeTranslate(currentLang);
-      
-      window.addEventListener('unifed:languageChanged', function(e) {
-        if (e.detail && e.detail.lang) safeTranslate(e.detail.lang);
-      });
-      window.addEventListener('languageChanged', function(e) {
-        let lang = e.detail && e.detail.lang;
-        if (!lang && typeof e.detail === 'string') lang = e.detail;
-        if (lang && (lang === 'pt' || lang === 'en')) safeTranslate(lang);
-      });
-      
-      console.info('[UNIFED] _activatePurePanel executado. Tradução com blindagem ativa. Idioma atual:', currentLang);
-    };
-
-    function runActivation() {
-      if (typeof window._activatePurePanel === 'function') {
-        window._activatePurePanel();
-      } else {
-        console.warn('[UNIFED] _activatePurePanel não definido ao tentar inicializar.');
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runActivation);
-    } else {
-      runActivation();
-    }
-  })();
-</script>
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <!-- PAINEL DO ADVOGADO: CONTRADITÓRIO DINÂMICO RECOMENDADO (TOP 3)      -->
