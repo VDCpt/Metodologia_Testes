@@ -556,12 +556,12 @@
     // =========================================================================
     // ELIMINAÇÃO DO FALLBACK ARITMÉTICO (COURT-READY-02)
     // =========================================================================
-    function safeGenerateMasterBatchHash() {
+    async function safeGenerateMasterBatchHash() {
         if (window.UNIFEDSystem && typeof window.UNIFEDSystem.masterHash === 'string' && window.UNIFEDSystem.masterHash.length === 64) {
             return window.UNIFEDSystem.masterHash;
         }
         if (typeof window.generateMasterBatchHash === 'function') {
-            const hash = window.generateMasterBatchHash();
+            const hash = await window.generateMasterBatchHash();
             if (typeof hash === 'string' && hash.length > 0) return hash;
         }
         const sessionId = window.UNIFED_SESSION_RESOLVER ? window.UNIFED_SESSION_RESOLVER._lastResolved : (window.UNIFEDSystem?.sessionId || 'UNKNOWN');
@@ -569,6 +569,15 @@
         if (typeof CryptoJS !== 'undefined' && CryptoJS.SHA256) {
             const hash = CryptoJS.SHA256(hashInput).toString().toUpperCase();
             triadaLog('info', '✅ Hash de lote gerado com CryptoJS (SHA-256)');
+            return hash;
+        }
+        // Tentativa final com crypto.subtle
+        if (window.crypto && window.crypto.subtle) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(hashInput);
+            const buf  = await window.crypto.subtle.digest('SHA-256', data);
+            const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+            triadaLog('info', '✅ Hash de lote gerado com crypto.subtle (WebCrypto)');
             return hash;
         }
         const errMsg = 'ERR_CRYPTO_FALLBACK_NOT_ALLOWED: A integridade da prova digital exige SHA-256 verificado. O fallback aritmético foi desativado por questões de conformidade forense (ISO 27037).';
@@ -579,10 +588,11 @@
 
     if (typeof window.generateMasterBatchHash === 'function') {
         const originalGen = window.generateMasterBatchHash;
-        window.generateMasterBatchHash = function() {
-            const errMsg = 'ERR_CRYPTO_FALLBACK_NOT_ALLOWED: A integridade da prova digital exige SHA-256 verificado. O fallback aritmético foi desativado.';
-            triadaLog('error', 'Tentativa de executar fallback aritmético bloqueada.', { vector: 'window.generateMasterBatchHash' });
-            throw new Error(errMsg);
+        // [R3-CRYPTO] Monkey-patch preservador: delega para a implementação original (async).
+        // O bloqueio destrutivo foi removido: window.generateMasterBatchHash é agora uma função
+        // async que usa CryptoJS ou crypto.subtle — ambos conformes com ISO/IEC 27037.
+        window.generateMasterBatchHash = async function() {
+            return await originalGen();
         };
     }
 
