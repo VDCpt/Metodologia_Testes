@@ -56,29 +56,31 @@
          BIBLIOTECAS CRÍTICAS (CARREGADAS VIA CDN – COMPATÍVEL COM GITHUB PAGES)
          ──────────────────────────────────────────────────────────────────────────── -->
     <!-- CryptoJS (hash SHA‑256) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <!-- R24-AUTH: config e autenticação carregados primeiro — obrigatório -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="libs/crypto-js.min.js"></script>
 
     <!-- pdfMake (geração de PDF) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
+    <script src="libs/pdfmake.min.js"></script>
+    <script src="libs/vfs_fonts.js"></script>
 
     <!-- Chart.js (gráficos ATF) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="libs/chart.umd.min.js"></script>
 
     <!-- QRCode.js (QR codes) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="libs/qrcode.min.js"></script>
 
     <!-- JSZip (compactação dos pacotes .zip) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="libs/jszip.min.js"></script>
 
     <!-- jsPDF (fallback para alguns PDFs) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="libs/jspdf.umd.min.js"></script>
 
     <!-- Outras bibliotecas auxiliares (PapaParse, pdf.js, docx) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"
-            onerror="this.onerror=null;this.src='https://unpkg.com/docx@7.8.2/build/index.js'"></script>
+    <script src="libs/papaparse.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+    <script src="libs/docx/index.js"></script>
 
     <!-- Verificação de carregamento do pdfMake -->
     <script>
@@ -1986,7 +1988,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
         window.pdfjsLib = window['pdfjs-dist/build/pdf'];
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-                'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+                'libs/pdf.worker.min.js';
         }
 
         // Guarda defensiva: apenas define se a função real (do #pureDashboard) ainda não foi carregada

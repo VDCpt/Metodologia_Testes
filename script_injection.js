@@ -65,12 +65,23 @@ async function _initCryptoEnvironment() {
 /**
  * Gerador seguro de hashes SHA-256 para cadeia de custódia
  */
+// RET 6 — _generateSHA256 com fallback CryptoJS quando WebCrypto indisponível
 async function _generateSHA256(data) {
     const encoder = new TextEncoder();
     const buffer = encoder.encode(JSON.stringify(data));
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    if (window.crypto && window.crypto.subtle) {
+        try {
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        } catch (_wcErr) {
+            console.warn('[CRYPTO] WebCrypto falhou, a usar fallback CryptoJS:', _wcErr.message);
+        }
+    }
+    if (typeof CryptoJS !== 'undefined') {
+        return CryptoJS.SHA256(JSON.stringify(data)).toString().toUpperCase();
+    }
+    throw new Error('[CRÍTICO] Nenhum motor de hash disponível (WebCrypto + CryptoJS ambos indisponíveis).');
 }
 
 /**
@@ -856,9 +867,10 @@ window.UNIFED_validateBeforeExport = async function(exportLabel) {
 // ============================================================================
 // RETIFICAÇÃO CIRÚRGICA: applyTimestampAndMerkle() - Preserva HMAC com verificação de readyState
 // ============================================================================
+// RET 7 — aguardar DOMContentLoaded em vez de retornar imediatamente
 async function applyTimestampAndMerkle() {
-    if (document.readyState !== 'complete') {
-        return;
+    if (document.readyState === 'loading') {
+        await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
     }
     const chain = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody;
     if (!chain || chain.sealed) return;

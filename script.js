@@ -855,10 +855,38 @@ const QUESTIONS_CACHE = [
 // ============================================================================
 // UTILITÁRIOS FORENSES
 // ============================================================================
+// ============================================================================
+// UTILITÁRIOS FORENSES — hoisted para evitar ReferenceError (RET 2)
+// ============================================================================
 const forensicRound = (num) => {
     if (num === null || num === undefined || isNaN(num)) return 0;
     return Math.round((num + Number.EPSILON) * 100) / 100;
 };
+
+let lastLogTime = 0;
+const LOG_THROTTLE = 100;
+
+function logAudit(message, type = 'info') {
+    const now = Date.now();
+    if (now - lastLogTime < LOG_THROTTLE && type !== 'error' && type !== 'success') {
+        return;
+    }
+    lastLogTime = now;
+    const locale = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'en-US' : 'pt-PT';
+    const timestamp = new Date().toLocaleTimeString(locale);
+    const entry = { timestamp, message, type };
+    if (typeof UNIFEDSystem !== 'undefined' && UNIFEDSystem.logs) {
+        UNIFEDSystem.logs.push(entry);
+    }
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        const logEl = document.createElement('div');
+        logEl.className = `log-entry log-${type}`;
+        logEl.textContent = `[${timestamp}] ${message}`;
+        consoleOutput.appendChild(logEl);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+}
 
 const normalizeNumericValue = (input) => {
     if (!input) return 0;
@@ -3941,8 +3969,7 @@ let UNIFEDSystem = {
 
 window.UNIFEDSystem = UNIFEDSystem;
 
-let lastLogTime = 0;
-const LOG_THROTTLE = 100;
+// lastLogTime e LOG_THROTTLE movidos para junto de forensicRound (RET 2)
 
 const fileProcessingQueue = [];
 let isProcessingQueue = false;
@@ -5805,25 +5832,29 @@ async function performAudit() {
         // deve ser selada antes de qualquer acção de validação ou exportação.
         // RETIFICAÇÃO R24-ASYNC: await explícito de calculateMasterHash() antes de seal()
         // para garantir que UNIFEDSystem.masterHash nunca contenha [object Promise].
-      if (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody) {
+        // RET 4 — await explícito + try/catch em volta de calculateMasterHash + seal
+        if (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody) {
             const chain = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody;
-            if (typeof chain.calculateMasterHash === 'function') {
-                const finalHash = await chain.calculateMasterHash();
-                UNIFEDSystem.masterHash = finalHash;
-                console.log('[UNIFED-COC] 🔑 calculateMasterHash() resolvido:', finalHash ? finalHash.substring(0,16)+'...' : 'FALHOU');
+            try {
+                if (typeof chain.calculateMasterHash === 'function') {
+                    const finalHash = await chain.calculateMasterHash();
+                    UNIFEDSystem.masterHash = finalHash;
+                    console.log('[UNIFED-COC] 🔑 calculateMasterHash():', finalHash ? finalHash.substring(0,16)+'...' : 'FALHOU');
+                }
+                await chain.seal();
+                UNIFEDSystem.masterHash = chain.masterHash || UNIFEDSystem.masterHash;
+                if (typeof window._syncPureDashboard === 'function') {
+                    window._syncPureDashboard(UNIFEDSystem);
+                }
+                if (typeof generateQRCode === 'function') {
+                    generateQRCode();
+                }
+                console.log('[UNIFED-COC] 🔐 Cadeia de custódia selada e masterHash sincronizado.');
+            } catch (_sealErr4) {
+                if (window.UNIFED_FORENSIC_LOG) window.UNIFED_FORENSIC_LOG.push({ ts: Date.now(), lvl: 'ERROR', msg: '[RET4] seal() falhou: ' + _sealErr4.message });
+                console.error('[UNIFED-COC] ❌ Erro na selagem:', _sealErr4.message);
             }
-    		await chain.seal();
-   		 // ⭐ Garantir que o masterHash do sistema é o mesmo da cadeia
-   		 UNIFEDSystem.masterHash = chain.masterHash || UNIFEDSystem.masterHash;
-   		 // Sincronizar interface
-   		 if (typeof window._syncPureDashboard === 'function') {
-       		 window._syncPureDashboard(UNIFEDSystem);
-    		}
-   		 if (typeof generateQRCode === 'function') {
-    		    generateQRCode();
-  		  }
- 		   console.log('[UNIFED-COC] 🔐 Cadeia de custódia selada e masterHash sincronizado.');
-	}
+        }
 
         UNIFEDSystem.performanceTiming.end = performance.now();
         const duration = (UNIFEDSystem.performanceTiming.end - UNIFEDSystem.performanceTiming.start).toFixed(2);
@@ -7548,27 +7579,7 @@ async function generateMasterHash() {
     return newHash;
 }
 
-function logAudit(message, type = 'info') {
-    const now = Date.now();
-    if (now - lastLogTime < LOG_THROTTLE && type !== 'error' && type !== 'success') {
-        return;
-    }
-    lastLogTime = now;
-
-    const locale = currentLang === 'pt' ? 'pt-PT' : 'en-US';
-    const timestamp = new Date().toLocaleTimeString(locale);
-    const entry = { timestamp, message, type };
-    UNIFEDSystem.logs.push(entry);
-
-    const consoleOutput = document.getElementById('consoleOutput');
-    if (consoleOutput) {
-        const logEl = document.createElement('div');
-        logEl.className = `log-entry log-${type}`;
-        logEl.textContent = `[${timestamp}] ${message}`;
-        consoleOutput.appendChild(logEl);
-        consoleOutput.scrollTop = consoleOutput.scrollHeight;
-    }
-}
+// logAudit movida para cima (RET 2 — hoisting)
 
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -8756,10 +8767,12 @@ window.resetEvidenceOnly = resetEvidenceOnly;
 window._isSyncing = window._isSyncing || false;
 
 window._syncPureDashboard = (function() {
-    let syncInProgress = false;
-    return function(system) {
-        if (syncInProgress) return 0;
-        syncInProgress = true;
+    // RET 5: flag de concorrência — syncPending em vez de syncInProgress
+    // permite re-entrada controlada sem bloquear o retry pattern
+    let syncPending = false;
+    return function(system, isRetry) {
+        if (syncPending && !isRetry) return 0;
+        syncPending = true;
         try {
             if (!system || !system.analysis) return 0;
             const totals = system.analysis.totals || {};
@@ -8995,7 +9008,8 @@ window._syncPureDashboard = (function() {
             console.log(`[SYNC] ${updated} elementos actualizados. Master hash: ${masterHash.substring(0,16)}...`);
             return updated;
         } finally {
-            syncInProgress = false;
+            // RET5: variável unificada syncPending controlada pelo wrapper externo
+            syncPending = false;
         }
     };
 })();
@@ -10022,14 +10036,44 @@ window.executarAnaliseForense = async function() {
     // Executa o congelamento do botão superior
     executarRetificacoesFinaisUnifed();
 
-    // INJEÇÃO DO NOVO ALERTA VISUAL PERSISTENTE NO DASHBOARD (aparece passados 3.5 segundos)
+    // RET 3 — alert() substituído por modal personalizada (sem bloqueio nativo do browser)
     window.setTimeout(() => {
-        alert("⚠ [ALERTA VISUAL CRÍTICO - HEURÍSTICA FORENSE NIFAF]\n\n" +
-              "Aviso de Desconformidade Estrutural das Plataformas Digitais:\n" +
-              "• Nível de Omissão Principal Detetado: 89.04%\n" +
-              "• Nível de Omissão Residual Detetado: 5.75%\n\n" +
-              "O botão acústico de topo foi desativado por segurança. Este diagnóstico visual permanecerá fixo no ecrã até que clique em 'OK'.");
-    }, 3500); // Exibido exatamente 3.5 segundos após a conclusão do processamento
+        if (typeof window.showModalMessage === 'function') {
+            window.showModalMessage(
+                "⚠ ALERTA FORENSE — HEURÍSTICA NIFAF",
+                "Aviso de Desconformidade Estrutural das Plataformas Digitais:\n\n" +
+                "• Nível de Omissão Principal Detetado: 89,04%\n" +
+                "• Nível de Omissão Residual Detetado: 5,75%\n\n" +
+                "O diagnóstico está fixo no painel. Clique em OK para fechar.",
+                null
+            );
+        } else {
+            // Fallback: modal inline sem depender de showModalMessage
+            (function _nifafModal() {
+                const _m = document.createElement('div');
+                _m.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:JetBrains Mono,monospace;';
+                _m.id = '_nifaf_modal';
+                // DOM API — sem aspas aninhadas em handler
+                (function() {
+                    var _box = document.createElement('div');
+                    _box.style.cssText = 'max-width:480px;width:90%;background:#0f172a;border:1px solid rgba(239,68,68,0.5);border-radius:8px;padding:28px;';
+                    var _t = document.createElement('div');
+                    _t.style.cssText = 'font-size:0.8rem;font-weight:800;color:#ef4444;margin-bottom:16px;letter-spacing:1px;';
+                    _t.textContent = '⚠ ALERTA FORENSE — HEURÍSTICA NIFAF';
+                    var _b = document.createElement('div');
+                    _b.style.cssText = 'font-size:0.72rem;color:#94a3b8;line-height:1.7;margin-bottom:20px;';
+                    _b.innerHTML = 'Aviso de Desconformidade Estrutural das Plataformas Digitais:<br><br>&bull; N&iacute;vel de Omiss&atilde;o Principal Detetado: <strong style="color:#ef4444;">89,04%</strong><br>&bull; N&iacute;vel de Omiss&atilde;o Residual Detetado: <strong style="color:#f59e0b;">5,75%</strong><br><br>O diagn&oacute;stico est&aacute; fixo no painel.';
+                    var _btn = document.createElement('button');
+                    _btn.style.cssText = 'padding:8px 24px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:700;font-family:inherit;';
+                    _btn.textContent = 'OK — Fechar';
+                    _btn.onclick = function() { _m.remove(); };
+                    _box.appendChild(_t); _box.appendChild(_b); _box.appendChild(_btn);
+                    _m.appendChild(_box);
+                })();
+                document.body.appendChild(_m);
+            })();
+        }
+    }, 3500);
 };
 
 

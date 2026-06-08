@@ -817,6 +817,7 @@
         return null;
     }
 
+    // RET 8 — gerarQRCodeDataURL com timeout de segurança (2000ms) e try/catch em new QRCode()
     async function gerarQRCodeDataURL(masterHash, sessionId) {
         return new Promise((resolve) => {
             if (typeof QRCode === 'undefined') {
@@ -830,21 +831,37 @@
             const div = document.createElement('div');
             div.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
             document.body.appendChild(div);
-            new QRCode(div, {
-                text: qrData,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+            // Timeout de segurança: resolve(null) ao fim de 2000ms se canvas não estiver pronto
+            const timer = setTimeout(() => {
+                try { document.body.removeChild(div); } catch(_) {}
+                triadaLog('warn', 'QR Code: timeout 2000ms — resolve(null)');
+                resolve(null);
+            }, 2000);
+            try {
+                new QRCode(div, {
+                    text: qrData,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            } catch (_qrErr) {
+                clearTimeout(timer);
+                try { document.body.removeChild(div); } catch(_) {}
+                triadaLog('warn', 'Erro em new QRCode():', { message: _qrErr.message });
+                resolve(null);
+                return;
+            }
             setTimeout(() => {
                 try {
                     const canvas = div.querySelector('canvas');
                     const dataUrl = canvas ? canvas.toDataURL('image/png') : null;
+                    clearTimeout(timer);
                     document.body.removeChild(div);
                     resolve(dataUrl);
                 } catch (err) {
+                    clearTimeout(timer);
                     triadaLog('warn', 'Erro ao gerar QR code dataURL', { message: err.message });
                     try { document.body.removeChild(div); } catch(_) {}
                     resolve(null);
@@ -2985,20 +3002,30 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         return { parecer: parecer, anexo: anexo, peticao: peticao };
     };
 
+    // RET 9 — validação de hashDashboard com fallback e protecção NaN
     ENG.runCourtReadyChecklist = function(payload, hashDashboard) {
         var erros  = [];
         var avisos = [];
         var linhas = ['=== UNIFED — COURT READY CHECKLIST (PVC-01) ==='];
+
+        // hashDashboard: usar argumento, ou masterHash do sistema, ou string vazia
+        hashDashboard = hashDashboard ||
+                        (window.UNIFEDSystem && window.UNIFEDSystem.masterHash) ||
+                        (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash) ||
+                        '';
 
         var riscoDash = 0;
         try {
             var sel = ['#omissaoCustosPercent','#riscoPct','#expenseOmissionPct','[data-metric="riscoPct"]'];
             for (var i = 0; i < sel.length; i++) {
                 var el = document.querySelector(sel[i]);
-                if (el) { riscoDash = parseFloat(el.textContent || el.innerText || '0'); break; }
+                if (el) {
+                    var _parsed = parseFloat((el.textContent || el.innerText || '0').replace(',','.').replace(/[^0-9.]/g,''));
+                    if (!isNaN(_parsed)) { riscoDash = _parsed; break; }
+                }
             }
         } catch(domErr) {}
-        var riscoPDF   = parseFloat(payload.riscoPercentual);
+        var riscoPDF   = parseFloat(String(payload.riscoPercentual).replace(',','.')) || 0;
         var deltaRisco = Math.abs(riscoDash - riscoPDF);
         if (riscoDash === 0) {
             avisos.push('CHECK 1: Leitura DOM indisponível — verificar manualmente (PDF: ' + payload.riscoPercentual + '%).');

@@ -596,6 +596,22 @@ window.exportPeticaoInicial = function(metricsOverride) {
             return parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
         };
         
+        // RET 10 — garantir pdfMake.vfs inicializado antes de criar docDefinition
+        if (typeof pdfMake !== 'undefined' && pdfMake.vfs && Object.keys(pdfMake.vfs).length === 0) {
+            forensicLog('warn', 'ENRICHMENT', 'pdfMake.vfs está vazio — a tentar carregar vfs_fonts manualmente');
+            if (typeof pdfMake.vfs_fonts !== 'undefined') {
+                pdfMake.vfs = pdfMake.vfs_fonts;
+                forensicLog('info', 'ENRICHMENT', 'pdfMake.vfs restaurado de pdfMake.vfs_fonts');
+            } else {
+                // Fallback: carregar vfs_fonts.js local
+                const _vfsScript = document.createElement('script');
+                _vfsScript.src = 'libs/vfs_fonts.js';
+                _vfsScript.onload = () => { forensicLog('info', 'ENRICHMENT', 'libs/vfs_fonts.js carregado'); };
+                _vfsScript.onerror = () => { forensicLog('warn', 'ENRICHMENT', 'libs/vfs_fonts.js não encontrado — PDF pode usar fonte fallback'); };
+                document.head.appendChild(_vfsScript);
+            }
+        }
+
         // =========================================================================
         // RETIFICAÇÃO v1.3: docDefinition com HEADER CONDICIONAL e MARGENS CORRECTAS
         // =========================================================================
@@ -726,10 +742,10 @@ window.exportPeticaoInicial = function(metricsOverride) {
             forensicLog('warn', 'ENRICHMENT', 'pdfMake não disponível; tentando carregar via CDN...');
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js';
+                script.src = 'libs/pdfmake.min.js'; // RET10: local em vez de CDN
                 script.onload = () => {
                     const vfsScript = document.createElement('script');
-                    vfsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js';
+                    vfsScript.src = 'libs/vfs_fonts.js'; // RET10: local
                     vfsScript.onload = () => {
                         forensicLog('info', 'ENRICHMENT', 'pdfMake carregado dinamicamente, a gerar PDF...');
                         resolve(window.exportPeticaoInicial(metricsOverride));
