@@ -224,7 +224,12 @@
 
     <div class="pure-wc-recommendation" id="pure-wc-recommendation">
       <strong id="pure-wc-rec-title" data-pt="RECOMENDAÇÃO PERICIAL:" data-en="EXPERT RECOMMENDATION:">RECOMENDAÇÃO PERICIAL:</strong>
-      <p id="pure-wc-rec-text" data-pt="Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado." data-en="Recommend referral for tax fraud investigation (DCIAP/PGR) based on evidence of structured omission, pattern of systemic underestimation, and documented violation of invoicing standards (Art. 78 CIVA). The scale of damage (€1,743,598,080 in 7-year projection) justifies application of organized economic crime typology.">Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado.</p>
+      <!-- data-pt/data-en INTENCIONALMENTE OMITIDOS: valor injectado dinamicamente
+           por script_injection.js (_syncPureDashboard → binding #pure-wc-rec-text).
+           Pipeline SSOT: macroMedia = discrepanciaCritica / mesesDados → macro7Anos.
+           Qualquer valor estático aqui seria sobrescrito e constituiria risco de
+           assimetria entre dashboard e texto pericial (NIST SP 800-86 §4.3). -->
+      <p id="pure-wc-rec-text" data-i18n-ignore="true">Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano será calculada dinamicamente após análise.</p>
     </div>
   </div>
 

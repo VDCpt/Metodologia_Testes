@@ -641,12 +641,19 @@ window._syncPureDashboard = (function() {
 
     function performSync(system, isRetry = false) {
         if (!system || !system.analysis) {
-            if (!isRetry && retryCount < MAX_RETRIES) {
+            if (retryCount < MAX_RETRIES) {
                 retryCount++;
-                setTimeout(() => performSync(system, true), RETRY_DELAY_MS);
+                // Fallback: tentar ler de window.UNIFEDSystem antes de abortar
+                const fallbackSystem = window.UNIFEDSystem || null;
+                if (fallbackSystem && fallbackSystem.analysis) {
+                    console.warn(`[UNIFED-SYNC] ⚠️ system.analysis ausente — a usar window.UNIFEDSystem (tentativa ${retryCount}/${MAX_RETRIES}).`);
+                    setTimeout(() => performSync(fallbackSystem, true), RETRY_DELAY_MS);
+                } else {
+                    setTimeout(() => performSync(system, true), RETRY_DELAY_MS);
+                }
                 return;
             }
-            console.error('[UNIFED-SYNC] ❌ Dados de análise ausentes.');
+            console.error('[UNIFED-SYNC] ❌ Dados de análise ausentes após ' + MAX_RETRIES + ' tentativas. Verificar se UNIFED_ANALYSIS_COMPLETE foi disparado.');
             return;
         }
 
@@ -772,14 +779,18 @@ window._syncPureDashboard = (function() {
         const _elIva6Val = document.getElementById('iva6Value');
         if (_elIva6Val) { _elIva6Val.innerText = fmt(_iva6Omitido); updated++; }
 
-        // ── RECTIFICAÇÃO R24-MACRO (RETIFICADO) ───────────────────────────────────
+        // ── RECTIFICAÇÃO R24-MACRO (SSOT v2 — RETIFICAÇÃO DEFINITIVA) ──────────────
+        // SSOT: mediaMensal = (BTOR − BTF) / meses_com_dados
+        // Pipeline: macroMedia → macroMensal (×38k) → macroAnual (×12) → macro7Anos (×7)
+        // NOTA: Factor 0.85 removido deste pipeline de display — aplica-se apenas em
+        // calcularDanoConservador() para projeções conservadoras de litígio (cross.impactoSeteAnosMercado).
+        // O dashboard e a RECOMENDAÇÃO PERICIAL usam o valor determinístico sem margem.
         const cross = system.analysis?.crossings || {};
         const macroMeses = (system.dataMonths && system.dataMonths.size > 0) ? system.dataMonths.size : 1;
-        const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
-        // Integração obrigatória da heurística de segurança forense (0.85)
-        const macroMensal   = (macroMedia * 38000) * 0.85;
-        const macroAnual    = macroMensal * 12;
-        const macro7Anos    = macroAnual * 7;
+        const macroMedia    = parseFloat(((cross.discrepanciaCritica || 0) / macroMeses).toFixed(2));
+        const macroMensal   = parseFloat((macroMedia * 38000).toFixed(2));
+        const macroAnual    = parseFloat((macroMensal * 12).toFixed(2));
+        const macro7Anos    = parseFloat((macroAnual * 7).toFixed(2));
         const fmtMacro = window.formatForensicCurrency || fmt;
 
         const macroMediaEl  = document.getElementById('pure-macro-media');
@@ -790,6 +801,19 @@ window._syncPureDashboard = (function() {
         if (macroMensalEl) { macroMensalEl.innerText = fmtMacro(macroMensal); updated++; }
         if (macroAnualEl)  { macroAnualEl.innerText  = fmtMacro(macroAnual);  updated++; }
         if (macro7AnosEl)  { macro7AnosEl.innerText  = fmtMacro(macro7Anos);  updated++; }
+
+        // ── BINDING DINÂMICO: RECOMENDAÇÃO PERICIAL (#pure-wc-rec-text) ──────────
+        // Substitui o valor estático €1.743.598.080 pela projeção calculada em SSOT.
+        // Elimina assimetria entre bloco de simulação e texto de recomendação.
+        const wcRecTextEl = document.getElementById('pure-wc-rec-text');
+        if (wcRecTextEl) {
+            const macro7AnosFormatado = fmtMacro(macro7Anos);
+            wcRecTextEl.setAttribute('data-i18n-ignore', 'true');
+            wcRecTextEl.innerText = lang === 'en'
+                ? `Recommend referral for tax fraud investigation (DCIAP/PGR) based on evidence of structured omission, pattern of systemic underestimation, and documented violation of invoicing standards (Art. 78 CIVA). The scale of damage (${macro7AnosFormatado} in 7-year projection) justifies application of organized economic crime typology.`
+                : `Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (${macro7AnosFormatado} em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado.`;
+            updated++;
+        }
         // ── FIM RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────
 
         // ── CORREÇÃO DA ZONA CINZENTA ─────────────────────────────────────────────

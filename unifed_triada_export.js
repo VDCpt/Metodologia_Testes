@@ -1575,9 +1575,21 @@
         const impactoAnualOmissaoCustos = omissaoCustos * 12;           // 26.219,40 €
         const ircEstimado = impactoAnualOmissaoCustos * 0.21;           // 5.506,07 €
         const contribuicaoIMT = omissaoReceita * 0.05;                  // 23,64 €
-        const impactoMensal38k = omissaoCustos * 38000;                 // 20.757.025 €
-        const impactoAnual38k = impactoMensal38k * 12;                  // 249.084.300 €
-        const impacto7Anos = impactoAnual38k * 7;                       // 1.743.598.080 €
+        // ── SSOT v2: mediaMensal = (BTOR − BTF) / meses_com_dados ──────────────
+        // Lê mesesDados de UNIFEDSystem.dataMonths (fonte de verdade).
+        // Fallback: 1 (evita divisão por zero; gera aviso de auditoria).
+        // Elimina assimetria com script.js performForensicCrossings().
+        const _mesesDados = (window.UNIFEDSystem && window.UNIFEDSystem.dataMonths &&
+                             window.UNIFEDSystem.dataMonths.size > 0)
+                            ? window.UNIFEDSystem.dataMonths.size : 1;
+        if (_mesesDados === 1 && !(window.UNIFEDSystem && window.UNIFEDSystem.dataMonths && window.UNIFEDSystem.dataMonths.size === 1)) {
+            console.warn('[TRIADA-SSOT] ⚠️ dataMonths.size não disponível — mediaMensal calculada sobre 1 mês. Verificar ingestão de dados.');
+        }
+        const mediaMensalSSOT  = parseFloat((omissaoCustos / _mesesDados).toFixed(2));
+        const impactoMensal38k = parseFloat((mediaMensalSSOT * 38000).toFixed(2));
+        const impactoAnual38k  = parseFloat((impactoMensal38k * 12).toFixed(2));
+        const impacto7Anos     = parseFloat((impactoAnual38k * 7).toFixed(2));
+        console.log(`[TRIADA-SSOT] mediaMensal=${mediaMensalSSOT} (omissaoCustos=${omissaoCustos} / meses=${_mesesDados}) → impacto7Anos=${impacto7Anos}`);
 
         // Datas e timestamps
         const now = new Date();
