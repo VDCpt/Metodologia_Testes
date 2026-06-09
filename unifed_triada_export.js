@@ -54,6 +54,12 @@
  * - Adicionado estilo footerText em _gerarBlobParecerTecnicoForense para evitar erro "Cannot read properties of undefined"
  * - Substituída secção 33 (Declaração de Compromisso) por versão sanitizada sem texto solto
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R24: CORRECÇÃO DAS VARIÁVEIS isPT E lang NAS FUNÇÕES DE BLOB
+ * - _gerarBlobAnexoCustodia: definidas lang e isPT no início
+ * - _gerarPeticaoBlob: definidas lang e isPT no início
+ * - Removidas dependências da fonte Roboto; usar Helvetica por defeito
+ * - Aumentado timeout de geração de PDF para 60s (evita timeouts em cargas pesadas)
+ * ============================================================================
  */
 
 (function () {
@@ -1304,6 +1310,9 @@
     // FUNÇÃO DE EXPORTAÇÃO DA PETIÇÃO INICIAL (PDF VIA pdfMake) - CONSOLIDADA
     // =========================================================================
     async function _gerarPeticaoBlob() {
+        // --- CORRECÇÃO R24: definir lang e isPT ---
+        const lang = window.currentLang || 'pt';
+        const isPT = lang === 'pt';
         triadaLog('info', '⚖️ Iniciando geração da Minuta de Petição Inicial (Blob) via pdfMake');
 
         const _activePayload = window.UNIFED_ACTIVE_EXPORT_PAYLOAD || null;
@@ -1347,6 +1356,7 @@
             const docDefinition = {
                 pageSize: 'A4',
                 pageMargins: [40, 85, 40, 60],
+                defaultStyle: { font: 'Helvetica', fontSize: 10.5, color: '#334155' },
                 header: function(currentPage, pageCount) {
                     return {
                         columns: [
@@ -1376,83 +1386,80 @@
                     { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
                 ],
                 footer: function(currentPage, pageCount) {
-    const pendingIds = getPendingEvidenceIds();
-    const hasPending = pendingIds.length > 0;
-    const lang = window.currentLang || 'pt';
-    const isPT = lang === 'pt';
-    const safeguardText = hasPending 
-        ? (isPT 
-            ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
-            : `⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
-        : '';
-    
-    const processoNum = m.session || 'UNIFED-SESSAO';
-    
-    return {
-        stack: [
-            // ── Linha separadora flush com as margens do corpo ──
-            {
-                canvas: [{
-                    type: 'line',
-                    x1: 0, y1: 0, x2: 515, y2: 0,
-                    lineWidth: 0.5,
-                    lineColor: '#1e3a8a'
-                }],
-                margin: [0, 0, 0, 3]
-            },
-            // ── Linha 1: título (esq) | processo (dir) ──
-            {
-                table: {
-                    widths: ['*', 'auto'],
-                    body: [[
-                        {
-                            text: 'RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP',
-                            style: 'footerLeft',
-                            border: [false, false, false, false]
-                        },
-                        {
-                            text: `PROCESSO N.: ${processoNum}`,
-                            style: 'footerRight',
-                            alignment: 'right',
-                            border: [false, false, false, false]
-                        }
-                    ]]
+                    const pendingIds = getPendingEvidenceIds();
+                    const hasPending = pendingIds.length > 0;
+                    const lang = window.currentLang || 'pt';
+                    const isPT = lang === 'pt';
+                    const safeguardText = hasPending 
+                        ? (isPT 
+                            ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
+                            : `⚠️ ABSENCE OF RFC 3161 TIMESTAMP for [ID: ${pendingIds.join(', ')}] does not compromise SHA-256 hash inviolability, pursuant to Art. 125.º CPP / ISO/IEC 27037:2012`)
+                        : '';
+                    
+                    const masterHashFooter = m.masterHash || 'INDISPONÍVEL';
+                    const processoNum = m.session || 'UNIFED-SESSAO';
+                    
+                    return {
+                        stack: [
+                            {
+                                canvas: [{
+                                    type: 'line',
+                                    x1: 0, y1: 0, x2: 515, y2: 0,
+                                    lineWidth: 0.5,
+                                    lineColor: '#1e3a8a'
+                                }],
+                                margin: [0, 0, 0, 3]
+                            },
+                            {
+                                table: {
+                                    widths: ['*', 'auto'],
+                                    body: [[
+                                        {
+                                            text: 'RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP',
+                                            style: 'footerLeft',
+                                            border: [false, false, false, false]
+                                        },
+                                        {
+                                            text: `PROCESSO N.: ${processoNum}`,
+                                            style: 'footerRight',
+                                            alignment: 'right',
+                                            border: [false, false, false, false]
+                                        }
+                                    ]]
+                                },
+                                layout: 'noBorders',
+                                margin: [0, 0, 0, 1]
+                            },
+                            {
+                                table: {
+                                    widths: ['*', 'auto'],
+                                    body: [[
+                                        {
+                                            text: `Master Hash SHA-256: ${masterHashFooter.toUpperCase()}`,
+                                            style: 'footerLeft',
+                                            border: [false, false, false, false]
+                                        },
+                                        {
+                                            text: `Página ${currentPage} de ${pageCount}`,
+                                            style: 'footerRight',
+                                            alignment: 'right',
+                                            border: [false, false, false, false]
+                                        }
+                                    ]]
+                                },
+                                layout: 'noBorders',
+                                margin: [0, 0, 0, 0]
+                            },
+                            ...(hasPending ? [{
+                                text: safeguardText,
+                                style: 'footerWarning',
+                                alignment: 'center',
+                                margin: [0, 4, 0, 0]
+                            }] : [])
+                        ],
+                        margin: [40, 0, 40, 8]
+                    };
                 },
-                layout: 'noBorders',
-                margin: [0, 0, 0, 1]
-            },
-            // ── Linha 2: master hash (esq) | página (dir) ──
-            {
-                table: {
-                    widths: ['*', 'auto'],
-                    body: [[
-                        {
-                            text: `Master Hash SHA-256: ${(m.masterHash || 'INDISPONÍVEL').toUpperCase()}`,
-                            style: 'footerLeft',
-                            border: [false, false, false, false]
-                        },
-                        {
-                            text: `Página ${currentPage} de ${pageCount}`,
-                            style: 'footerRight',
-                            alignment: 'right',
-                            border: [false, false, false, false]
-                        }
-                    ]]
-                },
-                layout: 'noBorders',
-                margin: [0, 0, 0, 0]
-            },
-            // ── Aviso RFC 3161 (condicional) ──
-            ...(hasPending ? [{
-                text: safeguardText,
-                style: 'footerWarning',
-                alignment: 'center',
-                margin: [0, 4, 0, 0]
-            }] : [])
-        ],
-        margin: [40, 0, 40, 8]
-    };
-},
                 styles: {
                     judicialHeader: { fontSize: 12, bold: true, alignment: 'center', lineHeight: 1.5 },
                     judicialSubheader: { fontSize: 11, alignment: 'center', lineHeight: 1.5 },
@@ -1461,7 +1468,9 @@
                     bodyText: { fontSize: 11, alignment: 'justify', lineHeight: 1.5, firstLineIndent: 40 },
                     signatureLine: { fontSize: 10, alignment: 'center', lineHeight: 1.5 },
                     signatureName: { fontSize: 10, alignment: 'center', lineHeight: 1.5, bold: true },
-                    forensicSeal: { fontSize: 7, bold: true, alignment: 'center', color: '#0f172a', background: '#f1f5f9' }
+                    footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
+                    footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
+                    footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' }
                 }
             };
 
@@ -1653,6 +1662,7 @@
         // =========================================================================
         const docDefinition = {
             pageMargins: [40, 75, 40, 80],
+            defaultStyle: { fontSize: 10.5, font: 'Helvetica', color: '#334155' },
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) return null;
                 return {
@@ -2233,7 +2243,7 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                 // RECTIFICAÇÃO [R2-CRYPTO]: número de página determinístico (pdfMake API).
                 { text: `Página ${currentPage} de ${pageCount} | Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
 
-                // ========== 28. VALIDAÇÃO DE SELAGEM (TSA) ==========
+                // ========== 28. VALIDAÇÃO DE SELAGEM GOVERNAMENTAL (TSA) — eIDAS / RFC 3161 ==========
                 { text: "8. VALIDAÇÃO DE SELAGEM GOVERNAMENTAL (TSA) — eIDAS / RFC 3161", style: 'h2' },
                 { text: `Protocolo de Carimbo de Tempo Qualificado conforme Regulamento eIDAS (UE) 910/2014 e RFC 3161 (IETF).
 
@@ -2388,6 +2398,9 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     }
 
     async function _gerarBlobAnexoCustodia() {
+        // --- CORRECÇÃO R24: definir lang e isPT ---
+        const lang = window.currentLang || 'pt';
+        const isPT = lang === 'pt';
         const _activePayload = window.UNIFED_ACTIVE_EXPORT_PAYLOAD || null;
         if (_activePayload && _activePayload.isVerified && _activePayload.evidencias.length > 0) {
             window._UNIFED_CUSTODY_PAYLOAD_OVERRIDE = _activePayload.evidencias;
@@ -2438,6 +2451,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         const docDef = {
             pageSize: 'A4',
             pageMargins: [40, 85, 40, 60],
+            defaultStyle: { font: 'Helvetica', fontSize: 10.5, color: '#334155' },
             header: function(currentPage, pageCount) {
                 var sid = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'DEMO';
                 return {
@@ -2475,8 +2489,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#e2e8f0', color: '#1e3a8a' },
                 footerLine1: { fontSize: 7.5, color: '#64748b', alignment: 'center', margin: [0, 0, 0, 4] },
                 footerLine2: { fontSize: 7.5, color: '#94a3b8', alignment: 'center' }
-            },
-            defaultStyle: { fontSize: 10.5, color: '#334155' }
+            }
         };
 
         try {
@@ -2692,7 +2705,8 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 if (docDefinition && Array.isArray(docDefinition.content)) {
                     docDefinition.content = strictValidatePDFContent(docDefinition.content);
                 }
-                const timer = setTimeout(() => reject(new Error('generatePDFBlob timeout (30s)')), 30000);
+                // Timeout aumentado para 60s (R24)
+                const timer = setTimeout(() => reject(new Error('generatePDFBlob timeout (60s)')), 60000);
                 pdfMake.createPdf(docDefinition).getBlob(function(blob) {
                     clearTimeout(timer);
                     if (!blob || blob.size < 1000) reject(new Error('pdfMake retornou blob inválido'));
@@ -2913,7 +2927,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R23 (CORRECÇÃO footerText + SECÇÃO 33 SANITIZADA)
+// Versão: v1.0-R24 (CORRECÇÃO fontes, variáveis, timeout)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -3196,5 +3210,5 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R23 instalado com sucesso (Parecer enriquecido + fluxo Analista integral + tabela completa + footerText corrigido + secção 33 sanitizada). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R24 instalado com sucesso (fontes corrigidas, variáveis definidas, timeout 60s). Consola 100% higienizada.');
 })();
