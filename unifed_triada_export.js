@@ -13,15 +13,20 @@
  * - Garantido lang e isPT em todos os escopos
  * - RESTAURADO TODO O CÓDIGO ORIGINAL SEM TRUNCAMENTO
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R26:
+ * - Garantido pdfMake.vfs antes da definição de fonts (suporte a VFS)
+ * - Removida linha que causava "currentPage is not defined" no content do parecer técnico
+ * ============================================================================
  */
 
 (function () {
     'use strict';
 
     // ============================================================================
-    // CONFIGURAÇÃO GLOBAL DAS FONTES DO PDFMAKE (APENAS ROBOTO, PADRÃO)
+    // CONFIGURAÇÃO GLOBAL DAS FONTES DO PDFMAKE (ROBOTO COM VFS)
     // ============================================================================
     if (typeof pdfMake !== 'undefined') {
+        pdfMake.vfs = pdfMake.vfs || {}; // assegurar que o VFS existe (vfs_fonts.js injeta aqui)
         pdfMake.fonts = {
             Roboto: {
                 normal: 'Roboto-Regular.ttf',
@@ -30,7 +35,7 @@
                 bolditalics: 'Roboto-MediumItalic.ttf'
             }
         };
-        console.log('[TRIADA] pdfMake.fonts configurado para usar Roboto (fontes padrão)');
+        console.log('[TRIADA] pdfMake.fonts configurado para usar Roboto com suporte a VFS');
     }
 
     // ============================================================================
@@ -1425,11 +1430,17 @@
                                     widths: ['*'],
                                     body: [[
                                         {
-                                            text: 'UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)',
-                                            fontSize: 9,
-                                            bold: true,
-                                            color: '#1e3a8a',
-                                            alignment: 'center',
+                                            stack: [
+                                                {
+                                                    text: 'UNIFED - PROBATUM | PARECER TÉCNICO FORENSE (MOD. 03-B)',
+                                                    fontSize: 9,
+                                                    bold: true,
+                                                    color: '#1e3a8a',
+                                                    alignment: 'center',
+                                                    fillColor: '#eef2ff',
+                                                    border: [true, true, true, true]
+                                                }
+                                            ],
                                             fillColor: '#eef2ff',
                                             border: [true, true, true, true]
                                         }
@@ -1917,7 +1928,7 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                     },
                     margin: [0, 0, 0, 10]
                 },
-                { text: `Página ${currentPage} de ${pageCount} | Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
+                // Removida a linha problemática: { text: `Página ${currentPage} de ${pageCount} | Master Hash SHA-256: ${m.masterHash.substring(0, 64)}`, style: 'footerText', alignment: 'center', margin: [0, 10, 0, 0] },
                 { text: "8. VALIDAÇÃO DE SELAGEM GOVERNAMENTAL (TSA) — eIDAS / RFC 3161", style: 'h2' },
                 { text: `Protocolo de Carimbo de Tempo Qualificado conforme Regulamento eIDAS (UE) 910/2014 e RFC 3161 (IETF).
 
