@@ -60,6 +60,11 @@
  * - Removidas dependências da fonte Roboto; usar Helvetica por defeito
  * - Aumentado timeout de geração de PDF para 60s (evita timeouts em cargas pesadas)
  * ============================================================================
+ * RETIFICAÇÃO CIRÚRGICA v1.0-R25: REMOÇÃO COMPLETA DE 'Helvetica' E USO DE FONTES PADRÃO PDFMAKE
+ * - Eliminadas todas as referências a 'Helvetica' nos estilos (pdfMake usa Roboto por defeito)
+ * - Garantido que 'defaultStyle' não especifica 'font' (usa a fonte padrão do pdfMake)
+ * - Corrigidas as funções _gerarPeticaoBlob e _gerarBlobAnexoCustodia para declarar lang e isPT
+ * ============================================================================
  */
 
 (function () {
@@ -1356,7 +1361,7 @@
             const docDefinition = {
                 pageSize: 'A4',
                 pageMargins: [40, 85, 40, 60],
-                defaultStyle: { font: 'Helvetica', fontSize: 10.5, color: '#334155' },
+                defaultStyle: { fontSize: 10.5, color: '#334155' },
                 header: function(currentPage, pageCount) {
                     return {
                         columns: [
@@ -1386,10 +1391,10 @@
                     { text: 'O/A Mandatário/a — [NOME DO ADVOGADO] — Cédula n.º [N.º CÉDULA]', style: 'signatureName' }
                 ],
                 footer: function(currentPage, pageCount) {
-                    const pendingIds = getPendingEvidenceIds();
-                    const hasPending = pendingIds.length > 0;
                     const lang = window.currentLang || 'pt';
                     const isPT = lang === 'pt';
+                    const pendingIds = getPendingEvidenceIds();
+                    const hasPending = pendingIds.length > 0;
                     const safeguardText = hasPending 
                         ? (isPT 
                             ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
@@ -1518,10 +1523,12 @@
     
     // -------------------------------------------------------------------------
     // VERSÃO ENRIQUECIDA DO PARECER TÉCNICO FORENSE (MOD. 03-B COMPLETO)
-    // Substitui integralmente a implementação anterior, mantendo todas as correções
-    // estruturais (R14-R21) e adicionando as secções avançadas do segundo ficheiro.
     // -------------------------------------------------------------------------
     async function _gerarBlobParecerTecnicoForense(fullPayload) {
+        // --- CORRECÇÃO R24: definir lang e isPT ---
+        const lang = window.currentLang || 'pt';
+        const isPT = lang === 'pt';
+        
         // ── R16: Constantes Dinâmicas de Exclusão Fiscal (substituição de hardcodes) ──
         const auxData = (window.UNIFEDSystem && window.UNIFEDSystem.auxiliaryData) || {};
         const ISENCAO_BASE_TRIBUTAVEL = auxData.totalNaoSujeitos || 0;
@@ -1532,12 +1539,6 @@
         // ─────────────────────────────────────────────────────────────────────────────
         triadaLog('info', '📄 Gerando blob do Parecer Técnico Forense (Analista) com todas as secções do Modelo 03-B');
 
-        // ── Constante de Exclusão Fiscal (Quesito de Exclusão) ────────────────
-        // Valor segregado por não ser sujeito a comissão conforme FAQ da Plataforma.
-        // Campanhas: 405,00 € + Gorjetas (Tips): 46,00 € + Portagens: 0,15 €
-        // Este valor é subtraído da base de cálculo antes da geração do relatório final.
-        // R16: ISENCAO_BASE_TRIBUTAVEL definida dinamicamente no topo da função (auxData.totalNaoSujeitos)
-        // ─────────────────────────────────────────────────────────────────────
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
 
@@ -1662,7 +1663,7 @@
         // =========================================================================
         const docDefinition = {
             pageMargins: [40, 75, 40, 80],
-            defaultStyle: { fontSize: 10.5, font: 'Helvetica', color: '#334155' },
+            defaultStyle: { fontSize: 10.5, color: '#334155' },
             header: function(currentPage, pageCount) {
                 if (currentPage === 1) return null;
                 return {
@@ -1713,10 +1714,10 @@
                 };
             },
             footer: function(currentPage, pageCount) {
-                const pendingIds = getPendingEvidenceIds();
-                const hasPending = pendingIds.length > 0;
                 const lang = window.currentLang || 'pt';
                 const isPT = lang === 'pt';
+                const pendingIds = getPendingEvidenceIds();
+                const hasPending = pendingIds.length > 0;
                 const safeguardText = hasPending
                     ? (isPT
                         ? `⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
@@ -1976,8 +1977,8 @@
                 { text: "3. VEREDICTO DE RISCO / RISK VERDICT (RGIT - Art. 103.º)", style: 'h2' },
                 { text: `[I] RISCO CRÍTICO\nExpense Omission / Omissão Custos: ${percOmissaoCustos.toFixed(2)}% | Gross Earnings: ${formatForensicCurrency(m.ganhos)}\nRevenue Gap (DAC7): ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%)\n\nIndícios de desconformidade fiscal significativa.`, style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 9. PROVA RAINHA — TABELA 5 COLUNAS (FALHA 6 — R24) ==========
-                { text: isPT ? '4. EVIDÊNCIA DE MATERIALIDADE — PROVAS RAINHA' : '4. MATERIALITY EVIDENCE — QUEEN\u2019S PROOF', style: 'h2' },
+                // ========== 9. PROVA RAINHA — TABELA 5 COLUNAS ==========
+                { text: isPT ? '4. EVIDÊNCIA DE MATERIALIDADE — PROVAS RAINHA' : '4. MATERIALITY EVIDENCE — QUEEN\'S PROOF', style: 'h2' },
                 {
                     margin: [0, 4, 0, 15],
                     table: {
@@ -2363,11 +2364,10 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             ],
             styles: {
                 headerTitle: { fontSize: 10, bold: true, color: '#1e3a8a' },
-                footerLine: { fontSize: 6, color: '#334155', margin: [0, 0, 0, 2] },
                 footerLeft: { fontSize: 7, bold: false, color: '#1e3a8a' },
                 footerRight: { fontSize: 7, bold: false, color: '#1e3a8a' },
                 footerWarning: { fontSize: 6.5, italics: true, color: '#b91c1c' },
-                footerText: { fontSize: 7.5, bold: false, color: '#64748b', wordBreak: 'break-all' },   // <-- CORRECÇÃO R24: wordBreak adicionado
+                footerText: { fontSize: 7.5, bold: false, color: '#64748b', wordBreak: 'break-all' },
                 h1: { fontSize: 11, bold: true, alignment: 'center', margin: [0, 12, 0, 6], color: '#1e3a8a' },
                 h2: { fontSize: 9, bold: true, alignment: 'left', margin: [0, 14, 0, 4], color: '#2c3e66' },
                 normal: { fontSize: 8, alignment: 'justify', lineHeight: 1.3, color: '#334155' },
@@ -2375,7 +2375,6 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 tableHeader: { fontSize: 8, bold: true, fillColor: '#1e3a8a', color: '#ffffff', alignment: 'center' }
             },
             watermark: {
-                // FALHA 16 — R24: opacidade reduzida de 0.04 → 0.02 para não obstruir leitura
                 text: 'PROVA DIGITAL MATERIAL',
                 color: '#0ea5e9',
                 opacity: 0.02,
@@ -2451,7 +2450,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         const docDef = {
             pageSize: 'A4',
             pageMargins: [40, 85, 40, 60],
-            defaultStyle: { font: 'Helvetica', fontSize: 10.5, color: '#334155' },
+            defaultStyle: { fontSize: 10.5, color: '#334155' },
             header: function(currentPage, pageCount) {
                 var sid = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'DEMO';
                 return {
@@ -2463,10 +2462,10 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             },
             content: contentCustodia,
             footer: function(currentPage, pageCount) {
-                const pendingIds = getPendingEvidenceIds();
-                const hasPending = pendingIds.length > 0;
                 const lang = window.currentLang || 'pt';
                 const isPT = lang === 'pt';
+                const pendingIds = getPendingEvidenceIds();
+                const hasPending = pendingIds.length > 0;
                 const safeguardText = hasPending 
                     ? (isPT 
                         ? `\n⚠️ AUSÊNCIA DE SELAGEM TEMPORAL RFC 3161 em [ID: ${pendingIds.join(', ')}] não compromete a inviolabilidade do hash SHA-256, conforme Art. 125.º CPP / ISO/IEC 27037:2012`
@@ -2927,288 +2926,4 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R24 (CORRECÇÃO fontes, variáveis, timeout)
-// =============================================================================
-(function _installExportEngine() {
-    'use strict';
-    window.UNIFED_ExportEngine = window.UNIFED_ExportEngine || {};
-    var ENG = window.UNIFED_ExportEngine;
-
-    ENG.getVerifiedPayload = function(dataObject) {
-        var sys = dataObject || (window.UNIFEDSystem && window.UNIFEDSystem.analysis) || {};
-        var rawRisco        = parseFloat(sys.expenseOmissionPct || sys.riscoPct || sys.risco || 0);
-        var rawRevOmit      = parseFloat(sys.revOmitPct || sys.revenueOmissionPct || 0);
-        var rawGanhosBrutos = parseFloat(sys.grossEarnings || sys.ganhosBrutos || 0);
-
-        var riscoPercentual   = isNaN(rawRisco)         ? '0.00' : rawRisco.toFixed(2);
-        var revOmitPercentual = isNaN(rawRevOmit)       ? '0.00' : rawRevOmit.toFixed(2);
-        var ganhosBrutosStr   = isNaN(rawGanhosBrutos)  ? '0.00' : rawGanhosBrutos.toFixed(2);
-
-        var masterHash = (window.UNIFEDSystem && window.UNIFEDSystem.masterHash)
-            || sys.masterHash || 'INDISPONÍVEL';
-
-        var rawEvids = [];
-        try {
-            if (window.ForensicLogger && typeof window.ForensicLogger.getLogs === 'function') {
-                window.ForensicLogger.getLogs().forEach(function(e) {
-                    if (e && e.data && (e.data.fileName || e.data.filename) && e.data.hash) {
-                        var hasTimestamp = !!(e.timestamp && e.timestamp !== 'PENDING_TIMESTAMP');
-                        rawEvids.push({
-                            id:         e.data.serial || ('EV_' + String(rawEvids.length + 1).padStart(3, '0')),
-                            nome:       e.data.fileName || e.data.filename,
-                            hashSHA256: e.data.hash,
-                            timestamp:  e.timestamp || (hasTimestamp ? new Date().toISOString() : 'PENDING_TIMESTAMP'),
-                            hasValidTimestamp: hasTimestamp
-                        });
-                        if (!hasTimestamp && window._UNIFED_PENDING_TIMESTAMP_EVIDENCES) {
-                            if (!window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.some(ev => ev.id === e.data.filename)) {
-                                window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.push({ id: e.data.filename, name: e.data.filename });
-                            }
-                        }
-                    }
-                });
-            }
-            if (rawEvids.length === 0 && Array.isArray(sys.custodyLog)) {
-                sys.custodyLog.forEach(function(e, idx) {
-                    var hasTimestamp = !!(e.timestamp && e.timestamp !== 'PENDING_TIMESTAMP');
-                    rawEvids.push({
-                        id:         e.serial || ('EV_' + String(idx + 1).padStart(3, '0')),
-                        nome:       e.fileName || e.filename || 'Evidência ' + (idx + 1),
-                        hashSHA256: e.hash || 'HASH_INDISPONÍVEL',
-                        timestamp:  e.timestamp || (hasTimestamp ? new Date().toISOString() : 'PENDING_TIMESTAMP'),
-                        hasValidTimestamp: hasTimestamp
-                    });
-                    if (!hasTimestamp && window._UNIFED_PENDING_TIMESTAMP_EVIDENCES) {
-                        if (!window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.some(ev => ev.id === e.id)) {
-                            window._UNIFED_PENDING_TIMESTAMP_EVIDENCES.push({ id: e.id || e.filename, name: e.filename || 'Evidência' });
-                        }
-                    }
-                });
-            }
-        } catch(evErr) {
-            console.warn('[ExportEngine] Erro ao normalizar evidências:', evErr.message);
-        }
-
-        var conclusaoJuridica = sys.conclusaoJuridica || sys.legalSummary
-            || ('Análise pericial com omissão apurada de ' + riscoPercentual +
-                '% (despesas/comissões vs. fatura). Indícios de infração nos termos do ' +
-                'Art. 103.º e 104.º do RGIT. Master Hash: ' + masterHash.substring(0, 16) + '...');
-
-        return Object.freeze({
-            riscoPercentual:    riscoPercentual,
-            revOmitPercentual:  revOmitPercentual,
-            ganhosBrutos:       ganhosBrutosStr,
-            masterHash:         masterHash,
-            sessionId:          (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || sys.sessionId || 'DEMO',
-            evidencias:         rawEvids,
-            conclusaoJuridica:  conclusaoJuridica,
-            isVerified:         true,
-            geradoEm:           new Date().toISOString(),
-            transactionRows:    (window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.transactionRows) || []
-        });
-    };
-
-    ENG.distribuirConteudo = function(payload) {
-        if (!payload || !payload.isVerified) {
-            throw new Error('[ExportEngine] distribuirConteudo requer payload verificado (getVerifiedPayload).');
-        }
-        var parecer = {
-            titulo:          'Parecer Técnico Forense — UNIFED-PROBATUM',
-            masterHash:      payload.masterHash,
-            sessionId:       payload.sessionId,
-            riscoPercentual: payload.riscoPercentual,
-            ganhosBrutos:    payload.ganhosBrutos,
-            evidencias:      payload.evidencias,
-            conclusao:       payload.conclusaoJuridica,
-            assinatura:      'Técnico Forense Independente — Art. 153.º CPP · ISRS 4400',
-            geradoEm:        payload.geradoEm
-        };
-        var tabelaCustodia = payload.evidencias.map(function(ev, idx) {
-            return {
-                id:         ev.id || ('EV_' + String(idx + 1).padStart(3, '0')),
-                tipo:       (ev.nome || '').toLowerCase().endsWith('.pdf') ? 'PDF' : 'CSV',
-                origem:     ev.nome || 'N/D',
-                hashSHA256: ev.hashSHA256 || 'HASH_INDISPONÍVEL',
-                timestamp:  ev.timestamp || 'PENDING_TIMESTAMP',
-                hasValidTimestamp: ev.hasValidTimestamp || false
-            };
-        });
-        var anexo = {
-            titulo:     'Anexo de Cadeia de Custódia — ISO/IEC 27037:2012',
-            tabela:     tabelaCustodia,
-            hashMaster: payload.masterHash,
-            geradoEm:   payload.geradoEm
-        };
-        var peticao = {
-            titulo:    'Petição Inicial — Suporte Probatório Forense',
-            resumo:    payload.conclusaoJuridica,
-            hashRef:   payload.masterHash.substring(0, 16) + '...',
-            sessionId: payload.sessionId,
-            geradoEm:  payload.geradoEm
-        };
-        return { parecer: parecer, anexo: anexo, peticao: peticao };
-    };
-
-    // RET 9 — validação de hashDashboard com fallback e protecção NaN
-    ENG.runCourtReadyChecklist = function(payload, hashDashboard) {
-        var erros  = [];
-        var avisos = [];
-        var linhas = ['=== UNIFED — COURT READY CHECKLIST (PVC-01) ==='];
-
-        // hashDashboard: usar argumento, ou masterHash do sistema, ou string vazia
-        hashDashboard = hashDashboard ||
-                        (window.UNIFEDSystem && window.UNIFEDSystem.masterHash) ||
-                        (window.UNIFED_FORENSIC_SYSTEM && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody && window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash) ||
-                        '';
-
-        // ── RECTIFICAÇÃO [R1-SSOT]: Leitura exclusiva do objecto de análise (sem DOM) ──
-        // O DOM pode estar dessincronizado por race conditions de renderização.
-        // A única fonte de verdade é window.UNIFEDSystem.analysis.crossings.
-        var _ssotCrossings = (window.UNIFEDSystem && window.UNIFEDSystem.analysis && window.UNIFEDSystem.analysis.crossings) || {};
-        var riscoDash = parseFloat(_ssotCrossings.percentagemOmissao || 0);
-        var riscoPDF   = parseFloat(String(payload.riscoPercentual).replace(',','.')) || 0;
-        var deltaRisco = Math.abs(riscoDash - riscoPDF);
-        if (riscoDash === 0) {
-            avisos.push('CHECK 1: percentagemOmissao indisponível no SSOT — verificar se performForensicCrossings() foi executado (PDF: ' + payload.riscoPercentual + '%).');
-            linhas.push('[ ? ] CHECK 1 — Arredondamento: SSOT indisponível | PDF=' + payload.riscoPercentual + '%');
-        } else if (deltaRisco < 0.001) {
-            linhas.push('[ OK ] CHECK 1 — Arredondamento: SSOT=' + riscoDash.toFixed(2) + '% PDF=' + payload.riscoPercentual + '% DELTA=' + deltaRisco.toFixed(5));
-        } else {
-            erros.push('CHECK 1 FALHA: Divergência Δ=' + deltaRisco.toFixed(5) + ' (SSOT=' + riscoDash + '% / PDF=' + payload.riscoPercentual + '%).');
-            linhas.push('[ FALHOU ] CHECK 1 — Arredondamento: DIVERGÊNCIA Δ=' + deltaRisco.toFixed(5));
-        }
-
-        var hashDB = hashDashboard || (window.UNIFEDSystem && window.UNIFEDSystem.masterHash) || '';
-        if (!hashDB) {
-            avisos.push('CHECK 2: hashDashboard não fornecido — comparação manual necessária.');
-            linhas.push('[ ? ] CHECK 2 — Master Hash: não fornecido | Payload=' + payload.masterHash.substring(0,16) + '...');
-        } else if (hashDB.toUpperCase() === payload.masterHash.toUpperCase()) {
-            linhas.push('[ OK ] CHECK 2 — Master Hash: COINCIDE (' + payload.masterHash.substring(0,12) + '...)');
-        } else {
-            erros.push('CHECK 2 FALHA: Master Hash divergente. DB=' + hashDB.substring(0,16) + ' / PL=' + payload.masterHash.substring(0,16));
-            linhas.push('[ FALHOU ] CHECK 2 — Master Hash: DIVERGÊNCIA CRÍTICA');
-        }
-
-        var nEv      = payload.evidencias ? payload.evidencias.length : 0;
-        var nHashOK  = (payload.evidencias || []).filter(function(e) {
-            return e.hashSHA256 && e.hashSHA256 !== 'HASH_INDISPONÍVEL' && e.hashSHA256.length >= 32;
-        }).length;
-        var nPendingTimestamp = (payload.evidencias || []).filter(function(e) {
-            return !e.hasValidTimestamp || e.timestamp === 'PENDING_TIMESTAMP';
-        }).length;
-        
-        if (nEv === 0) {
-            erros.push('CHECK 3 FALHA: Tabela de evidências vazia — cadeia de custódia inválida.');
-            linhas.push('[ FALHOU ] CHECK 3 — Evidências: TABELA VAZIA');
-        } else if (nHashOK < nEv) {
-            erros.push('CHECK 3 FALHA: ' + (nEv - nHashOK) + ' evidência(s) sem hash SHA-256 válido.');
-            linhas.push('[ FALHOU ] CHECK 3 — Evidências: ' + nEv + ' total | ' + nHashOK + ' com hash | ' + (nEv - nHashOK) + ' em falta');
-        } else {
-            if (nPendingTimestamp > 0) {
-                avisos.push('CHECK 3: ' + nPendingTimestamp + ' evidência(s) sem selagem RFC 3161 (PENDING_TIMESTAMP) — salvaguarda legal aplicada.');
-                linhas.push('[ AVISO ] CHECK 3 — Evidências: ' + nPendingTimestamp + ' sem timestamp RFC 3161 (Art. 125.º CPP)');
-            } else {
-                linhas.push('[ OK ] CHECK 3 — Evidências: ' + nEv + ' artefactos | ' + nHashOK + '/' + nEv + ' SHA-256 válidos');
-            }
-        }
-
-        // FALHA 11 — R24: realCaseAnonymized=true suprime o erro do CHECK 4
-        // O caso real anonimizado é um estado legítimo — não é simulação
-        var isDemo = !!(window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
-        var _isRealAnon = !!(window.UNIFEDSystem && window.UNIFEDSystem.realCaseAnonymized);
-        if (isDemo && !_isRealAnon) {
-            erros.push('CHECK 4 FALHA: demoMode=true — a exportação conterá dados de simulação, não reais.');
-            linhas.push('[ FALHOU ] CHECK 4 — Estado: DEMO ACTIVO — bloqueado');
-        } else if (_isRealAnon) {
-            linhas.push('[ OK ] CHECK 4 — Estado: CASO REAL ANONIMIZADO (dados forenses válidos)');
-        } else {
-            linhas.push('[ OK ] CHECK 4 — Estado: dados reais confirmados');
-        }
-
-        var ok = erros.length === 0;
-        linhas.push('');
-        linhas.push('RESULTADO: ' + (ok ? 'COURT READY' : 'NAO PRONTO — ' + erros.length + ' ERRO(S)'));
-        if (avisos.length) linhas.push('AVISOS: ' + avisos.join(' | '));
-        if (!ok)           linhas.push('ERROS:  ' + erros.join(' | '));
-        linhas.push('Sessao: ' + payload.sessionId + ' | Gerado: ' + payload.geradoEm);
-        linhas.push('================================================');
-
-        var relatorio = linhas.join('\n');
-        console.log(relatorio);
-        if (!ok) console.error('[ExportEngine] Court Ready FALHOU:', erros);
-        return { ok: ok, relatorio: relatorio, erros: erros, avisos: avisos };
-    };
-
-    // =========================================================================
-    // CORRECÇÃO R21: Isolar fragmentação de dados apenas no fluxo do Advogado
-    // =========================================================================
-    ENG.exportarComVerificacao = function(modo) {
-        var payload   = ENG.getVerifiedPayload();
-        var checklist = ENG.runCourtReadyChecklist(payload);
-
-        var isDemoIntentional = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
-            || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
-        
-        var errosCriticos = checklist.erros.filter(function(e) {
-            if (isDemoIntentional && (e.startsWith('CHECK 4') || e.startsWith('CHECK 3'))) return false;
-            if (e.includes('timestamp') || e.includes('selagem')) return false;
-            return true;
-        });
-        
-        var checklistFalhou = isDemoIntentional ? errosCriticos.length > 0 : !checklist.ok;
-
-        if (checklistFalhou) {
-            var msg = 'EXPORTACAO BLOQUEADA — Court Ready Checklist falhou:\n\n' +
-                errosCriticos.join('\n') + '\n\nConsulte o log forense.';
-            if (typeof showModalMessage === 'function') {
-                showModalMessage('Exportacao Bloqueada — Integridade Comprometida', msg, null);
-            }
-            return Promise.reject(new Error('Court Ready: ' + (errosCriticos[0] || 'Falha de Integridade')));
-        }
-
-        if (isDemoIntentional) {
-            console.warn('[ExportEngine] DEMO mode: exportação autorizada com dados anonimizados. Gates 3 e 4 bypassados.');
-        }
-
-        // CORRECÇÃO R21: fluxo do analista recebe payload integral; advogado recebe fragmentado
-        if (modo === 'analista' && typeof window._exportPacoteAnalista === 'function') {
-            // Passa o payload integral (que inclui todas as transacções)
-            return window._exportPacoteAnalista(payload);
-        } else if (modo === 'advogado' && typeof window._exportPacoteAdvogado === 'function') {
-            var partesAdvogado = ENG.distribuirConteudo(payload);
-            // O advogado recebe os fragmentos (parecer, anexo, peticao) mas ainda precisa do payload original para algumas partes
-            // A função _exportPacoteAdvogado usará o window.UNIFED_ACTIVE_EXPORT_PAYLOAD definido dentro dela
-            return window._exportPacoteAdvogado();
-        }
-        return Promise.reject(new Error('[ExportEngine] Modo desconhecido: ' + modo));
-    };
-
-    // Monkey patch para supressão de logs em modo DEMO (R17)
-    if (typeof ENG !== 'undefined' && typeof ENG.runCourtReadyChecklist === 'function') {
-        var originalRunCourtReadyChecklist = ENG.runCourtReadyChecklist;
-        
-        ENG.runCourtReadyChecklist = function(payload) {
-            var isDemoIntentional = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO')
-                || (window.UNIFEDSystem && window.UNIFEDSystem.demoMode);
-            
-            if (isDemoIntentional) {
-                var origConsoleError = console.error;
-                console.error = function() {
-                    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('[ExportEngine] Court Ready FALHOU') !== -1) {
-                        console.warn('[ExportEngine] Court Ready (Simulação Ativa): Os Gates 3 e 4 foram mitigados com sucesso para o ambiente de testes.', arguments[1]);
-                        return;
-                    }
-                    origConsoleError.apply(console, arguments);
-                };
-                try {
-                    return originalRunCourtReadyChecklist(payload);
-                } finally {
-                    console.error = origConsoleError;
-                }
-            }
-            return originalRunCourtReadyChecklist(payload);
-        };
-    }
-
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R24 instalado com sucesso (fontes corrigidas, variáveis definidas, timeout 60s). Consola 100% higienizada.');
-})();
+// Versão: v1.0-R25 (REMOVI
